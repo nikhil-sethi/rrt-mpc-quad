@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 MAX_ITER = 100
 DIST_TH = 0.001
-PERC_2_END_GOAL = 0.1
+PERC_2_END_GOAL = 0.1 # This is the percentage of evaluations at the goal position
 
 class Node:
      def __init__(self, pos: np.ndarray, parent=None, id=0):
@@ -16,20 +16,21 @@ class Node:
             self.connections = self.parent.connections + [self]
 
 class Graph:
-    def __init__(self, start_node):
+    def __init__(self, start_node: Node):
         self.nodes = [start_node]
     
-    def add_node(self, node):
+    def add_node(self, node: Node):
         self.nodes.append(node)
 
 class Workspace:
     def __init__(self, bounds_x: np.ndarray, bounds_y: np.ndarray, bounds_z: np.ndarray):
         self.bounds_x = bounds_x
         self.bounds_y = bounds_y
-        self.bounds_z = bounds_z       
+        self.bounds_z = bounds_z   
+        # Add the obstacles in this class    
 
 class RRT:
-    def __init__(self, start_node, end_node, workspace):
+    def __init__(self, start_node: Node, end_node: Node, workspace: Workspace):
         self.graph = Graph(start_node)
         self.end_goal = end_node
         self.ws = workspace
@@ -43,14 +44,14 @@ class RRT:
         z_sample =  np.random.choice(list(np.random.uniform(self.ws.bounds_z[0], self.ws.bounds_z[1], int(1//self.perc_endgoal))) + [self.end_goal.pos[2]])
         return np.array([x_sample, y_sample, z_sample])
     
-    def check_collision_node(self, node):
+    def check_collision_node(self, node_pos: np.ndarray) -> bool:
         return False
 
-    def find_closest_node(self, sample_point):
+    def find_closest_node(self, sample_point: np.ndarray) -> bool:
         closest_node = self.graph.nodes[np.argmin(np.linalg.norm(sample_point - np.array([self.graph.nodes[i].pos for i in range(len(self.graph.nodes))]), axis=1))]
         return closest_node
 
-    def check_collision_connection(self, node_a_pos, node_b_pos):
+    def check_collision_connection(self, node_a_pos: np.ndarray, node_b_pos: np.ndarray) -> bool:
         return False
     
     def check_reached_endgoal(self):
@@ -70,7 +71,7 @@ class RRT:
         self.graph.add_node(new_node)
         self.check_reached_endgoal()
 
-def plot_final_path(nodes):
+def plot_final_path(nodes: list, start_node: Node, end_node: Node):
     plt.figure()
     plt.title("final graph")
     for j in range(len(nodes)):
@@ -78,6 +79,9 @@ def plot_final_path(nodes):
         path_y = np.array([nodes[j].connections[i].pos[1] for i in range(len(nodes[j].connections))])
         plt.plot(path_x, path_y,"r--")
     plt.plot(path_x, path_y,"g")  
+    plt.plot(start_node.pos[0], start_node.pos[1], "bo", markersize=10, label="start")
+    plt.plot(end_node.pos[0], end_node.pos[1], "go", markersize=10, label="goal")
+    plt.legend()
     plt.grid()
     plt.show()
 
@@ -92,8 +96,8 @@ def main():
         rrt_planner.plan()
         iter+=1
 
-    plot_final_path(rrt_planner.graph.nodes)
+    plot_final_path(rrt_planner.graph.nodes, start_node, end_node)
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     main()
