@@ -205,7 +205,8 @@ def main():
     while (not(rrt_planner.reached_goal) and (iter<MAX_ITER)):
         rrt_planner.plan()
         iter+=1
-
+        
+    plot_final_path_2D(rrt_planner.graph.nodes, start_node, end_node, WS.obstacles)
     plot_final_path_3D(rrt_planner.graph.nodes, start_node, end_node, WS.obstacles)
 
 
