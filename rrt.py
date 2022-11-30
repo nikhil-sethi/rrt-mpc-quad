@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 MAX_ITER = 1000
 DIST_TH = 0.01
-PERC_2_END_GOAL = 0.001 # This is the percentage of evaluations at the goal position
+PERC_2_END_GOAL = 0.005 # This is the percentage of evaluations at the goal position
 
 class Node:
      def __init__(self, pos: np.ndarray, parent=None, id=0):
@@ -166,8 +166,10 @@ def plot_final_path(nodes: list, start_node: Node, end_node: Node, obstacles: li
 def main():
     start_node = Node(pos=np.array([1,1,0]))
     end_node = Node(pos=np.array([5,5,0]), id=-1)
-    obs = Cylinder(np.array([2, 2, 0]), 10, 1)
-    WS = Workspace(np.array([0,5]), np.array([0,5]), np.array([0,0]), [obs])
+    obs1 = Cylinder(np.array([2, 2, 0]), 10, 1)
+    obs2 = Cylinder(np.array([4, 2, 0]), 10, 0.8)
+    obs3 = Cylinder(np.array([2, 4, 0]), 10, 0.8)
+    WS = Workspace(np.array([0,6]), np.array([0,6]), np.array([0,0]), [obs1, obs2, obs3])
     drone = Quadrotor()
     rrt_planner = RRT(start_node=start_node, end_node=end_node, workspace=WS, drone=drone)
     iter=0
