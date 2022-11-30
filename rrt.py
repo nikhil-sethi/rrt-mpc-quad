@@ -158,7 +158,7 @@ class RRT:
 
 def plot_final_path_2D(nodes: list, start_node: Node, end_node: Node, obstacles: list):
     plt.figure()
-    plt.title("final graph")
+    plt.title("final graph in 2D")
     for j in range(len(nodes)):
         path_x = np.array([nodes[j].connections[i].pos[0] for i in range(len(nodes[j].connections))])
         path_y = np.array([nodes[j].connections[i].pos[1] for i in range(len(nodes[j].connections))])
@@ -170,13 +170,12 @@ def plot_final_path_2D(nodes: list, start_node: Node, end_node: Node, obstacles:
     plt.plot(end_node.pos[0], end_node.pos[1], "go", markersize=10, label="goal")
     plt.legend()
     plt.grid()
-    plt.show()
 
 
 def plot_final_path_3D(nodes: list, start_node: Node, end_node: Node, obstacles: list):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    plt.title("final graph")
+    plt.title("final graph in 3D")
     for j in range(len(nodes)):
         path_x = np.array([nodes[j].connections[i].pos[0] for i in range(len(nodes[j].connections))])
         path_y = np.array([nodes[j].connections[i].pos[1] for i in range(len(nodes[j].connections))])
@@ -189,7 +188,7 @@ def plot_final_path_3D(nodes: list, start_node: Node, end_node: Node, obstacles:
     ax.plot3D(end_node.pos[0], end_node.pos[1], end_node.pos[2], "go", markersize=10, label="goal")
     plt.legend()
     plt.grid()
-    plt.show()
+    
 
 
 def main():
@@ -205,10 +204,10 @@ def main():
     while (not(rrt_planner.reached_goal) and (iter<MAX_ITER)):
         rrt_planner.plan()
         iter+=1
-        
+
     plot_final_path_2D(rrt_planner.graph.nodes, start_node, end_node, WS.obstacles)
     plot_final_path_3D(rrt_planner.graph.nodes, start_node, end_node, WS.obstacles)
-
+    plt.show()
 
 
 if __name__ == "__main__":
