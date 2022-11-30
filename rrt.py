@@ -1,13 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-MAX_ITER = 100
-DIST_TH = 0.001
-PERC_2_END_GOAL = 0.1 # This is the percentage of evaluations at the goal position
+MAX_ITER = 1000
+DIST_TH = 0.01
+PERC_2_END_GOAL = 0.01 # This is the percentage of evaluations at the goal position
 
 class Node:
      def __init__(self, pos: np.ndarray, parent=None, id=0):
-        self.id = id
+        self.id = id  # Only for debugging
         self.pos = pos
         self.parent = parent
         if parent is None:
@@ -39,10 +39,12 @@ class RRT:
         self.nr_nodes = 1
     
     def sample_node_position(self) -> np.ndarray:
-        x_sample = np.random.choice(np.array(list(np.random.uniform(self.ws.bounds_x[0],self.ws.bounds_x[1], int(1//self.perc_endgoal))) + [self.end_goal.pos[0]]))
-        y_sample =  np.random.choice(list(np.random.uniform(self.ws.bounds_y[0],self.ws.bounds_y[1], int(1//self.perc_endgoal))) + [self.end_goal.pos[1]])
-        z_sample =  np.random.choice(list(np.random.uniform(self.ws.bounds_z[0], self.ws.bounds_z[1], int(1//self.perc_endgoal))) + [self.end_goal.pos[2]])
-        return np.array([x_sample, y_sample, z_sample])
+        x_sample = np.array(list(np.random.uniform(self.ws.bounds_x[0],self.ws.bounds_x[1], int(1//self.perc_endgoal))) + [self.end_goal.pos[0]])
+        y_sample = np.array(list(np.random.uniform(self.ws.bounds_y[0],self.ws.bounds_y[1], int(1//self.perc_endgoal))) + [self.end_goal.pos[1]])
+        z_sample =  np.array(list(np.random.uniform(self.ws.bounds_z[0], self.ws.bounds_z[1], int(1//self.perc_endgoal))) + [self.end_goal.pos[2]])
+        samples = np.vstack((x_sample, y_sample, z_sample)).T
+        chosen_sample = samples[np.random.choice(len(samples))]
+        return chosen_sample
     
     def check_collision_node(self, node_pos: np.ndarray) -> bool:
         return False
