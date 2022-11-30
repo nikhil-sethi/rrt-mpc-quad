@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 MAX_ITER = 1000
 DIST_TH = 0.01
@@ -42,7 +43,7 @@ class Obstacle:
         # Implement this in child classes
         raise NotImplementedError()
 
-    def plot_3D(self):
+    def plot_3D(self, axis):
         # Implement this in child classes
         raise NotImplementedError()
 
@@ -56,11 +57,20 @@ class Cylinder(Obstacle):
     def check_collision(self, drone: Quadrotor, new_node_pos: np.ndarray) -> bool:
         return (np.linalg.norm(np.array([self.center[0] - new_node_pos[0], self.center[1] - new_node_pos[1]])) < (self.radius + drone.radius)) and (self.center[2] < new_node_pos[2] + drone.radius) and (self.center[2] + self.height > new_node_pos[2] - drone.radius)
     
-    def plot2D(self):
+    def plot_2D(self):
         theta = np.linspace(0, 2*np.pi, 100)
         x = self.center[0] + self.radius*np.cos(theta)
         y = self.center[1] + self.radius*np.sin(theta)
         plt.plot(x, y, "orange")
+    
+    def plot_3D(self, axis):
+        N = 100
+        z = np.linspace(self.center[2], self.center[2] + self.height, N)
+        theta = np.linspace(0, 2*np.pi, N)
+        theta_grid, z_grid=np.meshgrid(theta, z)
+        x_grid = self.radius*np.cos(theta_grid) + self.center[0]
+        y_grid = self.radius*np.sin(theta_grid) + self.center[1]
+        axis.plot_surface(x_grid, y_grid, z_grid, color="orange", alpha=0.5)
 
 
 class Globe(Obstacle):
@@ -146,7 +156,7 @@ class RRT:
         self.check_reached_endgoal()
 
 
-def plot_final_path(nodes: list, start_node: Node, end_node: Node, obstacles: list):
+def plot_final_path_2D(nodes: list, start_node: Node, end_node: Node, obstacles: list):
     plt.figure()
     plt.title("final graph")
     for j in range(len(nodes)):
@@ -155,7 +165,7 @@ def plot_final_path(nodes: list, start_node: Node, end_node: Node, obstacles: li
         plt.plot(path_x, path_y,"r--")
     plt.plot(path_x, path_y,"g")  
     for obs in obstacles:
-        obs.plot2D()
+        obs.plot_2D()
     plt.plot(start_node.pos[0], start_node.pos[1], "bo", markersize=10, label="start")
     plt.plot(end_node.pos[0], end_node.pos[1], "go", markersize=10, label="goal")
     plt.legend()
@@ -163,13 +173,32 @@ def plot_final_path(nodes: list, start_node: Node, end_node: Node, obstacles: li
     plt.show()
 
 
+def plot_final_path_3D(nodes: list, start_node: Node, end_node: Node, obstacles: list):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    plt.title("final graph")
+    for j in range(len(nodes)):
+        path_x = np.array([nodes[j].connections[i].pos[0] for i in range(len(nodes[j].connections))])
+        path_y = np.array([nodes[j].connections[i].pos[1] for i in range(len(nodes[j].connections))])
+        path_z = np.array([nodes[j].connections[i].pos[2] for i in range(len(nodes[j].connections))])
+        ax.plot3D(path_x, path_y, path_z, "r", alpha=0.2)
+    ax.plot3D(path_x, path_y, path_z, "g")  
+    for obs in obstacles:
+        obs.plot_3D(ax)
+    ax.plot3D(start_node.pos[0], start_node.pos[1], start_node.pos[2], "bo", markersize=10, label="start")
+    ax.plot3D(end_node.pos[0], end_node.pos[1], end_node.pos[2], "go", markersize=10, label="goal")
+    plt.legend()
+    plt.grid()
+    plt.show()
+
+
 def main():
-    start_node = Node(pos=np.array([1,1,0]))
-    end_node = Node(pos=np.array([5,5,0]), id=-1)
+    start_node = Node(pos=np.array([1,1,1]))
+    end_node = Node(pos=np.array([5,5,5]), id=-1)
     obs1 = Cylinder(np.array([2, 2, 0]), 10, 1)
     obs2 = Cylinder(np.array([4, 2, 0]), 10, 0.8)
     obs3 = Cylinder(np.array([2, 4, 0]), 10, 0.8)
-    WS = Workspace(np.array([0,6]), np.array([0,6]), np.array([0,0]), [obs1, obs2, obs3])
+    WS = Workspace(np.array([0,6]), np.array([0,6]), np.array([0,6]), [obs1, obs2, obs3])
     drone = Quadrotor()
     rrt_planner = RRT(start_node=start_node, end_node=end_node, workspace=WS, drone=drone)
     iter=0
@@ -177,7 +206,7 @@ def main():
         rrt_planner.plan()
         iter+=1
 
-    plot_final_path(rrt_planner.graph.nodes, start_node, end_node, WS.obstacles)
+    plot_final_path_3D(rrt_planner.graph.nodes, start_node, end_node, WS.obstacles)
 
 
 
