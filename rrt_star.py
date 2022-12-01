@@ -2,9 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-MAX_ITER = 2000
+MAX_ITER = 1000
 DIST_TH = 0.01
-PERC_2_END_GOAL = 0.1 # This is the percentage of evaluations at the goal position
+PERC_2_END_GOAL = 0.05 # This is the percentage of evaluations at the goal position
 
 class Node:
      def __init__(self, pos: np.ndarray, parent=None, id=0):
