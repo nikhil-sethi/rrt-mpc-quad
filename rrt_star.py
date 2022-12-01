@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-MAX_ITER = 500
+MAX_ITER = 2000
 DIST_TH = 0.01
 PERC_2_END_GOAL = 0.1 # This is the percentage of evaluations at the goal position
 
@@ -144,7 +144,6 @@ class RRT:
         max_dist = np.inf
         shortest_path_node = None
         for node in close_nodes:
-            #print(new_node.pos, node.pos, node.dist_from_start + np.linalg.norm(node.pos - new_node.pos), new_node.dist_from_start)
             collision_connection = self.check_collision_connection(node.pos, sample_point, self.ws.obstacles, self.drone)
             if collision_connection:
                 continue
@@ -168,8 +167,6 @@ class RRT:
                 return True
         return False
     
-    def check_reached_endgoal(self):
-        self.reached_goal = (np.linalg.norm((self.graph.nodes[-1].pos - self.end_goal.pos)) < DIST_TH)
 
     def plan(self):
         new_node_pos = self.sample_node_position()
@@ -185,25 +182,20 @@ class RRT:
 
         self.graph.add_node(new_node)
         self.nr_nodes+=1
-        #print("hi")
-        #plot_final_path_2D(self.graph.nodes, self.start_node, self.end_goal, self.ws.obstacles)
         self.check_shortcut_for_nodes(new_node)
         if (np.linalg.norm(self.graph.nodes[-1].pos -self.end_goal.pos)<DIST_TH) and (self.graph.nodes[-1].dist_from_start < self.fastest_route_to_end):
             self.fastest_route_to_end = self.graph.nodes[-1].dist_from_start
             self.final_node = self.graph.nodes[-1]
-            print([self.final_node.connections[i].pos[0] for i in range(len(self.final_node.connections))])
-
+            self.reached_goal = True
+        
         self.garbage_collection()
-
-        #plot_final_path_2D(self.graph.nodes, self.start_node, self.end_goal, self.ws.obstacles)
-        self.check_reached_endgoal()
 
     def garbage_collection(self):
         if np.linalg.norm(self.graph.nodes[-1].pos -self.end_goal.pos)<DIST_TH:
             for node in self.graph.nodes:
-                if node.dist_from_start > self.fastest_route_to_end:
+                if node.dist_from_start + np.linalg.norm(self.end_goal.pos - node.pos) > self.fastest_route_to_end:
                     self.graph.remove_node(node)
-        elif self.graph.nodes[-1].dist_from_start > self.fastest_route_to_end:
+        elif self.graph.nodes[-1].dist_from_start + np.linalg.norm(self.end_goal.pos - self.graph.nodes[-1].pos) > self.fastest_route_to_end:
             self.graph.remove_node(self.graph.nodes[-1])
 
         
@@ -222,10 +214,8 @@ class RRT:
     def check_shortcut_for_nodes(self, new_node):
         close_nodes = sorted(self.graph.nodes, key=lambda n: np.linalg.norm(n.pos - new_node.pos))[1:max(len(self.graph.nodes), 10)]
         for node in close_nodes:
-            #print(new_node.pos, node.pos, node.dist_from_start + np.linalg.norm(node.pos - new_node.pos), new_node.dist_from_start)
             shortcut_bool = new_node.dist_from_start + np.linalg.norm(node.pos - new_node.pos) < node.dist_from_start - 0.0000001
             if shortcut_bool:
-                #print(node.pos, new_node.pos)
                 self.reroute(node, new_node)
 
 
@@ -245,7 +235,6 @@ def plot_final_path_2D(nodes: list, start_node: Node, end_node: Node, final_node
     plt.plot(end_node.pos[0], end_node.pos[1], "go", markersize=10, label="goal")
     plt.legend()
     plt.grid()
-    plt.show()
         
 
 def plot_final_path_3D(nodes: list, start_node: Node, end_node: Node, final_node: Node, obstacles: list):
@@ -281,15 +270,17 @@ def main():
     drone = Quadrotor()
     rrt_planner = RRT(start_node=start_node, end_node=end_node, workspace=WS, drone=drone)
     iter=0
-    while (iter<MAX_ITER): #not(rrt_planner.reached_goal) and
+    while (iter<MAX_ITER):
         rrt_planner.plan()
         iter+=1
         print(iter)
-
-
-    plot_final_path_2D(rrt_planner.graph.nodes, start_node, end_node, rrt_planner.final_node, WS.obstacles)
-    plot_final_path_3D(rrt_planner.graph.nodes, start_node, end_node, rrt_planner.final_node, WS.obstacles)
-    plt.show()
+    
+    if rrt_planner.reached_goal:
+        plot_final_path_2D(rrt_planner.graph.nodes, start_node, end_node, rrt_planner.final_node, WS.obstacles)
+        plot_final_path_3D(rrt_planner.graph.nodes, start_node, end_node, rrt_planner.final_node, WS.obstacles)
+        plt.show()
+    else:
+        print("GOAL NOT REACHED")
 
 
 if __name__ == "__main__":
