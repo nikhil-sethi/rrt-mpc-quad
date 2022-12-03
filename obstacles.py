@@ -16,6 +16,7 @@ class Obstacle3D:
         self.mesh = mesh
         self.color:tuple = color # RGBA
 
+        self.extent = self.get_extent()
         self.create_urdf()
 
     def create_urdf(self):
@@ -62,14 +63,20 @@ class Obstacle3D:
             physicsClientId=client
             )
 
-    @property
-    def extent(self):
-        return (self.pose.origin - self.bbox, self.pose.origin + self.bbox)
+    def get_extent(self):
+        ll = [self.pose.origin[i] - self.bbox[i]/2 for i in range(3)]
+        ul = [self.pose.origin[i] + self.bbox[i]/2 for i in range(3)]
+        return (ll, ul)
 
-    # def is_colliding(self, point:list):
-    #     extent = self.extent
-    #     if extent[0] < point[0] <
-
+    def is_colliding(self, point:list):
+        extent = self.extent
+        x_in = extent[0][0] < point[0] < extent[1][0]
+        y_in = extent[0][1] < point[1] < extent[1][1]
+        z_in = extent[0][2] < point[2] < extent[1][2]
+        if x_in and y_in and z_in:
+            return True
+        return False
+        
 class Cuboid(Obstacle3D):
     def __init__(self, name, origin, orientation, sides:tuple, color = Color.GRAY) -> None:
         super().__init__(name, origin, orientation, sides, color=color)

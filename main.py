@@ -19,7 +19,7 @@ import time
 import argparse
 import numpy as np
 from maps import load_map, MAPS
-
+import pybullet as p
 
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
@@ -32,6 +32,8 @@ from gym import spaces
 
 from gym_pybullet_drones.envs.BaseAviary import BaseAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
+
+from utils import Color
 
 class PlanAviary(CtrlAviary):
 	"""Multi-drone environment class for control applications."""
@@ -84,7 +86,7 @@ class PlanAviary(CtrlAviary):
 			Whether to draw the drones' axes and the GUI RPMs sliders.
 
 		"""
-		self.map = map
+		self.map = MAPS[map]
 		super().__init__(drone_model=drone_model,
 						 num_drones=num_drones,
 						 neighbourhood_radius=neighbourhood_radius,
@@ -99,13 +101,16 @@ class PlanAviary(CtrlAviary):
 						 user_debug_gui=user_debug_gui,
 						 output_folder=output_folder,
 						 )
-		
-
+	
+	@staticmethod
+	def plot_point(position, color:Color = Color.BLUE):
+		"""Used to plot trajectories"""
+		p.addUserDebugPoints(pointPositions = [position], pointColorsRGB = [color.value[:-1]])
 
 	def _addObstacles(self):
 		"""Add obstacles to the environment.
 		"""
-		load_map(MAPS[self.map], self.CLIENT)
+		load_map(self.map, self.CLIENT)
 
 					   
 					   
@@ -225,7 +230,7 @@ def run(
 	for i in range(0, int(duration_sec*env.SIM_FREQ), AGGR_PHY_STEPS):
 
 		#### Step the simulation ###################################
-		action = {str(i): np.array([0,0,0,0]) for i in range(num_drones)}
+		# action = {str(i): np.array([0,0,0,0]) for i in range(num_drones)}
 		obs, reward, done, info = env.step(action)
 
 		#### Compute control at the desired frequency ##############
@@ -239,8 +244,9 @@ def run(
 																	   # target_pos=INIT_XYZS[j, :] + TARGET_POS[wp_counters[j], :],
 																	   target_rpy=INIT_RPYS[j, :]
 																	   )
-								
-
+				pos = obs[str(j)]["state"][:3]								
+				env.plot_point(pos, color=Color.BLUE)
+			
 			#### Go to the next way point and loop #####################
 			for j in range(num_drones): 
 				wp_counters[j] = wp_counters[j] + 1 if wp_counters[j] < (NUM_WP-1) else 0
@@ -254,9 +260,9 @@ def run(
 					   # control=np.hstack([INIT_XYZS[j, :]+TARGET_POS[wp_counters[j], :], INIT_RPYS[j, :], np.zeros(6)])
 					   )
 
-		#### Printout ##############################################
-		if i%env.SIM_FREQ == 0:
-			env.render()
+		# #### Printout ##############################################
+		# if i%env.SIM_FREQ == 0:
+		# 	env.render()
 			
 		#### Sync the simulation ###################################
 		if gui:
