@@ -6,12 +6,21 @@ This is going to be one KILLER project.
 ## Setup
 ```
 git clone git@github.com:nikhil-sethi/rrt-mpc-quad.git
+cd rrt-mpc-quad
 chmod +x ./tooling/install.sh
 ./tooling/install.sh
 ```
 
-### Obstacles
+## Run
+```
+python main.py --map 1
+```
+If everything worked correctly, you should see the drone follow a circular trajectory like the following image
 
+<img src="media/trajectory.png" alt="circle trajectory" width="450"> 
+
+## API
+### Obstacles
 
 A small sketch explaining how to create a new obstacle
 ```python
