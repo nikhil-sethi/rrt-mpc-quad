@@ -34,6 +34,10 @@ from gym_pybullet_drones.envs.BaseAviary import BaseAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 
 from utils import Color
+from planner.sample_based import RRT
+from planner.spaces import Space
+from planner.graph import Node
+
 
 class PlanAviary(CtrlAviary):
 	"""Multi-drone environment class for control applications."""
@@ -107,12 +111,24 @@ class PlanAviary(CtrlAviary):
 		"""Used to plot trajectories"""
 		p.addUserDebugPoints(pointPositions = [position], pointColorsRGB = [color.value[:-1]])
 
+	@staticmethod
+	def plot_line(from_pos, to_pos, color:Color = Color.BLUE):
+		"""Used to plot trajectories"""
+		p.addUserDebugLine(lineFromXYZ = from_pos, lineToXYZ = to_pos, lineColorRGB = [color.value[:-1]])
+
 	def _addObstacles(self):
 		"""Add obstacles to the environment.
 		"""
 		load_map(self.map, self.CLIENT)
 
-					   
+	def plan(self, goal, method = 'rrt*'):
+		
+		start = Node(pos = self.INIT_XYZS[0])
+		goal = Node(pos = [-0.6, 0.6, 0.5])
+		ws = Space(low=[-1, -1, 0], high=[1, 1, 1])
+		if method == 'rrt':
+			planner = RRT(space=ws, start=start, goal=goal, map=self.map)
+		return planner.run()
 					   
 DEFAULT_DRONES = DroneModel("cf2x")
 DEFAULT_NUM_DRONES = 1
@@ -208,6 +224,13 @@ def run(
 						user_debug_gui=user_debug_gui,
 						map=map
 						)
+	plan = env.plan(goal=[-0.6,0.6,0.3], method='rrt')
+	prev_pos = env.INIT_XYZS[0]
+	for node in plan:
+		env.plot_point(node.pos)
+		# try:
+		env.plot_line(prev_pos, node.pos)
+		prev_pos = node.pos
 
 	#### Obtain the PyBullet Client ID from the environment ####
 	PYB_CLIENT = env.getPyBulletClient()

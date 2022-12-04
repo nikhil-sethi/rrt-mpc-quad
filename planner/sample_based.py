@@ -1,5 +1,9 @@
-from spaces import Space
-from graph import Graph
+from .spaces import Space
+from .graph import Graph, Node
+import matplotlib.pyplot as plt
+import numpy as np
+
+DIST_TH = 0.1
 
 class SamplingPlanner:
     def __init__(self, start, goal, space:Space, map) -> None:
@@ -8,6 +12,15 @@ class SamplingPlanner:
         self.map:list = map # list of obstacles
         self.space = space
         self.graph = Graph(init_node=start) 
+    
+    def check_collision_connection(self, node_a, node_b):
+        return False
+
+    def check_collision_point(self, point:list):
+        for obs in self.map:
+            if obs.is_colliding(point):
+                return True
+        return False
     
     def get_free_sample(self):
         colliding = True
@@ -25,35 +38,59 @@ class SamplingPlanner:
 
 class RRT(SamplingPlanner):
     def __init__(self, start, goal, space:Space, map) -> None:
-        super().__init__(self, start, goal, space, map)
+        super().__init__(start, goal, space, map)
         self.best_cost = 0
         self.max_depth = 10
+        self.reached_goal = False
+        self.num_nodes = len(self.graph.nodes)
+
+    def check_reached_goal(self):
+        dist = self.graph.euclidean_metric(self.graph.nodes[-1].pos, self.goal.pos)
+        # print(dist)
+        if dist < DIST_TH:
+            self.reached_goal = True
+    
+    def plot_final_path(self):
+        fig = plt.figure()
+        ax = plt.axes(projection='3d')
+        plt.title("final graph")
+        nodes = self.graph.nodes
+
+        for j in range(len(nodes)):
+            path_x = np.array([nodes[j].connections[i].pos[0] for i in range(len(nodes[j].connections))])
+            path_y = np.array([nodes[j].connections[i].pos[1] for i in range(len(nodes[j].connections))])
+            path_z = np.array([nodes[j].connections[i].pos[2] for i in range(len(nodes[j].connections))])
+            ax.plot3D(path_x, path_y, path_z,"r--")
+        ax.plot3D(path_x, path_y, path_z, "g")  
+        ax.plot3D(self.start.pos[0], self.start.pos[1],self.start.pos[2], "bo", markersize=10, label="start")
+        ax.plot3D(self.goal.pos[0], self.goal.pos[1],self.start.pos[2], "go", markersize=10, label="goal")
+        plt.legend()
+        plt.grid()
+        plt.show()
 
     def step(self):
         """one step of the planner"""
-        
-        # Sample a point in free space
-        q = self.get_free_sample()
-        q_p, cost = self.graph.closest_node(q)
-        e = self.get_free_connection(q, q_p)
-        
-        return q, e, cost
-        """
-        initialise graph with start node
-        sample a new point
-        check for collision with obstacles in map
-        do until point in free space is found
-        """
+        new_node_pos = self.space.sample()
+        if self.check_collision_point(new_node_pos):
+            return
+
+        closest_node = self.graph.closest_node(new_node_pos)
+        if self.check_collision_connection(closest_node.pos, new_node_pos):
+            return
+
+        new_node = Node(pos=new_node_pos, parent=closest_node, id=self.num_nodes)
+        self.num_nodes+=1
+        self.graph.add_node(new_node)
+        self.check_reached_goal()
+
     def backtrack(self, point):
         """Returns a continuous connected path from point to start node"""
-        
+        pass
 
     def run(self):
-        for i in range(self.max_depth):
-            q, e, cost = self.step()
-            self.graph.add_edge(e)
-            self.graph.add_node(q)
+        # for i in range(self.max_iters):
+        while not self.reached_goal:
+            self.step()
 
-            dist_to_target = self.graph.euclidean_metric(q, self.goal)
-            if cost < dist_to_target:
-                return self.backtrack()
+        return self.graph.nodes[-1].connections
+

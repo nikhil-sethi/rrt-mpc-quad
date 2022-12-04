@@ -70,12 +70,7 @@ class Obstacle3D:
 
     def is_colliding(self, point:list):
         extent = self.extent
-        x_in = extent[0][0] < point[0] < extent[1][0]
-        y_in = extent[0][1] < point[1] < extent[1][1]
-        z_in = extent[0][2] < point[2] < extent[1][2]
-        if x_in and y_in and z_in:
-            return True
-        return False
+        return all([extent[0][0] < point[i] < extent[1][i] for i in range(len((point)))])
         
 class Cuboid(Obstacle3D):
     def __init__(self, name, origin, orientation, sides:tuple, color = Color.GRAY) -> None:
