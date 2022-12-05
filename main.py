@@ -7,7 +7,7 @@ Example
 -------
 In a terminal, run as:
 
-	$ python plan.py
+	$ python main.py
 
 Notes
 -----
@@ -15,24 +15,15 @@ The drones move, at different altitudes, along cicular trajectories
 in the X-Y plane, around point (0, -.3).
 
 """
-import os
 import time
 import argparse
-from datetime import datetime
-import pdb
-import math
-import random
 import numpy as np
+from maps import load_map, MAPS
 import pybullet as p
-import matplotlib.pyplot as plt
-from maps import load_map
-
 
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
-from gym_pybullet_drones.envs.VisionAviary import VisionAviary
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
-from gym_pybullet_drones.control.SimplePIDControl import SimplePIDControl
 from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.utils.utils import sync, str2bool
 
@@ -41,6 +32,8 @@ from gym import spaces
 
 from gym_pybullet_drones.envs.BaseAviary import BaseAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
+
+from utils import Color
 
 class PlanAviary(CtrlAviary):
 	"""Multi-drone environment class for control applications."""
@@ -93,7 +86,7 @@ class PlanAviary(CtrlAviary):
 			Whether to draw the drones' axes and the GUI RPMs sliders.
 
 		"""
-		self.map = map
+		self.map = MAPS[map]
 		super().__init__(drone_model=drone_model,
 						 num_drones=num_drones,
 						 neighbourhood_radius=neighbourhood_radius,
@@ -108,26 +101,17 @@ class PlanAviary(CtrlAviary):
 						 user_debug_gui=user_debug_gui,
 						 output_folder=output_folder,
 						 )
-		
-
+	
+	@staticmethod
+	def plot_point(position, color:Color = Color.BLUE):
+		"""Used to plot trajectories"""
+		p.addUserDebugPoints(pointPositions = [position], pointColorsRGB = [color.value[:-1]])
 
 	def _addObstacles(self):
 		"""Add obstacles to the environment.
-		Extends the superclass method and add the gate build of cubes and an architrave.
 		"""
-		# super()._addObstacles()
 		load_map(self.map, self.CLIENT)
-		# for i in range(10): 
-		# 	p.loadURDF("cube_small.urdf",
-		# 			   [-.3, -1, .02+i*0.05],
-		# 			   p.getQuaternionFromEuler([0, 0, 0]),
-		# 			   physicsClientId=self.CLIENT
-		# 			   )
-		# 	p.loadURDF("cube_small.urdf",
-		# 			   [.3, -1, .02+i*0.05],
-		# 			   p.getQuaternionFromEuler([0,0,0]),
-		# 			   physicsClientId=self.CLIENT
-		# 			   )
+
 					   
 					   
 DEFAULT_DRONES = DroneModel("cf2x")
@@ -175,13 +159,18 @@ def run(
 
 	#### Initialize a circular trajectory ######################
 	PERIOD = 10
-	NUM_WP = control_freq_hz*PERIOD
+	NUM_WP = control_freq_hz*PERIOD 
 	TARGET_POS = np.zeros((NUM_WP,3))
 
 	for i in range(NUM_WP):
 		TARGET_POS[i, :] = R*np.cos((i/NUM_WP)*(2*np.pi)+np.pi/2)+INIT_XYZS[0, 0], R*np.sin((i/NUM_WP)*(2*np.pi)+np.pi/2)-R+INIT_XYZS[0, 1], 0
 	wp_counters = np.array([int((i*NUM_WP/6)%NUM_WP) for i in range(num_drones)])
 
+	# for i in range(NUM_WP):
+	# 	if i>NUM_WP//2:
+	# 		pass
+	# 	else:
+	# 		TARGET_POS[i, :] = 
 	#### Debug trajectory ######################################
 	#### Uncomment alt. target_pos in .computeControlFromState()
 	# INIT_XYZS = np.array([[.3 * i, 0, .1] for i in range(num_drones)])
@@ -204,34 +193,21 @@ def run(
 	# wp_counters = np.array([0 for i in range(num_drones)])
 
 	#### Create the environment with or without video capture ##
-	if vision: 
-		env = VisionAviary(drone_model=drone,
-						   num_drones=num_drones,
-						   initial_xyzs=INIT_XYZS,
-						   initial_rpys=INIT_RPYS,
-						   physics=physics,
-						   neighbourhood_radius=10,
-						   freq=simulation_freq_hz,
-						   aggregate_phy_steps=AGGR_PHY_STEPS,
-						   gui=gui,
-						   record=record_video,
-						   obstacles=obstacles
-						   )                     
-	else: 
-		env = PlanAviary(drone_model=drone,
-						 num_drones=num_drones,
-						 initial_xyzs=INIT_XYZS,
-						 initial_rpys=INIT_RPYS,
-						 physics=physics,
-						 neighbourhood_radius=10,
-						 freq=simulation_freq_hz,
-						 aggregate_phy_steps=AGGR_PHY_STEPS,
-						 gui=gui,
-						 record=record_video,
-						 obstacles=obstacles,
-						 user_debug_gui=user_debug_gui,
-						 map=map
-						 )
+
+	env = PlanAviary(drone_model=drone,
+						num_drones=num_drones,
+						initial_xyzs=INIT_XYZS,
+						initial_rpys=INIT_RPYS,
+						physics=physics,
+						neighbourhood_radius=10,
+						freq=simulation_freq_hz,
+						aggregate_phy_steps=AGGR_PHY_STEPS,
+						gui=gui,
+						record=record_video,
+						obstacles=obstacles,
+						user_debug_gui=user_debug_gui,
+						map=map
+						)
 
 	#### Obtain the PyBullet Client ID from the environment ####
 	PYB_CLIENT = env.getPyBulletClient()
@@ -244,10 +220,7 @@ def run(
 					)
 
 	#### Initialize the controllers ############################
-	if drone in [DroneModel.CF2X, DroneModel.CF2P]:
-		ctrl = [DSLPIDControl(drone_model=drone) for i in range(num_drones)]
-	elif drone in [DroneModel.HB]:
-		ctrl = [SimplePIDControl(drone_model=drone) for i in range(num_drones)]
+	ctrl = [DSLPIDControl(drone_model=drone) for i in range(num_drones)]
 
 	#### Run the simulation ####################################
 	CTRL_EVERY_N_STEPS = int(np.floor(env.SIM_FREQ/control_freq_hz))
@@ -256,11 +229,8 @@ def run(
 	START = time.time()
 	for i in range(0, int(duration_sec*env.SIM_FREQ), AGGR_PHY_STEPS):
 
-		#### Make it rain rubber ducks #############################
-		# if i/env.SIM_FREQ>5 and i%10==0 and i/env.SIM_FREQ<10: p.loadURDF("duck_vhacd.urdf", [0+random.gauss(0, 0.3),-0.5+random.gauss(0, 0.3),3], p.getQuaternionFromEuler([random.randint(0,360),random.randint(0,360),random.randint(0,360)]), physicsClientId=PYB_CLIENT)
-
 		#### Step the simulation ###################################
-		action = {str(i): np.array([0,0,0,0]) for i in range(num_drones)}
+		# action = {str(i): np.array([0,0,0,0]) for i in range(num_drones)}
 		obs, reward, done, info = env.step(action)
 
 		#### Compute control at the desired frequency ##############
@@ -274,8 +244,9 @@ def run(
 																	   # target_pos=INIT_XYZS[j, :] + TARGET_POS[wp_counters[j], :],
 																	   target_rpy=INIT_RPYS[j, :]
 																	   )
-								
-
+				pos = obs[str(j)]["state"][:3]								
+				env.plot_point(pos, color=Color.BLUE)
+			
 			#### Go to the next way point and loop #####################
 			for j in range(num_drones): 
 				wp_counters[j] = wp_counters[j] + 1 if wp_counters[j] < (NUM_WP-1) else 0
@@ -289,17 +260,10 @@ def run(
 					   # control=np.hstack([INIT_XYZS[j, :]+TARGET_POS[wp_counters[j], :], INIT_RPYS[j, :], np.zeros(6)])
 					   )
 
-		#### Printout ##############################################
-		if i%env.SIM_FREQ == 0:
-			env.render()
-			#### Print matrices with the images captured by each drone #
-			if vision:
-				for j in range(num_drones):
-					print(obs[str(j)]["rgb"].shape, np.average(obs[str(j)]["rgb"]),
-						  obs[str(j)]["dep"].shape, np.average(obs[str(j)]["dep"]),
-						  obs[str(j)]["seg"].shape, np.average(obs[str(j)]["seg"])
-						  )
-
+		# #### Printout ##############################################
+		# if i%env.SIM_FREQ == 0:
+		# 	env.render()
+			
 		#### Sync the simulation ###################################
 		if gui:
 			sync(i, START, env.TIMESTEP)

@@ -1,28 +1,17 @@
-import pybullet as p
-import os
+from obstacles import Cuboid, Cube
+from utils import Color
 
-def load_takeoff_land(client):
-    # Takeoff base
-    p.loadURDF(os.getcwd() + "/maps/take_off_base.urdf",
-                [0.6, -0.6, 0.3],
-                p.getQuaternionFromEuler([0, 0, 0]),
-                physicsClientId=client
-                )
+MAP_0 = [Cube(name = "landing", origin=[-0.6, 0.6, 0.15], orientation = [0,0,0], sides=[0.3, 0.3, 0.3], color = Color.GREEN),
+        Cube(name = "take_off", origin=[0.6, -0.6, 0.15], orientation = [0,0,0], sides=[0.3, 0.3, 0.3], color = Color.RED)]
 
-    # End Landing base
-    p.loadURDF(os.getcwd() + "/maps/landing_base.urdf",
-                [-0.6, 0.6, 0.3],
-                p.getQuaternionFromEuler([0, 0, 0]),
-                physicsClientId=client
-                )
+MAP_1 = MAP_0.copy()
+MAP_1.extend([
+    Cuboid(name = "wall_a", origin = [0, 0, 0.3], orientation = [0,0, 3.14/4], sides=[0.7, 0.1, 0.6], color = Color.GLASS)
+])
+
+MAPS = [MAP_0, MAP_1]
 
 
-def load_map(i, client):
-    load_takeoff_land(client)
-    if i == 1: # Map 1
-        # wall A
-        p.loadURDF(os.getcwd() + "/maps/wall_a.urdf",
-                [0, 0, 0.5],
-                p.getQuaternionFromEuler([0, 0, 0.785]),
-                physicsClientId=client
-                )
+def load_map(map:list, client):
+    for obs in map:
+        obs.load_urdf(client)
