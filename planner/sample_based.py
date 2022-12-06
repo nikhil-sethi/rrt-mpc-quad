@@ -3,7 +3,7 @@ from .graph import Graph, Node
 import matplotlib.pyplot as plt
 import numpy as np
 
-DIST_TH = 0.1
+DIST_TH = 0.2
 
 class SamplingPlanner:
     def __init__(self, start, goal, space:Space, map) -> None:
@@ -19,7 +19,7 @@ class SamplingPlanner:
         y_s = np.linspace(node_a_pos[1], node_b_pos[1], N)
         z_s = np.linspace(node_a_pos[2], node_b_pos[2], N)
         for i in range(x_s.shape[0]):
-            coll = self.check_collision_point([x_s, y_s, z_s])
+            coll = self.check_collision_point([x_s[i], y_s[i], z_s[i]])
             if coll:
                 return True
         return False
@@ -54,9 +54,10 @@ class RRT(SamplingPlanner):
 
     def check_reached_goal(self):
         dist = self.graph.euclidean_metric(self.graph.nodes[-1].pos, self.goal.pos)
-        # print(dist)
+        print(round(dist,3))
         if dist < DIST_TH:
             self.reached_goal = True
+            print("Final distance",dist)
     
     def plot_final_path(self):
         fig = plt.figure()

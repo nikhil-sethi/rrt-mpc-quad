@@ -9,7 +9,7 @@ MAP_1 = MAP_0 + [
 ]
 
 MAP_2 = MAP_0 + [
-    Cuboid(name = "wall_b", origin = [0, 0, 1], orientation = [0,0, 3.14/4], sides=[3, 0.1, 2], color = Color.BLUE)
+    Cuboid(name = "wall_b", origin = [0, 0, 0.5], orientation = [0,0, 3.14/4], sides=[1.5, 0.1, 1], color = Color.BLUE)
 ]
 
 MAPS = [MAP_0, MAP_1, MAP_2]
