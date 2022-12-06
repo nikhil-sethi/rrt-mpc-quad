@@ -31,7 +31,7 @@ def traj(t, coeffs):
     return y
 
 # waypont conditions
-t = [0, 2, 3, 5]
+t = [0, 2, 5, 7]
 # x = [0, 2, 3, 5]   # position
 # x_1 = [5, 5, 5, 5]
 # x_2 = [0, 0, 0, 0]
@@ -39,12 +39,17 @@ t = [0, 2, 3, 5]
 k = 4 # order of control
 
 x = np.array([
-    [0, 2, 3, 5], # pos
-    [0, 5, 5, 5], # vel
+    [0, 2, 4, 5], # pos
+    [0, 1, 0, 5], # vel
     [0, 0, 0, 0], # acc
     [0, 0, 0, 0]  # jerk
 ])
-
+y = np.array([
+    [0, 4, 2, 5], # pos
+    [0, 0.5, 0, 5], # vel
+    [0, 0, 0, 0], # acc
+    [0, 0, 0, 0]  # jerk
+])
 
 def get_bounds(x, k, t):
     bounds = np.zeros((2*k, len(t)-1))
@@ -54,8 +59,9 @@ def get_bounds(x, k, t):
     return bounds
 
 def get_M(t_id, t):
-    t_i = t[t_id]
-    t_f = t[t_id +1]
+    print(t)
+    t_i = t[0]
+    t_f = t[1]
     M = np.zeros((2*k, 2*k)) 
     for i in range(k):
         for j in range(2*k):
@@ -67,17 +73,36 @@ def get_M(t_id, t):
 
 def get_coeffs(x, k, t_id, t):
     M = get_M(t_id, t)
-    bounds = get_bounds(x[:,:t_id+2], k, t)
+    bounds = get_bounds(x[:,t_id:t_id+2], k, t)
     coeffs = np.linalg.inv(M) @ bounds
     return coeffs
 
-t_id = 0
+t_id = 0 
 
-coeffs = get_coeffs(x, k, t_id, t[:t_id+2])
+coeffs_x = get_coeffs(x, k, t_id, t[t_id:t_id+2])
+coeffs_y = get_coeffs(y, k, t_id, t[t_id:t_id+2])
 
-print(coeffs)
+# print(coeffs)
 times = np.linspace(t[t_id],t[t_id+1],20)
-plan = traj(times, coeffs)
+plan_x = traj(times, coeffs_x)
+plan_y = traj(times, coeffs_y)
 
-plt.plot(times, plan, 'r.')
+plt.plot(plan_x, plan_y, 'r-')
+
+t_id = 1
+
+coeffs_x = get_coeffs(x, k, t_id, t[t_id:t_id+2])
+coeffs_y = get_coeffs(y, k, t_id, t[t_id:t_id+2])
+
+# print(coeffs)
+times = np.linspace(t[t_id],t[t_id+1],20)
+plan_x = traj(times, coeffs_x)
+plan_y = traj(times, coeffs_y)
+
+plt.plot(plan_x, plan_y, 'r-')
+
+
+plt.plot(x[0][:t_id+2], y[0][:t_id+2], 'b-')
+# plt.plot(x[:t_id+2], y[:t_id+2], 'b.')
+
 plt.show()
