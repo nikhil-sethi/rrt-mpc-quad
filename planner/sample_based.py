@@ -14,6 +14,14 @@ class SamplingPlanner:
         self.graph = Graph(init_node=start) 
     
     def check_collision_connection(self, node_a, node_b):
+        N = 20
+        x_s = np.linspace(node_a.pos[0], node_b.pos[0], N)
+        y_s = np.linspace(node_a.pos[1], node_b.pos[1], N)
+        z_s = np.linspace(node_a.pos[2], node_b.pos[2], N)
+        for i in range(x_s.shape[0]):
+            coll = self.check_collision_point([x_s, y_s, z_s])
+            if coll:
+                return True
         return False
 
     def check_collision_point(self, point:list):
