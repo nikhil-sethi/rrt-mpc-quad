@@ -3,7 +3,7 @@ from .graph import Graph, Node
 import matplotlib.pyplot as plt
 import numpy as np
 
-DIST_TH = 0.2
+DIST_TH = 0.1
 
 class SamplingPlanner:
     def __init__(self, start, goal, space:Space, map) -> None:
@@ -54,10 +54,9 @@ class RRT(SamplingPlanner):
 
     def check_reached_goal(self):
         dist = self.graph.euclidean_metric(self.graph.nodes[-1].pos, self.goal.pos)
-        print(round(dist,3))
         if dist < DIST_TH:
             self.reached_goal = True
-            print("Final distance",dist)
+
     
     def plot_final_path(self):
         fig = plt.figure()
