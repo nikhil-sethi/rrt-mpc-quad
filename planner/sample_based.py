@@ -13,11 +13,11 @@ class SamplingPlanner:
         self.space = space
         self.graph = Graph(init_node=start) 
     
-    def check_collision_connection(self, node_a, node_b):
+    def check_collision_connection(self, node_a_pos:list, node_b_pos:list):
         N = 20
-        x_s = np.linspace(node_a.pos[0], node_b.pos[0], N)
-        y_s = np.linspace(node_a.pos[1], node_b.pos[1], N)
-        z_s = np.linspace(node_a.pos[2], node_b.pos[2], N)
+        x_s = np.linspace(node_a_pos[0], node_b_pos[0], N)
+        y_s = np.linspace(node_a_pos[1], node_b_pos[1], N)
+        z_s = np.linspace(node_a_pos[2], node_b_pos[2], N)
         for i in range(x_s.shape[0]):
             coll = self.check_collision_point([x_s, y_s, z_s])
             if coll:
@@ -82,7 +82,7 @@ class RRT(SamplingPlanner):
         if self.check_collision_point(new_node_pos):
             return
 
-        closest_node = self.graph.closest_node(new_node_pos)
+        closest_node = self.graph.closest_node(new_node_pos) # of type Node
         if self.check_collision_connection(closest_node.pos, new_node_pos):
             return
 
