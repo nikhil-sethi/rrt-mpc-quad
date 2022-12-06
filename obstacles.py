@@ -74,7 +74,7 @@ class Cuboid(Obstacle3D):
     
     def is_colliding(self, point:list):
         extent = self.extent
-        return all([extent[0][0] < point[i] < extent[1][i] for i in range(len((point)))])
+        return all([extent[0][i] < point[i] < extent[1][i] for i in range(len((point)))])
         
 class Cube(Cuboid):
     def __init__(self, name, origin, orientation, sides:tuple, color = Color.GRAY) -> None:

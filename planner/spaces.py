@@ -21,3 +21,12 @@ class Space:
     #     skewnorm()
 
     #     if prob>bias
+
+
+class Workspace:
+    def __init__(self, bounds_x: np.ndarray, bounds_y: np.ndarray, bounds_z: np.ndarray, obstacles: list):
+        self.bounds_x = bounds_x
+        self.bounds_y = bounds_y
+        self.bounds_z = bounds_z
+        self.obstacles = obstacles
+        # Add the obstacles in this class  
