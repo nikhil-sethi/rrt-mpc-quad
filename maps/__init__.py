@@ -8,7 +8,11 @@ MAP_1 = MAP_0 + [
     Cuboid(name = "wall_a", origin = [0, 0, 0.3], orientation = [0,0, 3.14/4], sides=[0.7, 0.1, 0.6], color = Color.GLASS)
 ]
 
-MAPS = [MAP_0, MAP_1]
+MAP_2 = MAP_0 + [
+    Cuboid(name = "wall_b", origin = [0, 0, 1], orientation = [0,0, 3.14/4], sides=[3, 0.1, 2], color = Color.BLUE)
+]
+
+MAPS = [MAP_0, MAP_1, MAP_2]
 
 
 def load_map(map:list, client):
