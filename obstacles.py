@@ -68,15 +68,15 @@ class Obstacle3D:
         ul = [self.pose.origin[i] + self.bbox[i]/2 for i in range(3)]
         return (ll, ul)
 
+class Cuboid(Obstacle3D):
+    def __init__(self, name, origin, orientation, sides:tuple, color = Color.GRAY) -> None:
+        super().__init__(name, origin, orientation, sides, color=color)
+    
     def is_colliding(self, point:list):
         extent = self.extent
         return all([extent[0][0] < point[i] < extent[1][i] for i in range(len((point)))])
         
-class Cuboid(Obstacle3D):
-    def __init__(self, name, origin, orientation, sides:tuple, color = Color.GRAY) -> None:
-        super().__init__(name, origin, orientation, sides, color=color)
-
-class Cube(Obstacle3D):
+class Cube(Cuboid):
     def __init__(self, name, origin, orientation, sides:tuple, color = Color.GRAY) -> None:
         assert sides[0] == sides[1] == sides[1]
         super().__init__(name, origin, orientation, sides, color=color)
