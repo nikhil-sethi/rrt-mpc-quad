@@ -88,7 +88,6 @@ class RRT(SamplingPlanner):
 
             closest_node = self.graph.closest_node(new_node_pos) # of type Node
             if self.check_collision_connection(closest_node.pos, new_node_pos):
-                print("Collision on edge")
                 return
             
 
@@ -103,12 +102,13 @@ class RRT(SamplingPlanner):
             if self.check_collision_point(new_node_pos):
                 return
 
-            closest_node = self.graph.closest_node(new_node_pos) # of type Node
-            if self.check_collision_connection(closest_node.pos, new_node_pos):
-                return
+            shortest_node = self.graph.shortest_node(new_node_pos) # of type Node
+            #for i in range(len(shortest_node)):
+            if self.check_collision_connection(shortest_node.pos, new_node_pos):
+                return #break
             
 
-            new_node = Node(pos=new_node_pos, parent=closest_node, id=self.num_nodes)
+            new_node = Node(pos=new_node_pos, parent=shortest_node, id=self.num_nodes)
             self.num_nodes+=1
             self.graph.add_node(new_node)
             self.check_reached_goal()
