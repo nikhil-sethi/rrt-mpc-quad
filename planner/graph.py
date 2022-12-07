@@ -2,7 +2,7 @@ import math
 import numpy as np
 
 class Node:
-    def __init__(self, pos: np.ndarray, parent=None, id=0) -> None:
+    def __init__(self, pos: np.ndarray, parent=None, id=0, dist=0) -> None:
         self.id = id  # Only for debugging
         self.pos = pos
         self.parent = parent
@@ -11,7 +11,7 @@ class Node:
             self.cost_to_come = 0. # for RRT*
         else:
             self.connections = self.parent.connections + [self]
-            self.cost_to_come = self.parent.cost_to_come
+            self.cost_to_come = self.parent.cost_to_come + dist
 
     def add_cost(self,distance) -> None:
         self.cost_to_come = self.cost_to_come + distance

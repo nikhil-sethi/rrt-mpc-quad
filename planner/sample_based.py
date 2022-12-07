@@ -60,6 +60,8 @@ class RRT(SamplingPlanner):
         dist = self.graph.euclidean_metric(self.graph.nodes[-1].pos, self.goal.pos)
         if dist < DIST_TH:
             self.reached_goal = True
+            print("Final path distance = ",round(self.graph.nodes[-1].cost_to_come,3))
+        
     
     def plot_final_path(self):
         fig = plt.figure()
@@ -112,7 +114,8 @@ class RRT(SamplingPlanner):
             if coll:    # if no connection is collision free
                 return
 
-            new_node = Node(pos=new_node_pos, parent=parent_node, id=self.num_nodes)
+            dist = self.graph.euclidean_metric(new_node_pos,parent_node.pos)
+            new_node = Node(pos=new_node_pos, parent=parent_node, id=self.num_nodes, dist=dist)
             self.num_nodes+=1
             self.graph.add_node(new_node)
             self.check_reached_goal()
