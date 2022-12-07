@@ -2,14 +2,19 @@ import math
 import numpy as np
 
 class Node:
-     def __init__(self, pos: np.ndarray, parent=None, id=0):
+    def __init__(self, pos: np.ndarray, parent=None, id=0) -> None:
         self.id = id  # Only for debugging
         self.pos = pos
         self.parent = parent
         if parent is None:
             self.connections = [self]
+            self.cost_to_come = 0. # for RRT*
         else:
             self.connections = self.parent.connections + [self]
+            self.cost_to_come = self.parent.cost_to_come
+
+    def add_cost(self,distance) -> None:
+        self.cost_to_come = self.cost_to_come + distance
 
 class Graph:
     def __init__(self, init_node = None) -> None:
@@ -26,7 +31,7 @@ class Graph:
         """Euclidean distance"""
         return math.sqrt(sum([(a[i] - b[i])**2 for i in range(len(a))]))
 
-    def closest_node(self, point):
+    def closest_node(self, point) -> Node:
         min_dist = math.inf
         closest_node = None
         for node in self.nodes:
@@ -35,3 +40,9 @@ class Graph:
                 min_dist = dist
                 closest_node = node
         return closest_node
+        
+    def cost_to_come_nodes(self, point:list) -> list:
+
+        sorted_nodes = sorted(self.nodes, key=lambda n: n.cost_to_come + self.euclidean_metric(n.pos,point))[:max(len(self.nodes), 20)] # sort based on cost-to-come to new poit
+        
+        return sorted_nodes

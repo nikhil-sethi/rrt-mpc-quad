@@ -4,7 +4,7 @@ from utils import Quadrotor
 import matplotlib.pyplot as plt
 import numpy as np
 
-MODE = 'regular' # 'regular' rrt or rrt 'star'
+MODE = 'star' # 'regular' rrt or rrt 'star'
 MAX_ITER = 200
 DIST_TH = 0.01 # when node is within this distance to the goal, it is connected to the goal
 PERC_2_END_GOAL = 0.05 # This is the percentage of evaluations at the goal position
@@ -102,13 +102,17 @@ class RRT(SamplingPlanner):
             if self.check_collision_point(new_node_pos):
                 return
 
-            shortest_node = self.graph.shortest_node(new_node_pos) # of type Node
-            #for i in range(len(shortest_node)):
-            if self.check_collision_connection(shortest_node.pos, new_node_pos):
-                return #break
+            cost_to_come_list = self.graph.cost_to_come_nodes(new_node_pos)
+            for node in cost_to_come_list:
+                coll = self.check_collision_connection(node.pos,new_node_pos)
+                if not coll:
+                    parent_node = node
+                    break
             
+            if coll:    # if no connection is collision free
+                return
 
-            new_node = Node(pos=new_node_pos, parent=shortest_node, id=self.num_nodes)
+            new_node = Node(pos=new_node_pos, parent=parent_node, id=self.num_nodes)
             self.num_nodes+=1
             self.graph.add_node(new_node)
             self.check_reached_goal()
