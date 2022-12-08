@@ -53,14 +53,13 @@ class RRT(SamplingPlanner):
         super().__init__(start, goal, space, map)
         self.goal = goal
         self.best_cost = np.Inf
-        self.max_depth = 10
+        #self.max_depth = 10
         self.reached_goal = False
         self.path_improvements = 0
         self.done = False
         self.num_nodes = len(self.graph.nodes)
 
     def check_reached_goal(self) -> None:
-        #print("Goal check")
         if self.graph.nodes[-1].pos == self.goal.pos:
             if self.reached_goal:
                 if self.graph.nodes[-1].cost_to_come < self.best_cost:
@@ -134,11 +133,12 @@ class RRT(SamplingPlanner):
             self.check_reached_goal()
     elif MODE == 'star':
         def step(self):
-            """one step of the planner"""
+            # Sample new node and check for collision
             new_node_pos = self.space.sample(self.goal.pos,PERC_2_END_GOAL)
             if self.check_collision_point(new_node_pos):
                 return
 
+            # Build new connection based on cost-to-come and check for collision
             cost_to_come_list = self.graph.cost_to_come_nodes(new_node_pos)
             for node in cost_to_come_list:
                 coll = self.check_collision_connection(node.pos,new_node_pos)
@@ -146,13 +146,16 @@ class RRT(SamplingPlanner):
                     parent_node = node
                     break
             
-            if coll:    # if no connection is collision free
+            if coll:    # if no connection is collision free: new sample
                 return
 
+            # Add new node to graph
             dist = self.graph.euclidean_metric(new_node_pos,parent_node.pos)
             new_node = Node(pos=new_node_pos, parent=parent_node, id=self.num_nodes, dist=dist)
             self.num_nodes+=1
             self.graph.add_node(new_node)
+
+            # Check if goal is reached, deleted obsolete nodes and rewire nodes to improve path
             self.check_reached_goal()
             self.garbage_collection()
             self.rewire(new_node)
@@ -160,11 +163,12 @@ class RRT(SamplingPlanner):
         raise NotImplementedError()
 
 
-    def backtrack(self, point):
+    def backtrack(self, point): # still unused
         """Returns a continuous connected path from point to start node"""
         pass
 
     def run(self):
+        # Sample points until MAX_ITER iterations or until MAX_IMPR number of improvements made to the path
         for i in range(MAX_ITER):
             self.step()
             i+=1
