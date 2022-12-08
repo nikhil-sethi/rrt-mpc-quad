@@ -18,7 +18,7 @@ class SamplingPlanner:
         self.graph = Graph(init_node=start) 
     
     def check_collision_connection(self, node_a_pos:list, node_b_pos:list):
-        N = 20
+        N = int(self.graph.euclidean_metric(node_a_pos,node_b_pos)/0.05 + 1)
         x_s = np.linspace(node_a_pos[0], node_b_pos[0], N)
         y_s = np.linspace(node_a_pos[1], node_b_pos[1], N)
         z_s = np.linspace(node_a_pos[2], node_b_pos[2], N)
