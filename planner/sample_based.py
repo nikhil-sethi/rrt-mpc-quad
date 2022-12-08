@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 MODE = 'star' # 'regular' rrt or rrt 'star'
-MAX_ITER = 500
-MAX_IMPR = 2 # when node is within this distance to the goal, it is connected to the goal
+MAX_ITER = 2000
+MAX_IMPR = 10 # number of improvements the rrt* algorithm makes before it stops
 PERC_2_END_GOAL = 0.05 # This is the percentage of evaluations at the goal position
 
 class SamplingPlanner:
@@ -60,19 +60,19 @@ class RRT(SamplingPlanner):
         self.num_nodes = len(self.graph.nodes)
 
     def check_reached_goal(self) -> None:
-        if self.graph.nodes[-1] == self.goal:
+        #print("Goal check")
+        if self.graph.nodes[-1].pos == self.goal.pos:
             if self.reached_goal:
                 if self.graph.nodes[-1].cost_to_come < self.best_cost:
                     self.best_cost = self.graph.nodes[-1].cost_to_come
                     self.path_improvements+=1
-                    print("Current best path = ",self.best_cost)
-                    if self.path_improvents > MAX_IMPR:
+                    print("Current best path =",self.best_cost)
+                    if self.path_improvements > MAX_IMPR:
                         self.done = True
-                return
             else:
                 self.best_cost = self.graph.nodes[-1].cost_to_come
                 self.reached_goal = True
-                return
+                print("First path found with distance:",self.best_cost)
 
     def garbage_collection(self):
         if self.reached_goal:
@@ -81,10 +81,21 @@ class RRT(SamplingPlanner):
                     self.graph.remove_node(node)
         elif self.graph.nodes[-1].cost_to_come + self.graph.euclidean_metric(self.graph.nodes[-1].pos,self.goal.pos) > self.best_cost:
             self.graph.remove_node(self.graph.nodes[-1])
-        print("Collecting garbage... ",self.num_nodes," nodes remaining.")
 
-    def result(self) -> None:
-        print("Final path distance after ",self.path_improvements," improvements is ",round(self.graph.nodes[-1].cost_to_come,3))
+    def rewire(self, new_node:Node):
+        new_parent = None
+        best_rewire = np.Inf
+        for node in self.graph.nodes:
+            dist = self.graph.euclidean_metric(node.pos,new_node.pos)
+            if node.cost_to_come + dist < best_rewire:
+                new_parent = node
+        
+        if not new_parent is None:
+            new_node.rewire_node(new_parent,dist)
+
+    def result(self):
+        print(self.num_nodes,"nodes remaining.")
+        print("Final path distance after",self.path_improvements-1,"improvements is ",round(self.graph.nodes[-1].cost_to_come,3))
         
     
     def plot_final_path(self):
@@ -144,6 +155,7 @@ class RRT(SamplingPlanner):
             self.graph.add_node(new_node)
             self.check_reached_goal()
             self.garbage_collection()
+            self.rewire(new_node)
     else:
         raise NotImplementedError()
 
@@ -160,6 +172,8 @@ class RRT(SamplingPlanner):
                 break
         if self.reached_goal:
             self.result()
+        else:
+            print("No path found within iteration limit.")
 
         return self.graph.nodes[-1].connections
 
