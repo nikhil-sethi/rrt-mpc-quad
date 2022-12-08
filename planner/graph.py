@@ -25,6 +25,13 @@ class Graph:
     def add_node(self, point):
         self.nodes.append(point)
 
+    def remove_node(self, node: Node):
+        id = node.id
+        for i in range(len(self.graph.nodes)):
+            if self.graph.nodes[i].id == id:
+                self.graph.nodes.remove(i)
+        return
+
 
     @staticmethod
     def euclidean_metric(a, b):
