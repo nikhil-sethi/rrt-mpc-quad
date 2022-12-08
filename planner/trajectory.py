@@ -152,15 +152,21 @@ class TrajectoryGen():
 
         wps = self.wps
         assert len(X) == self.l*(self.m-2)*(self.n-1), "Insufficient or extra number of decision variables"
-        # (x,x_dot...x_n), (y,y_dot...y_n) ...(z)
+
+        self.constraints[:,[0,-1],0] = np.array(wps)[:-1,[0,-1]]    # first point is at rest, all n-1 derivatives are zero
         for i in range(self.l): # for all dimensions x,y,z...
-            self.constraints[i,0,:] = [wps[i][0]] + [0]*(self.n - 1)  # first point is at rest, all n-1 derivatives are zero
-            self.constraints[i,-1,:] = [wps[i][-1]] + [0]*(self.n - 1) # last point is at rest, all n-1 derivatives are zero
+            # self.constraints[i,0,:] = [wps[i][0]] + [0]*(self.n - 1)  
+            # self.constraints[i,-1,:] = [wps[i][-1]] + [0]*(self.n - 1) # last point is at rest, all n-1 derivatives are zero
             
             for j in range(self.m - 2): # for all points except first and last
                 idx = (i*(self.m-2) + j)*(self.n-1) # this conversion is needed becuase the decision variable is a 1D list, but constraints is 3D
                 self.constraints[i,j+1,:] = [wps[i][j+1]] + X[idx:idx + self.n-1]  # updates the n-1 derivatives for all points except first and last
-    
+    @property
+    def A(self):
+        """The boundary condition vector"""
+        _A = np.array([np.insert(self.constraints[i][1:,:], range(self.n), self.constraints[i][:-1,:], axis=1) for i in range(self.l)])
+
+        return _A.reshape(self.l, self.m-1, 2*self.n, 1)
 
 # time bound waypoints
 # (x,y,t)   2D
@@ -191,4 +197,5 @@ order = 4 # min snap
 tgen = TrajectoryGen(n = order, wps=waypoints)
 tgen.to_constraints(X)
 print(tgen.constraints)
+print(tgen.A)
 # plan = tgen.generate(d = 30) # numpy array of 30x2 points of the trajectory
