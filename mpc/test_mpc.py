@@ -1,6 +1,8 @@
 from solver import MPCSolver
 import numpy as np
 import matplotlib.pyplot as plt
+
+
 class Drone:
     def __init__(self):
         self.max_rotor_speed = 30000 
@@ -12,7 +14,7 @@ def main():
     drone = Drone()
     mpc_solver = MPCSolver(drone, dt=0.1)
 
-    sim_length = 100 # simulate 8sec
+    sim_length = 180 # simulate 8sec
 
     x = np.zeros((12,sim_length+1)) # states
     u = np.zeros((4,sim_length)) # inputs

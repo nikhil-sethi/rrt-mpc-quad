@@ -2,13 +2,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-MAX_ITER = 1000
+MAX_ITER = 100
 DIST_TH = 0.01
 PERC_2_END_GOAL = 0.05 # This is the percentage of evaluations at the goal position
 
 class Node:
      def __init__(self, pos: np.ndarray, parent=None, id=0):
-        self.id = id  # Only for debugging
+        self.id = id
         self.pos = pos
         self.parent = parent
         if parent is None:
@@ -123,7 +123,7 @@ class RRT:
     def sample_node_position(self) -> np.ndarray:
         x_sample = np.array(list(np.random.uniform(self.ws.bounds_x[0],self.ws.bounds_x[1], int(1//self.perc_endgoal))) + [self.end_goal.pos[0]])
         y_sample = np.array(list(np.random.uniform(self.ws.bounds_y[0],self.ws.bounds_y[1], int(1//self.perc_endgoal))) + [self.end_goal.pos[1]])
-        z_sample =  np.array(list(np.random.uniform(self.ws.bounds_z[0], self.ws.bounds_z[1], int(1//self.perc_endgoal))) + [self.end_goal.pos[2]])
+        z_sample = np.array(list(np.random.uniform(self.ws.bounds_z[0], self.ws.bounds_z[1], int(1//self.perc_endgoal))) + [self.end_goal.pos[2]])
         samples = np.vstack((x_sample, y_sample, z_sample)).T
         chosen_sample = samples[np.random.choice(len(samples))]
         return chosen_sample

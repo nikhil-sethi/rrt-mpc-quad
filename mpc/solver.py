@@ -11,7 +11,7 @@ from matplotlib.gridspec import GridSpec
 import casadi
 
 from dynamics import continuous_nonlinear_dynamics_3d as continuous_dynamics
-from util import extract_next_path_points, find_closest_point
+from util import extract_next_path_points
 from objectives import obj, objN
 
 class MPCSolver:
@@ -23,6 +23,8 @@ class MPCSolver:
         self.max_pitch_roll_rate = drone.max_pitch_roll_rate
         self.max_yaw_rate = drone.max_yaw_rate
         self.x0 = np.array([])
+        self.problem = {}
+        self.generate_pathplanner()
 
     def generate_pathplanner(self):        
         self.model.N = 10  # horizon length
@@ -41,9 +43,9 @@ class MPCSolver:
 
 
         #                     inputs                 |  states
-        #                 thrust       Mx       My       Mz        x        y        z       vx       vy       vz     roll    pitch      yaw    roll_rate   pitch_rate    yaw_rate
-        self.model.lb = np.array([0.0,                                    0.0,                  0.0,                  0.0, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf,   -self.max_pitch_roll, -self.max_pitch_roll, -np.pi,    -5*np.pi, -5*np.pi, -5*np.pi])
-        self.model.ub = np.array([self.max_rotor_speed,  self.max_rotor_speed, self.max_rotor_speed, self.max_rotor_speed,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf,    self.max_pitch_roll, self.max_pitch_roll,  np.pi,   5*np.pi, 5*np.pi, 5*np.pi])
+        #                                       omega1,                omega2,               omega3,               omega4,       x,       y,       z,      vx,      vy,      vz,                   roll,                pitch,    yaw,                   roll_rate,                pitch_rate,           yaw_rate
+        self.model.lb = np.array([                 0.0,                   0.0,                  0.0,                  0.0, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf,   -self.max_pitch_roll, -self.max_pitch_roll, -np.pi,   -self.max_pitch_roll_rate, -self.max_pitch_roll_rate, -self.max_yaw_rate])
+        self.model.ub = np.array([self.max_rotor_speed,  self.max_rotor_speed, self.max_rotor_speed, self.max_rotor_speed,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf,    self.max_pitch_roll,  self.max_pitch_roll,  np.pi,    self.max_pitch_roll_rate,  self.max_pitch_roll_rate,  self.max_yaw_rate])
 
         # Initial condition on vehicle states x
         self.model.xinitidx = range(4,16) # use this to specify on which variables initial conditions
@@ -66,12 +68,7 @@ class MPCSolver:
         # codeoptions.nlp.bfgs_init = 2.5*np.identity(16)
         # codeoptions.sqp_nlp.maxqps = 1      # maximum number of quadratic problems to be solved
         # codeoptions.sqp_nlp.reg_hessian = 5e-9 # increase this if exitflag=-8
-        # change this to your server or leave uncommented for using the 
-        # standard embotech server at https://forces.embotech.com 
-        # codeoptions.server = 'https://forces.embotech.com'
-        
-        # Creates code for symbolic model formulation given above, then contacts 
-        # server to generate new solver
+
         self.solver = self.model.generate_solver(options=codeoptions)
         
         x0i = np.zeros((self.model.nvar,1))
@@ -79,12 +76,12 @@ class MPCSolver:
     
     def compute_action(self, state, reference_path):
 
-        problem = {"x0": self.x0, "xinit": state}
+        self.problem = {"x0": self.x0, "xinit": state}
 
         next_path_points = extract_next_path_points(reference_path, state[:3], self.model.N)
-        problem["all_parameters"] = np.reshape(next_path_points, (self.model.npar*self.model.N,1))
+        self.problem["all_parameters"] = np.reshape(next_path_points, (self.model.npar*self.model.N,1))
 
-        output, exitflag, info = self.solver.solve(problem)
+        output, exitflag, info = self.solver.solve(self.problem)
 
         # Make sure the solver has exited properly.
         # assert exitflag == 1, "bad exitflag"
@@ -95,8 +92,8 @@ class MPCSolver:
         temp = np.zeros((np.max(self.model.nvar), self.model.N))
         for i in range(self.model.N):
             temp[:, i] = output['x{0:02d}'.format(i+1)]
-        problem["x0"] = temp
+        self.problem["x0"] = temp
         pred_u = temp[0:4, :]
         pred_x = temp[4:16, :]
-        return pred_u[:,0]
-
+        new_state = np.transpose(self.model.eq(np.concatenate((pred_u[:,0],pred_x[:,0]))))
+        return pred_u[:,0], new_state
