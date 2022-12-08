@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 MODE = 'star' # 'regular' rrt or rrt 'star'
-MAX_ITER = 200
-MAX_IMPR = 0.01 # when node is within this distance to the goal, it is connected to the goal
+MAX_ITER = 500
+MAX_IMPR = 2 # when node is within this distance to the goal, it is connected to the goal
 PERC_2_END_GOAL = 0.05 # This is the percentage of evaluations at the goal position
 
 class SamplingPlanner:
@@ -34,7 +34,7 @@ class SamplingPlanner:
                 return True
         return False
     
-    def get_free_sample(self):
+    def get_free_sample(self): # still unused
         colliding = True
         while colliding:
             sample = self.space.sample(self.goal.pos,PERC_2_END_GOAL)
@@ -45,7 +45,7 @@ class SamplingPlanner:
                     colliding = False
         return sample
     
-    def get_free_connection(self, q, q_p):
+    def get_free_connection(self, q, q_p): # still unused
         return (q,q_p)
 
 class RRT(SamplingPlanner):
@@ -66,7 +66,7 @@ class RRT(SamplingPlanner):
                     self.best_cost = self.graph.nodes[-1].cost_to_come
                     self.path_improvements+=1
                     print("Current best path = ",self.best_cost)
-                    if self.path_improvents > 10:
+                    if self.path_improvents > MAX_IMPR:
                         self.done = True
                 return
             else:
@@ -81,6 +81,7 @@ class RRT(SamplingPlanner):
                     self.graph.remove_node(node)
         elif self.graph.nodes[-1].cost_to_come + self.graph.euclidean_metric(self.graph.nodes[-1].pos,self.goal.pos) > self.best_cost:
             self.graph.remove_node(self.graph.nodes[-1])
+        print("Collecting garbage... ",self.num_nodes," nodes remaining.")
 
     def result(self) -> None:
         print("Final path distance after ",self.path_improvements," improvements is ",round(self.graph.nodes[-1].cost_to_come,3))
@@ -153,9 +154,12 @@ class RRT(SamplingPlanner):
 
     def run(self):
         for i in range(MAX_ITER):
-            while not self.done:
-                self.step()
-        self.result()
+            self.step()
+            i+=1
+            if self.done:
+                break
+        if self.reached_goal:
+            self.result()
 
         return self.graph.nodes[-1].connections
 
