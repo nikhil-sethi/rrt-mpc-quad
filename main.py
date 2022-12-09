@@ -34,7 +34,7 @@ from gym_pybullet_drones.envs.BaseAviary import BaseAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 
 from utils import Color
-from planner.sample_based import RRT
+from planner.sample_based import RRT, RRT_Star_MT
 from planner.spaces import Space
 from planner.graph import Node
 
@@ -58,7 +58,8 @@ class PlanAviary(CtrlAviary):
 				 obstacles=False,
 				 user_debug_gui=True,
 				 output_folder='results',
-				 map = 1
+				 map = 1,
+				 planner = 'rrt_star'
 				 ):
 		"""Initialization of an aviary environment for control applications.
 
@@ -121,13 +122,15 @@ class PlanAviary(CtrlAviary):
 		"""
 		load_map(self.map, self.CLIENT)
 
-	def plan(self, goal, method = 'rrt*'):
+	def plan(self, goal, method):
 		
 		start = Node(pos = self.INIT_XYZS[0])
 		goal = Node(pos = [-0.6, 0.6, 0.5])
 		ws = Space(low=[-1, -1, 0], high=[1, 1, 1])
 		if method == 'rrt':
 			planner = RRT(space=ws, start=start, goal=goal, map=self.map)
+		elif method == 'rrt_star':
+			planner = RRT_Star_MT(space=ws, start=start, goal=goal, map=self.map)
 		return planner.run()
 					   
 DEFAULT_DRONES = DroneModel("cf2x")
@@ -146,6 +149,8 @@ DEFAULT_DURATION_SEC = 12
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 DEFAULT_MAP = 1
+DEFAULT_PLANNER = 'rrt_star'
+
 def run(
 		drone=DEFAULT_DRONES,
 		num_drones=DEFAULT_NUM_DRONES,
@@ -162,7 +167,8 @@ def run(
 		duration_sec=DEFAULT_DURATION_SEC,
 		output_folder=DEFAULT_OUTPUT_FOLDER,
 		colab=DEFAULT_COLAB,
-		map = DEFAULT_MAP
+		map = DEFAULT_MAP,
+		planner = DEFAULT_PLANNER
 		):
 	#### Initialize the simulation #############################
 	H = .1
@@ -222,9 +228,10 @@ def run(
 						record=record_video,
 						obstacles=obstacles,
 						user_debug_gui=user_debug_gui,
-						map=map
+						map=map,
+						planner=planner
 						)
-	plan = env.plan(goal=[-0.6,0.6,0.3], method='rrt')
+	plan = env.plan(goal=[-0.6,0.6,0.3], method=planner)
 	prev_pos = env.INIT_XYZS[0]
 	for node in plan:
 		env.plot_point(node.pos)
@@ -320,7 +327,8 @@ if __name__ == "__main__":
 	parser.add_argument('--duration_sec',       default=DEFAULT_DURATION_SEC,         type=int,           help='Duration of the simulation in seconds (default: 5)', metavar='')
 	parser.add_argument('--output_folder',     default=DEFAULT_OUTPUT_FOLDER, type=str,           help='Folder where to save logs (default: "results")', metavar='')
 	parser.add_argument('--colab',              default=DEFAULT_COLAB, type=bool,           help='Whether example is being run by a notebook (default: "False")', metavar='')
-	parser.add_argument('--map',              default=DEFAULT_MAP, type=int,           help='Map number")', metavar='')
+	parser.add_argument('--map',              default=DEFAULT_MAP, type=int,           help='Map number (default: "Map 1")', metavar='')
+	parser.add_argument('--planner',              default=DEFAULT_PLANNER, type=str,           help='Planner (default: "rrt_star")', metavar='')
 	ARGS = parser.parse_args()
 
 	run(**vars(ARGS))
