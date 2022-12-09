@@ -34,7 +34,8 @@ from gym_pybullet_drones.envs.BaseAviary import BaseAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 
 from utils import Color
-from planner.sample_based import RRT, RRT_Star_MT
+from planner.sample_based import RRT
+from planner.sample_based import RRT_Star
 from planner.spaces import Space
 from planner.graph import Node
 
@@ -124,13 +125,16 @@ class PlanAviary(CtrlAviary):
 
 	def plan(self, goal, method):
 		
-		start = Node(pos = self.INIT_XYZS[0])
-		goal = Node(pos = [-0.6, 0.6, 0.5])
+		start = Node(pos = np.array(self.INIT_XYZS[0]))
+		goal = Node(pos = np.array([-0.6, 0.6, 0.5]))
 		ws = Space(low=[-1, -1, 0], high=[1, 1, 1])
 		if method == 'rrt':
 			planner = RRT(space=ws, start=start, goal=goal, map=self.map)
 		elif method == 'rrt_star':
-			planner = RRT_Star_MT(space=ws, start=start, goal=goal, map=self.map)
+			planner = RRT_Star(space=ws, start=start, goal=goal, map=self.map)
+		else:
+			raise NotImplementedError()
+
 		return planner.run()
 					   
 DEFAULT_DRONES = DroneModel("cf2x")
@@ -231,7 +235,8 @@ def run(
 						map=map,
 						planner=planner
 						)
-	plan = env.plan(goal=[-0.6,0.6,0.3], method=planner)
+
+	plan = env.plan(goal=np.array([-0.6,0.6,0.3]), method=planner)
 	prev_pos = env.INIT_XYZS[0]
 	for node in plan:
 		env.plot_point(node.pos)

@@ -2,53 +2,25 @@ import math
 import numpy as np
 
 class Node:
-    def __init__(self, pos: np.ndarray, parent=None, id=0, dist=0) -> None:
+     def __init__(self, pos: np.ndarray, parent=None, id=0):
         self.id = id  # Only for debugging
         self.pos = pos
-        if parent is None:
-            self.parent = parent
-            self.connections = [self]
-            self.cost_to_come = 0. # for RRT*
-        else:
-            self.rewire_node(parent,dist)
-
-    def add_cost(self,distance) -> None:
-        self.cost_to_come = self.cost_to_come + distance
-    
-    def rewire_node(self,parent,dist):
         self.parent = parent
-        self.connections = self.parent.connections + [self]
-        self.cost_to_come = self.parent.cost_to_come + dist
+        if parent is None:
+            self.connections = [self]
+            self.dist_from_start = 0
+        else:
+            self.connections = self.parent.connections + [self]
+            self.dist_from_start = self.parent.dist_from_start + np.linalg.norm(self.pos - self.parent.pos)
 
 class Graph:
-    def __init__(self, init_node = None) -> None:
-        self.nodes = []
-        if init_node != None:
-            self.nodes.append(init_node)
-
-    def add_node(self, point):
-        self.nodes.append(point)
-
+    def __init__(self, start_node: Node):
+        self.nodes = [start_node]
+    
+    def add_node(self, node: Node):
+        self.nodes.append(node)
+    
     def remove_node(self, node: Node):
-        self.nodes.remove(node)
-
-    @staticmethod
-    def euclidean_metric(a, b):
-        """Euclidean distance"""
-        return math.sqrt(sum([(a[i] - b[i])**2 for i in range(len(a))]))
-
-    def closest_node(self, point) -> Node:
-        min_dist = math.inf
-        closest_node = None
-        for node in self.nodes:
-            dist = self.euclidean_metric(node.pos, point) 
-            if  dist < min_dist:
-                min_dist = dist
-                closest_node = node
-        return closest_node
-        
-    def cost_to_come_nodes(self, point:list) -> list:
-
-        sorted_nodes = sorted(self.nodes, key=lambda n: n.cost_to_come + self.euclidean_metric(n.pos,point))[:max(len(self.nodes), 20)] # sort based on cost-to-come to new poit
-        
-        return sorted_nodes
+        nodes_arr = np.array(self.nodes)
+        nodes_arr = np.delete(nodes_arr, np.sum((np.array([node_s.id for node_s in self.nodes])==node.id)*np.arange(len(self.nodes))))
+        self.nodes = list(nodes_arr)
