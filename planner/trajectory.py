@@ -46,7 +46,7 @@ x = np.array([
 ])
 y = np.array([
     [0, 4, 2, 5], # pos
-    [0, 0.5, 0, 5], # vel
+    [0, -0.5, 0, 5], # vel
     [0, 0, 0, 0], # acc
     [0, 0, 0, 0]  # jerk
 ])
@@ -96,7 +96,7 @@ times = np.linspace(t[t_id],t[t_id+1],20)
 plan_x = traj(times, coeffs_x)
 plan_y = traj(times, coeffs_y)
 
-plt.plot(plan_x, plan_y, 'r-')
+# plt.plot(plan_x, plan_y, 'r-')
 
 t_id = 1
 
@@ -108,10 +108,10 @@ times = np.linspace(t[t_id],t[t_id+1],20)
 plan_x = traj(times, coeffs_x)
 plan_y = traj(times, coeffs_y)
 
-plt.plot(plan_x, plan_y, 'r-')
+# plt.plot(plan_x, plan_y, 'r-')
 
 
-plt.plot(x[0][:t_id+2], y[0][:t_id+2], 'b-')
+# plt.plot(x[0][:t_id+2], y[0][:t_id+2], 'b-')
 # plt.plot(x[:t_id+2], y[:t_id+2], 'b.')
 
 # plt.show()
@@ -187,17 +187,29 @@ class TrajectoryGen():
                 _M[:,2*i+1, j] = fact(j,i) * pow(self.t[1:], j-i)
         return _M
     
-    def generate(self, d=100):
-        C = np.linalg.inv(self.M)@self.A
-        tfunc = np.poly1d(C.flatten()[::-1])
-        return tfunc(np.linspace(0, self.t[-1], d))
+    def generate(self, d = 100):
+        # M = self.M
+        # for A_i in self.A:
+        C = np.linalg.inv(self.M) @ self.A
+
+        T = np.tile(np.linspace(self.t[:-1],self.t[1:], d//(self.m-1)).T.reshape(self.m-1, d//(self.m-1),1), 2*self.n)** np.arange(2*self.n)
+        print(C.shape, T.shape)
+        return (T@C).squeeze(axis=-1).transpose(0,2,1).transpose(2,1,0) # (l x d x m-1) 
+        # polys = np.array([np.poly1d(C[i].flatten()[::-1]) for i in range()])
+        
+        # return tfunc(np.linspace(0, self.t[-1], d))
+
+    def plot(self, plan):
+        for p_i in plan:
+            plt.plot(p_i[:,0],p_i[:,1], 'r-')
+        # plt.show()
 
 # time bound waypoints
 # (x,y,t)   2D
 waypoints = np.array([
-    [0,4], # all xs
-    # [0,2, 4], # all ys
-    [0,3]  # all ts
+    [0,2,4,7], # all xs
+    [0,4,2,7], # all ys
+    [0,3,5,7]  # all ts
 ])
 
 
@@ -212,8 +224,8 @@ X = [
     # x1_d, x1_dd, x1_ddd, x2_d, x2_dd ... m-1,
     # y1_d, y1_dd, y1_ddd, y2_d, y2_dd ... m-1,
     # z1_d, z1_dd, z1_ddd, z2_d, z2_dd ... m-1,
-    # 0,0,0, 
-    # 5,2,0,
+    1,0,0, 1,0,0, 
+    1,0,0, 1,0,0, 
 ] # 
 
 order = 4 # min snap
@@ -223,10 +235,16 @@ tgen.to_constraints(X)
 # print(tgen.constraints)
 # print(tgen.A)
 # print(tgen.M[0])
-C = np.linalg.inv(tgen.M) @tgen.A
+# C = np.linalg.inv(tgen.M) @tgen.A
 # print(C)
 
+plt.plot(waypoints[0],waypoints[1],'b-')
 plan = tgen.generate(d = 30) # numpy array of 30x2 points of the trajectory
 print(plan)
-plt.plot(np.linspace(0,waypoints[-1][-1], 30), plan, 'r.')
+tgen.plot(plan)
+# times = np.linspace(waypoints[-1,0],waypoints[-1,1], 30)
+# plt.plot(plan[0][:,0],plan[0][:,1], 'r-')
+# # plt.plot(times,plan[0][:,0], 'r-')
+# plt.plot(plan[1][:,0],plan[1][:,1], 'r-')
+# plt.plot(np.linspace(0,waypoints[-1][-1], 30), plan, 'r.')
 plt.show()
