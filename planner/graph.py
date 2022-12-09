@@ -8,30 +8,19 @@ class Node:
         self.parent = parent
         if parent is None:
             self.connections = [self]
+            self.dist_from_start = 0
         else:
             self.connections = self.parent.connections + [self]
+            self.dist_from_start = self.parent.dist_from_start + np.linalg.norm(self.pos - self.parent.pos)
 
 class Graph:
-    def __init__(self, init_node = None) -> None:
-        self.nodes = []
-        if init_node != None:
-            self.nodes.append(init_node)
-
-    def add_node(self, point):
-        self.nodes.append(point)
-
-
-    @staticmethod
-    def euclidean_metric(a, b):
-        """Euclidean distance"""
-        return math.sqrt(sum([(a[i] - b[i])**2 for i in range(len(a))]))
-
-    def closest_node(self, point):
-        min_dist = math.inf
-        closest_node = None
-        for node in self.nodes:
-            dist = self.euclidean_metric(node.pos, point) 
-            if  dist < min_dist:
-                min_dist = dist
-                closest_node = node
-        return closest_node
+    def __init__(self, start_node: Node):
+        self.nodes = [start_node]
+    
+    def add_node(self, node: Node):
+        self.nodes.append(node)
+    
+    def remove_node(self, node: Node):
+        nodes_arr = np.array(self.nodes)
+        nodes_arr = np.delete(nodes_arr, np.sum((np.array([node_s.id for node_s in self.nodes])==node.id)*np.arange(len(self.nodes))))
+        self.nodes = list(nodes_arr)

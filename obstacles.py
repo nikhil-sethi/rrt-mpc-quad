@@ -2,6 +2,7 @@ import pybullet as p
 import os
 from vector import Pose
 from utils import Color
+import numpy as np
 
 class Obstacle3D:
     """An intermediary class which helps management between python and pybullet obstacles"""
@@ -68,13 +69,20 @@ class Obstacle3D:
         ul = [self.pose.origin[i] + self.bbox[i]/2 for i in range(3)]
         return (ll, ul)
 
+    def dilate_obstacles(self, dilation: float):
+        for i in range(len(self.extent[0])):
+            # Reduce the lower-limits by dilation value (drone radius + margin)
+            self.extent[0][i] = self.extent[0][i] - dilation
+            # Increase the upper-limits by dilation value (drone radius + margi>
+            self.extent[1][i] = self.extent[1][i] + dilation
+
 class Cuboid(Obstacle3D):
     def __init__(self, name, origin, orientation, sides:tuple, color = Color.GRAY) -> None:
         super().__init__(name, origin, orientation, sides, color=color)
     
-    def is_colliding(self, point:list):
+    def is_colliding(self, point:np.ndarray):
         extent = self.extent
-        return all([extent[0][0] < point[i] < extent[1][i] for i in range(len((point)))])
+        return all([extent[0][i] < point[i] < extent[1][i] for i in range(point.shape[0])])
         
 class Cube(Cuboid):
     def __init__(self, name, origin, orientation, sides:tuple, color = Color.GRAY) -> None:
