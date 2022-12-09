@@ -20,8 +20,8 @@ MAP_3 = MAP_0 + [
 MAPS = [MAP_0, MAP_1, MAP_2, MAP_3]
 
 
-def load_map(map:list, client):
+def load_map(map:list, client, dilate=False, dilation=0):
     for obs in map:
         obs.load_urdf(client)
-        
-# add msp display
+        if dilate:
+            obs.dilate_obstacles(dilation)
