@@ -12,6 +12,8 @@ MAP_1.extend([
 MAPS = [MAP_0, MAP_1]
 
 
-def load_map(map:list, client):
+def load_map(map:list, client, dilate=False, dilation=0):
     for obs in map:
         obs.load_urdf(client)
+        if dilate:
+            obs.dilate_obstacles(dilation)
