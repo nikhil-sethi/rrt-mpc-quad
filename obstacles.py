@@ -76,6 +76,14 @@ class Obstacle3D:
         if x_in and y_in and z_in:
             return True
         return False
+
+    def dilate_obstacles(self, dilation: float):
+        for i in range(len(self.extent[0])):
+            # Reduce the lower-limits by dilation value (drone radius + margin)
+            self.extent[0][i] = self.extent[0][i] - dilation
+            # Increase the upper-limits by dilation value (drone radius + margi>
+            self.extent[1][i] = self.extent[1][i] + dilation
+
         
 class Cuboid(Obstacle3D):
     def __init__(self, name, origin, orientation, sides:tuple, color = Color.GRAY) -> None:

@@ -110,7 +110,8 @@ class PlanAviary(CtrlAviary):
 	def _addObstacles(self):
 		"""Add obstacles to the environment.
 		"""
-		load_map(self.map, self.CLIENT)
+		# Dilate obstacles to drone radius plus margin also equal to drone radius 
+		load_map(self.map, self.CLIENT, dilate=True, dilation=2*self.L)
 
 					   
 					   
