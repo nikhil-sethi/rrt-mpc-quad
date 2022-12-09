@@ -1,5 +1,6 @@
 import xml.etree.ElementTree as ET
 import  enum
+import numpy as np
 
 class Color(enum.Enum):
     # RGBA tuple
@@ -29,3 +30,8 @@ def node2dict(node):
 #     obs.bbox = tuple(bbox)
     
 #     return obs
+
+class Quadrotor:
+    def __init__(self):
+        self.radius = 0.08  # [m]
+        self.pos = np.array([0., 0., 0.])
