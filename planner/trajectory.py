@@ -69,7 +69,16 @@ def get_M(t_id, t):
             M[2*i+1][j] = fact(j,i) * pow(t_f, j-i)
     return M
 
-# f = 1
+def get_M_vec(t):
+    # t_i = t[0]
+    # t_f = t[1]
+    M = np.zeros((len(t)-1,2*k, 2*k)) 
+    for i in range(k):
+        for j in range(2*k):
+            M[:,2*i, j] = fact(j,i) * pow(t[:-1], j-i)
+            M[:,2*i+1, j] = fact(j,i) * pow(t[1:], j-i)
+    return M
+
 
 def get_coeffs(x, k, t_id, t):
     M = get_M(t_id, t)
@@ -111,7 +120,8 @@ plt.plot(x[0][:t_id+2], y[0][:t_id+2], 'b-')
 class TrajectoryGen():
     def __init__(self, n, wps) -> None:
         self.wps = np.array(wps) # time constrained waypoints
-        
+        self.t = self.wps[-1,:]
+
         self.l  = self.wps.shape[0]-1 # number of dimensions
         self.m = self.wps.shape[1] # number of waypoints
         self.n = n # order of control/number of derivatives
@@ -153,7 +163,7 @@ class TrajectoryGen():
         wps = self.wps
         assert len(X) == self.l*(self.m-2)*(self.n-1), "Insufficient or extra number of decision variables"
 
-        self.constraints[:,[0,-1],0] = np.array(wps)[:-1,[0,-1]]    # first point is at rest, all n-1 derivatives are zero
+        self.constraints[:,[0,-1],0] = wps[:-1,[0,-1]]    # first point is at rest, all n-1 derivatives are zero
         for i in range(self.l): # for all dimensions x,y,z...
             # self.constraints[i,0,:] = [wps[i][0]] + [0]*(self.n - 1)  
             # self.constraints[i,-1,:] = [wps[i][-1]] + [0]*(self.n - 1) # last point is at rest, all n-1 derivatives are zero
@@ -163,18 +173,32 @@ class TrajectoryGen():
                 self.constraints[i,j+1,:] = [wps[i][j+1]] + X[idx:idx + self.n-1]  # updates the n-1 derivatives for all points except first and last
     @property
     def A(self):
-        """The boundary condition vector"""
+        """The boundary condition tensor"""
         _A = np.array([np.insert(self.constraints[i][1:,:], range(self.n), self.constraints[i][:-1,:], axis=1) for i in range(self.l)])
 
         return _A.reshape(self.l, self.m-1, 2*self.n, 1)
 
+    @property
+    def M(self):
+        _M = np.empty((len(self.t)-1, 2*self.n, 2*self.n)) 
+        for i in range(self.n):
+            for j in range(2*self.n):
+                _M[:,2*i, j] = fact(j,i) * pow(self.t[:-1], j-i)
+                _M[:,2*i+1, j] = fact(j,i) * pow(self.t[1:], j-i)
+        return _M
+    
+    def generate(self, d=100):
+        C = np.linalg.inv(self.M)@self.A
+        tfunc = np.poly1d(C.flatten()[::-1])
+        return tfunc(np.linspace(0, self.t[-1], d))
+
 # time bound waypoints
 # (x,y,t)   2D
-waypoints = [
-    [0,4, 2], # all xs
-    [0,2, 4], # all ys
-    [0,3, 5]  # all ts
-]
+waypoints = np.array([
+    [0,4], # all xs
+    # [0,2, 4], # all ys
+    [0,3]  # all ts
+])
 
 
 # l: number of dimensions
@@ -188,14 +212,21 @@ X = [
     # x1_d, x1_dd, x1_ddd, x2_d, x2_dd ... m-1,
     # y1_d, y1_dd, y1_ddd, y2_d, y2_dd ... m-1,
     # z1_d, z1_dd, z1_ddd, z2_d, z2_dd ... m-1,
-    5,0,2, 
-    5,2,0,
+    # 0,0,0, 
+    # 5,2,0,
 ] # 
 
 order = 4 # min snap
 
 tgen = TrajectoryGen(n = order, wps=waypoints)
 tgen.to_constraints(X)
-print(tgen.constraints)
-print(tgen.A)
-# plan = tgen.generate(d = 30) # numpy array of 30x2 points of the trajectory
+# print(tgen.constraints)
+# print(tgen.A)
+# print(tgen.M[0])
+C = np.linalg.inv(tgen.M) @tgen.A
+# print(C)
+
+plan = tgen.generate(d = 30) # numpy array of 30x2 points of the trajectory
+print(plan)
+plt.plot(np.linspace(0,waypoints[-1][-1], 30), plan, 'r.')
+plt.show()
