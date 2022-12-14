@@ -38,7 +38,28 @@ from planner.sample_based import RRT
 from planner.sample_based import RRT_Star
 from planner.spaces import Space
 from planner.graph import Node
-
+					   
+DEFAULT_DRONES = DroneModel("cf2x")
+DEFAULT_NUM_DRONES = 1
+DEFAULT_PHYSICS = Physics("pyb")
+DEFAULT_VISION = False
+DEFAULT_GUI = True
+DEFAULT_RECORD_VISION = False
+DEFAULT_PLOT = True
+DEFAULT_USER_DEBUG_GUI = False
+DEFAULT_AGGREGATE = True
+DEFAULT_OBSTACLES = True
+DEFAULT_SIMULATION_FREQ_HZ = 240
+DEFAULT_CONTROL_FREQ_HZ = 48
+DEFAULT_DURATION_SEC = 12
+DEFAULT_OUTPUT_FOLDER = 'results'
+DEFAULT_COLAB = False
+DEFAULT_MAP = 4
+DEFAULT_PLANNER = 'rrt_star'
+ws_low = [-3, -3, 0] 
+ws_high = [3, 3, 1]
+drone_start = [0.5, 0, 0]
+drone_target = np.array([-0.5, 2, 0.5])
 
 class PlanAviary(CtrlAviary):
 	"""Multi-drone environment class for control applications."""
@@ -122,13 +143,13 @@ class PlanAviary(CtrlAviary):
 		"""Add obstacles to the environment.
 		"""
 		# Dilate obstacles to drone radius plus margin also equal to drone radius 
-		load_map(self.map, self.CLIENT, dilate=True, dilation=2*self.L)
+		load_map(self.map, self.CLIENT, dilate=False, dilation=2*self.L)
 
 	def plan(self, goal_loc, method):
 		
 		start = Node(pos = np.array(self.INIT_XYZS[0]))
 		goal = Node(pos = goal_loc)
-		ws = Space(low=[-2, -2, 0], high=[2, 2, 2])
+		ws = Space(ws_low, ws_high)
 		if method == 'rrt':
 			planner = RRT(space=ws, start=start, goal=goal, map=self.map)
 		elif method == 'rrt_star':
@@ -137,24 +158,7 @@ class PlanAviary(CtrlAviary):
 			raise NotImplementedError()
 
 		return planner.run()
-					   
-DEFAULT_DRONES = DroneModel("cf2x")
-DEFAULT_NUM_DRONES = 1
-DEFAULT_PHYSICS = Physics("pyb")
-DEFAULT_VISION = False
-DEFAULT_GUI = True
-DEFAULT_RECORD_VISION = False
-DEFAULT_PLOT = True
-DEFAULT_USER_DEBUG_GUI = False
-DEFAULT_AGGREGATE = True
-DEFAULT_OBSTACLES = True
-DEFAULT_SIMULATION_FREQ_HZ = 240
-DEFAULT_CONTROL_FREQ_HZ = 48
-DEFAULT_DURATION_SEC = 12
-DEFAULT_OUTPUT_FOLDER = 'results'
-DEFAULT_COLAB = False
-DEFAULT_MAP = 5
-DEFAULT_PLANNER = 'rrt_star'
+
 
 def run(
 		drone=DEFAULT_DRONES,
@@ -179,7 +183,7 @@ def run(
 	H = .1
 	H_STEP = .05
 	R = .3
-	INIT_XYZS = np.array([[0, 0, 0] for i in range(num_drones)])
+	INIT_XYZS = np.array([drone_start for i in range(num_drones)])
 	
 	INIT_RPYS = np.array([[0, 0,  i * (np.pi/2)/num_drones] for i in range(num_drones)])
 	AGGR_PHY_STEPS = int(simulation_freq_hz/control_freq_hz) if aggregate else 1
@@ -237,7 +241,13 @@ def run(
 						planner=planner
 						)
 
-	plan, rrt_nodes = env.plan(goal_loc=np.array([0.5, 2, 0.1]), method=planner)
+	
+	for obs in env.map:
+		for pos in obs.extent:
+			env.plot_point(pos)
+		env.plot_line(obs.extent[0], obs.extent[1])
+
+	plan, rrt_nodes = env.plan(goal_loc=drone_target, method=planner)
 	
 	# Create TARGET_POS variable from planned waypoints
 	TARGET_POS = discretize_path(plan, num_steps=int(300/len(plan)))

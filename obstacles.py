@@ -73,8 +73,14 @@ class Obstacle3D:
 
         pos_half_bbox = np.array([self.bbox[0]/2, self.bbox[1]/2, self.bbox[2]/2, 1])
         neg_half_bbox = np.array([-self.bbox[0]/2, -self.bbox[1]/2, -self.bbox[2]/2, 1])
-        ll = T_A_B@neg_half_bbox.reshape((4,1))
-        ul = T_A_B@pos_half_bbox.reshape((4,1))
+        ll = (T_A_B@neg_half_bbox.reshape((4,1)))[0:3]
+        ul = (T_A_B@pos_half_bbox.reshape((4,1)))[0:3]
+        # Rotations greater than 90 degrees cause +- bounding box calculations to flip. So, I manually flip them back, like a dum-dum
+        for i in range(ll.shape[0]):
+            if ll[i] > ul[i]:
+                temp = ul[i].copy()
+                ul[i] = ll[i].copy()
+                ll[i] = temp
         return (ll, ul)
 
     def dilate_obstacles(self, dilation: float):
@@ -90,7 +96,10 @@ class Cuboid(Obstacle3D):
     
     def is_colliding(self, point:np.ndarray):
         extent = self.extent
-        return all([extent[0][i] < point[i] < extent[1][i] for i in range(point.shape[0])])
+        test = all([extent[0][i] < point[i] < extent[1][i] for i in range(point.shape[0])])
+        if test:
+            pass
+        return test
         
 class Cube(Cuboid):
     def __init__(self, name, origin, orientation, sides:tuple, color = Color.GRAY) -> None:

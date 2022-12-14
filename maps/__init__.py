@@ -1,39 +1,44 @@
 from obstacles import Cuboid, Cube
 from utils import Color
 
-MAP_0 = [Cube(name = "landing", origin=[-0.6, 0.6, 0.15], orientation = [0,0,0], sides=[0.3, 0.3, 0.3], color = Color.GREEN),
-        Cube(name = "take_off", origin=[0.6, -0.6, 0.15], orientation = [0,0,0], sides=[0.3, 0.3, 0.3], color = Color.RED)]
+MAP_0 = [
+    # Cube(name = "landing", origin=[-0.6, 0.6, 0.15], orientation = [0,0,0], sides=[0.3, 0.3, 0.3], color = Color.GREEN),
+    # Cube(name = "take_off", origin=[0.6, -0.6, 0.15], orientation = [0,0,0], sides=[0.3, 0.3, 0.3], color = Color.RED)
+]
 
 MAP_1 = MAP_0 + [
-    Cuboid(name = "wall_a", origin = [0, 0, 0.3], orientation = [0,0, 3.14/4], sides=[0.7, 0.1, 0.6], color = Color.RED)
+    # Cuboid(name = "wall_a", origin = [0, 0, 0.3], orientation = [0,0, 3.14/4], sides=[0.7, 0.1, 0.6], color = Color.RED)
 ]
 
 MAP_2 = MAP_0 + [
-    Cuboid(name = "wall_b", origin = [0, 0, 0.3], orientation = [0,0, 3.14/4], sides=[2, 0.1, 0.6], color = Color.BLUE),
+    # Cuboid(name = "wall_b", origin = [0, 0, 0.3], orientation = [0,0, 3.14/4], sides=[2, 0.1, 0.6], color = Color.BLUE),
 ]
 
 MAP_3 = MAP_0 + [
-    Cuboid(name = "wall_c", origin = [0, 0, 0.35], orientation = [0,0, 3.14/4], sides=[2, 0.1, 0.7], color = Color.BLUE),
-    Cuboid(name = "wall_d", origin = [0.5, 0.5, 1.2], orientation = [0,0, 3.14/4], sides=[1, 0.1, 1], color = Color.BLUE)
+    # Cuboid(name = "wall_c", origin = [0, 0, 0.35], orientation = [0,0, 3.14/4], sides=[2, 0.1, 0.7], color = Color.BLUE),
+    # Cuboid(name = "wall_d", origin = [0.5, 0.5, 1.2], orientation = [0,0, 3.14/4], sides=[1, 0.1, 1], color = Color.BLUE)
 ]
 
 MAP_4 = [
     Cuboid(name = "wall_a", origin = [0, -1, 0.5], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.RED),
     Cuboid(name = "wall_b", origin = [1, -1, 0.5], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.RED),
-    Cuboid(name = "wall_c", origin = [0.5, -1, 1.05], orientation = [3.14/2, 0, 0], sides=[1.1, 0.1, 1], color = Color.GREEN),
+    Cuboid(name = "wall_c", origin = [0.5, -1, 1.05], orientation = [3.14/2, 0, 0], sides=[1.1, 0.1, 1], color = Color.RED),
     Cuboid(name = "wall_d", origin = [0, 0, 0.5], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.RED),
     Cuboid(name = "wall_e", origin = [1, 0, 0.5], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.RED),
-    Cuboid(name = "wall_f", origin = [0.5, 0, 1.05], orientation = [3.14/2, 0, 0], sides=[1.1, 0.1, 1], color = Color.GREEN),
+    Cuboid(name = "wall_f", origin = [0.5, 0, 1.05], orientation = [3.14/2, 0, 0], sides=[1.1, 0.1, 1], color = Color.RED),
     Cuboid(name = "wall_g", origin = [0, 1, 0.5], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.RED),
     Cuboid(name = "wall_h", origin = [1, 1, 0.5], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.RED),
-    Cuboid(name = "wall_i", origin = [0.5, 1, 1.05], orientation = [3.14/2, 0, 0], sides=[1.1, 0.1, 1], color = Color.GREEN),
+    Cuboid(name = "wall_i", origin = [0.5, 1, 1.05], orientation = [3.14/2, 0, 0], sides=[1.1, 0.1, 1], color = Color.RED),
     Cuboid(name = "wall_j", origin = [0, 2, 0.5], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.RED),
     Cuboid(name = "wall_k", origin = [1, 2, 0.5], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.RED),
-    Cuboid(name = "wall_l", origin = [0.5, 2, 1.05], orientation = [3.14/2, 0, 0], sides=[1.1, 0.1, 1], color = Color.GREEN),
+    Cuboid(name = "wall_l", origin = [0.5, 2, 1.05], orientation = [3.14/2, 0, 0], sides=[1.1, 0.1, 1], color = Color.RED),
 ]
 
 MAP_5 = [
-    Cuboid(name = "test_wall", origin = [0, 2, 0], orientation = [0, 0, 0], sides=[1, 0.1, 1], color = Color.RED)
+    # Cuboid(name = "test_wall1", origin = [0, 0.55, 0.5], orientation = [0, 0, 0*6.28/4], sides=[1, 0.2, 1], color = Color.GLASS),
+    # Cuboid(name = "test_wall2", origin = [-0.55, 0, 0.5], orientation = [0, 0, 1*6.28/4], sides=[1, 0.2, 1], color = Color.GLASS),
+    # Cuboid(name = "test_wall3", origin = [0, -0.55, 0.5], orientation = [0, 0, 2*6.28/4], sides=[1, 0.2, 1], color = Color.GLASS),
+    Cuboid(name = "test_wall4", origin = [0.55, 0, 0.5], orientation = [0, 0, 3*6.28/4], sides=[1, 0.2, 1], color = Color.GLASS)
 ]
 
 MAPS = [MAP_0, MAP_1, MAP_2, MAP_3, MAP_4, MAP_5]

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 DIST_TH = 0.01
-MAX_ITER = 50
+MAX_ITER = 100
 MAX_IMPR = 10 # number of improvements the rrt* algorithm makes before it stops
 PERC_2_GOAL = 0.05 # This is the percentage of evaluations at the goal position
 
