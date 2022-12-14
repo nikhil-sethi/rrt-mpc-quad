@@ -32,7 +32,11 @@ MAP_4 = [
     Cuboid(name = "wall_l", origin = [0.5, 2, 1.05], orientation = [3.14/2, 0, 0], sides=[1.1, 0.1, 1], color = Color.GREEN),
 ]
 
-MAPS = [MAP_0, MAP_1, MAP_2, MAP_3, MAP_4]
+MAP_5 = [
+    Cuboid(name = "test_wall", origin = [0, 2, 0], orientation = [0, 0, 0], sides=[1, 0.1, 1], color = Color.RED)
+]
+
+MAPS = [MAP_0, MAP_1, MAP_2, MAP_3, MAP_4, MAP_5]
 
 
 def load_map(map:list, client, dilate=False, dilation=0):

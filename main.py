@@ -153,7 +153,7 @@ DEFAULT_CONTROL_FREQ_HZ = 48
 DEFAULT_DURATION_SEC = 12
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
-DEFAULT_MAP = 4
+DEFAULT_MAP = 5
 DEFAULT_PLANNER = 'rrt_star'
 
 def run(
@@ -179,7 +179,7 @@ def run(
 	H = .1
 	H_STEP = .05
 	R = .3
-	INIT_XYZS = np.array([[0.5, 0, 0.1] for i in range(num_drones)])
+	INIT_XYZS = np.array([[0, 0, 0] for i in range(num_drones)])
 	
 	INIT_RPYS = np.array([[0, 0,  i * (np.pi/2)/num_drones] for i in range(num_drones)])
 	AGGR_PHY_STEPS = int(simulation_freq_hz/control_freq_hz) if aggregate else 1
@@ -237,7 +237,7 @@ def run(
 						planner=planner
 						)
 
-	plan = env.plan(goal_loc=np.array([0.5, 2, 0.1]), method=planner)
+	plan, rrt_nodes = env.plan(goal_loc=np.array([0.5, 2, 0.1]), method=planner)
 	
 	# Create TARGET_POS variable from planned waypoints
 	TARGET_POS = discretize_path(plan, num_steps=int(300/len(plan)))
