@@ -67,8 +67,20 @@ class Obstacle3D:
 
     def get_extent(self):
         r = R.from_euler('xyz', self.pose.orient, degrees=False).as_matrix()
-        ll = r@np.array([self.pose.origin[i] - self.bbox[i]/2 for i in range(3)])
-        ul = r@np.array([self.pose.origin[i] + self.bbox[i]/2 for i in range(3)])
+        T_A_B = np.eye(4)
+        T_A_B[0:3,0:3] = r
+        T_A_B[0:3,3] = np.array(self.pose.origin)
+
+        pos_half_bbox = np.array([self.bbox[0]/2, self.bbox[1]/2, self.bbox[2]/2, 1])
+        neg_half_bbox = np.array([-self.bbox[0]/2, -self.bbox[1]/2, -self.bbox[2]/2, 1])
+        ll = (T_A_B@neg_half_bbox.reshape((4,1)))[0:3]
+        ul = (T_A_B@pos_half_bbox.reshape((4,1)))[0:3]
+        # Rotations greater than 90 degrees cause +- bounding box calculations to flip. So, I manually flip them back, like a dum-dum
+        for i in range(ll.shape[0]):
+            if ll[i] > ul[i]:
+                temp = ul[i].copy()
+                ul[i] = ll[i].copy()
+                ll[i] = temp
         return (ll, ul)
 
     def dilate_obstacles(self, dilation: float):
