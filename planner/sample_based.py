@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 DIST_TH = 0.01
-MAX_ITER = 500
+MAX_ITER = 50
 MAX_IMPR = 10 # number of improvements the rrt* algorithm makes before it stops
 PERC_2_GOAL = 0.05 # This is the percentage of evaluations at the goal position
 
@@ -128,7 +128,7 @@ class RRT_Star(SamplingPlanner):
             self.final_node = self.graph.nodes[-1]
             self.reached_goal = True
         
-        self.garbage_collection()
+        # self.garbage_collection()
 
     def run(self) -> list:
         for i in range(MAX_ITER):
