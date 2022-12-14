@@ -124,11 +124,11 @@ class PlanAviary(CtrlAviary):
 		# Dilate obstacles to drone radius plus margin also equal to drone radius 
 		load_map(self.map, self.CLIENT, dilate=True, dilation=2*self.L)
 
-	def plan(self, goal, method):
+	def plan(self, goal_loc, method):
 		
 		start = Node(pos = np.array(self.INIT_XYZS[0]))
-		goal = Node(pos = np.array([-0.6, 0.6, 0.5]))
-		ws = Space(low=[-1, -1, 0], high=[1, 1, 1])
+		goal = Node(pos = goal_loc)
+		ws = Space(low=[-2, -2, 0], high=[2, 2, 2])
 		if method == 'rrt':
 			planner = RRT(space=ws, start=start, goal=goal, map=self.map)
 		elif method == 'rrt_star':
@@ -179,7 +179,7 @@ def run(
 	H = .1
 	H_STEP = .05
 	R = .3
-	INIT_XYZS = np.array([[0.6,-0.6,0.5] for i in range(num_drones)])
+	INIT_XYZS = np.array([[0.5, 0, 0.1] for i in range(num_drones)])
 	
 	INIT_RPYS = np.array([[0, 0,  i * (np.pi/2)/num_drones] for i in range(num_drones)])
 	AGGR_PHY_STEPS = int(simulation_freq_hz/control_freq_hz) if aggregate else 1
@@ -237,7 +237,7 @@ def run(
 						planner=planner
 						)
 
-	plan = env.plan(goal=np.array([-0.6,0.6,0.3]), method=planner)
+	plan = env.plan(goal_loc=np.array([0.5, 2, 0.1]), method=planner)
 	
 	# Create TARGET_POS variable from planned waypoints
 	TARGET_POS = discretize_path(plan, num_steps=int(300/len(plan)))
