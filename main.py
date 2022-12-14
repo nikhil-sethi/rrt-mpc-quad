@@ -237,19 +237,30 @@ def run(
 						planner=planner
 						)
 
-	plan = env.plan(goal=np.array([-0.6,0.6,0.3]), method=planner)
+	plan, rrt_nodes = env.plan(goal=np.array([-0.6,0.6,0.3]), method=planner)
 	
 	# Create TARGET_POS variable from planned waypoints
 	TARGET_POS = discretize_path(plan, num_steps=int(300/len(plan)))
 	NUM_WP = TARGET_POS.shape[0]
 	wp_counters = np.array([0 for i in range(num_drones)])
 
+	# Print plan
 	prev_pos = env.INIT_XYZS[0]
 	for node in plan:
 		env.plot_point(node.pos)
 		# try:
 		env.plot_line(prev_pos, node.pos)
 		prev_pos = node.pos
+
+	# Print all nodes
+	for end_node in rrt_nodes:
+		connections = end_node.connections
+		prev_pos = env.INIT_XYZS[0]		
+		for node in connections:
+			env.plot_point(node.pos)
+			# try:
+			env.plot_line(prev_pos, node.pos)
+			prev_pos = node.pos
 
 	#### Obtain the PyBullet Client ID from the environment ####
 	PYB_CLIENT = env.getPyBulletClient()
@@ -342,6 +353,7 @@ if __name__ == "__main__":
 	parser.add_argument('--colab',              default=DEFAULT_COLAB, type=bool,           help='Whether example is being run by a notebook (default: "False")', metavar='')
 	parser.add_argument('--map',              default=DEFAULT_MAP, type=int,           help='Map number (default: "Map 1")', metavar='')
 	parser.add_argument('--planner',              default=DEFAULT_PLANNER, type=str,           help='Planner (default: "rrt_star")', metavar='')
+	
 	ARGS = parser.parse_args()
 
 	run(**vars(ARGS))

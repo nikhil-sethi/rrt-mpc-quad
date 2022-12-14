@@ -5,7 +5,7 @@ MAP_0 = [Cube(name = "landing", origin=[-0.6, 0.6, 0.15], orientation = [0,0,0],
         Cube(name = "take_off", origin=[0.6, -0.6, 0.15], orientation = [0,0,0], sides=[0.3, 0.3, 0.3], color = Color.RED)]
 
 MAP_1 = MAP_0 + [
-    Cuboid(name = "wall_a", origin = [0, 0, 0.3], orientation = [0,0, 3.14/4], sides=[0.7, 0.1, 0.6], color = Color.GLASS)
+    Cuboid(name = "wall_a", origin = [0, 0, 0.3], orientation = [0,0, 3.14/4], sides=[0.7, 0.1, 0.6], color = Color.RED)
 ]
 
 MAP_2 = MAP_0 + [

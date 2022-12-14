@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 DIST_TH = 0.01
-MAX_ITER = 500
+MAX_ITER = 200
 MAX_IMPR = 10 # number of improvements the rrt* algorithm makes before it stops
 PERC_2_GOAL = 0.05 # This is the percentage of evaluations at the goal position
 
@@ -84,10 +84,10 @@ class RRT(SamplingPlanner):
         if self.reached_goal:
             print("GOAL REACHED")            
             print("Final distance =",self.final_node.dist_from_start)
-            return self.graph.nodes[-1].connections
+            return self.graph.nodes[-1].connections, self.graph.nodes
         else:
             print("GOAL NOT REACHED")
-            return self.graph.nodes[-1].connections
+            return self.graph.nodes[-1].connections, self.graph.nodes
 
 class RRT_Star(SamplingPlanner):
     def __init__(self,start:Node, goal:Node, space:Space, map):
@@ -128,7 +128,7 @@ class RRT_Star(SamplingPlanner):
             self.final_node = self.graph.nodes[-1]
             self.reached_goal = True
         
-        self.garbage_collection()
+        #self.garbage_collection()
 
     def run(self) -> list:
         for i in range(MAX_ITER):
@@ -138,10 +138,10 @@ class RRT_Star(SamplingPlanner):
         if self.reached_goal:
             print("GOAL REACHED")
             print("Final distance =",self.final_node.dist_from_start)
-            return self.final_node.connections
+            return self.final_node.connections, self.graph.nodes
         else:
             print("GOAL NOT REACHED")
-            return self.graph.nodes[-1].connections
+            return self.graph.nodes[-1].connections, self.graph.nodes
 
     def garbage_collection(self):
         if np.linalg.norm(self.graph.nodes[-1].pos -self.goal.pos)<DIST_TH:

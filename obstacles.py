@@ -3,6 +3,7 @@ import os
 from vector import Pose
 from utils import Color
 import numpy as np
+from scipy.spatial.transform import Rotation as R
 
 class Obstacle3D:
     """An intermediary class which helps management between python and pybullet obstacles"""
@@ -65,6 +66,7 @@ class Obstacle3D:
             )
 
     def get_extent(self):
+        #r = R.from_euler('zyx', [90, 45, 30], degrees=True)
         ll = [self.pose.origin[i] - self.bbox[i]/2 for i in range(3)]
         ul = [self.pose.origin[i] + self.bbox[i]/2 for i in range(3)]
         return (ll, ul)
