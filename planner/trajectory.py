@@ -1,4 +1,5 @@
 import numpy as np
+import time
 import matplotlib.pyplot as plt
 # from .. import utils
 
@@ -14,10 +15,10 @@ def pow(n, k):
     return n**k
 
 
-class TrajectoryGen():
-    def __init__(self, n, wps) -> None:
+class TrajectoryGenerator():
+    def __init__(self, n, wps, d = 100) -> None:
         self.wps = np.array(wps) # time constrained waypoints
-        self.t = self.wps[-1,:]
+        self.t = self.wps[-1,:] # cumulative times for waypoints 
 
         self.l  = self.wps.shape[0]-1 # number of dimensions
         self.m = self.wps.shape[1] # number of waypoints
@@ -25,6 +26,16 @@ class TrajectoryGen():
 
         self.path_wts = None
         self.constraints = np.zeros((self.l, self.m, self.n)) # a consise tensor with all n-1 derivative
+
+        # doing this stuff here to increase performance. This stuff doesn't depend on constraints
+        
+        pts_per_poly = d//(self.m-1)
+        
+        self.num_pts = pts_per_poly*(self.m-1) 
+        # the next line discretizes the trajectory based on the nth order polynomial
+        self.T = np.tile(np.linspace(self.t[:-1],self.t[1:], pts_per_poly).T.reshape(self.m-1, pts_per_poly,1), 2*self.n) ** np.arange(2*self.n) # (l x d/l x n)
+        self.T_cost = self.T_cost = self.T[:,:,:self.n] # n degree polynomial to calcualate cost 
+        self.M_inv = np.linalg.inv(self.M) # inverse of the polynomial tensor. coz we need coefficients given boundary constraints
 
     def get_wts(self):
         """returns distance based weights of the path"""
@@ -80,35 +91,48 @@ class TrajectoryGen():
         _M = np.empty((len(self.t)-1, 2*self.n, 2*self.n)) 
         for i in range(self.n):
             for j in range(2*self.n):
-                _M[:,2*i, j] = fact(j,i) * pow(self.t[:-1], j-i)
-                _M[:,2*i+1, j] = fact(j,i) * pow(self.t[1:], j-i)
+                _M[:,2*i, j] = fact(j,i) * pow(self.t[:-1], j-i) # time derivatives for start point
+                _M[:,2*i+1, j] = fact(j,i) * pow(self.t[1:], j-i) # time derivatives for end point
         return _M
     
-    def generate(self, d = 100):
-        C = np.linalg.inv(self.M) @ self.A  # (l x n x m-1) The coefficients for each dimension and each polynomial
-        
-        pts_per_poly = d//(self.m-1)
+    def generate(self):
+        C = self.M_inv @ self.A  # (l x n x m-1) The coefficients for each dimension and each polynomial
+        self.update_cost(C)
+        return (self.T@C).reshape(self.l, self.num_pts).T # (d x l)  
 
-        # the next line discretizes the trajectory based on the nth order polynomial
-        T = np.tile(np.linspace(self.t[:-1],self.t[1:], pts_per_poly).T.reshape(self.m-1, pts_per_poly,1), 2*self.n) ** np.arange(2*self.n) # (l x d/l x n)
-        
-        return (T@C).squeeze(axis=-1).transpose(0,2,1).transpose(2,1,0) # (l x d/l x m-1)  
+    def update_cost(self, C):
+        """Calculate the actual cost over all time. 
+
+        cost = \sum_0^T f^n(x(t)^2) + f^n(y(t)^2) + f^n(z(t)^2)
+
+        here f^n is the nth derivative of the polynomial x(t)
+
+        =====
+        for example for minimum snap (n=4)
+        x(t) = c_0 + c_1*t + ... c_(2n-1)*t^(2n-1)
+
+        f^4(x(t)) = c_4 + c_5*t + c_6*t^2 + c_7*t^3
+                  = [c_4, c_5, c_6, c_7] * [1, t, t^2, t^3]
+        Note that we don't use the actual derivative coefficients and merge them into
+        the main poly coefficients as it won't matter while minimizing.
+        """
+        self.cost = np.sum((self.T_cost@C[:,:,self.n:])**2) # equiv
 
     def plot(self, plan):
         fig = plt.figure()
         ax = plt.axes(projection='3d')
         ax.plot(self.wps[0],self.wps[1],self.wps[2],'b-')
-        for p_i in plan:
-            ax.plot(p_i[:,0],p_i[:,1],p_i[:,2], 'r-')
+        # for p_i in plan:
+        ax.plot(plan[:,0],plan[:,1],plan[:,2], 'r-')
         # plt.show()
 
 # time bound waypoints
 # (x,y,t)   2D
 waypoints = np.array([
-    [0,2,4,7], # all xs
-    [0,4,2,7], # all ys
+    [0,4,4,7], # all xs
+    [0,4,4,7], # all ys
     [0,3,2,2], # all zs
-    [0,3,5,7]  # all ts
+    [0,2,4,6]  # all ts
 ])
 
 
@@ -131,11 +155,59 @@ X = [
 
 order = 4 # min snap
 
-tgen = TrajectoryGen(n = order, wps=waypoints)
+tgen = TrajectoryGenerator(n = order, wps = waypoints, d = 100)
 
 tgen.to_constraints(X)
-traj = tgen.generate(d = 100) # numpy array of 30x2 points of the trajectory
+print(time.perf_counter())
+
+traj = tgen.generate() # numpy array of dxl points of the trajectory
+print(tgen.cost)
+print(time.perf_counter())
 
 tgen.plot(traj)
 
 plt.show()
+
+class MinVelAccJerkSnapCrackPop(): # cute name
+    def __init__(self, order, waypoints) -> None:
+        self.order = order 
+        self.tgen = TrajectoryGenerator(n = order, wps=waypoints)
+
+    def obj(self, traj):
+        """Calculates nth order derivative of the trajectory"""
+        pass
+
+    def optimize(self):
+        """
+
+        """
+        pass
+    # def constraints():
+    #     pass
+
+"""
+## arguments to pogram
+- model // str: cf2x
+- map_id // int: 0,1,2,3
+- global_planner // str: 'rrt', 'rrt_star'
+- min_snap // bool
+- local_planner // str: 'mpc', 'bug', 'orca'
+
+env = Env(model = drone)
+env.load_map(map_id) // map has start, goal, 
+plan = env.plan(global = global_planner, min_snap = min_snap) // list of x,yz coordinates. run will take care of rest
+env.run(plan, local_planner =)
+
+env.plan
+    if method is rrt
+        wps = RRT(map) # map includes start, goal and obstacles
+    elif method is rrt
+        wps = RRT_star(map) # map includes start, goal and obstacles
+
+    if min_snap:
+        plan = MinSnap(order=4, waypoints = wps).optimize()
+    else:
+        plan = self.discretise_wps(wps)
+    return plan
+
+"""
