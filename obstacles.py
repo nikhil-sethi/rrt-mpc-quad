@@ -70,6 +70,7 @@ class Obstacle3D:
         T_A_B = np.eye(4)
         T_A_B[0:3,0:3] = r
         T_A_B[0:3,3] = np.array(self.pose.origin)
+        self.T = T_A_B
 
         pos_half_bbox = np.array([self.bbox[0]/2, self.bbox[1]/2, self.bbox[2]/2, 1])
         neg_half_bbox = np.array([-self.bbox[0]/2, -self.bbox[1]/2, -self.bbox[2]/2, 1])
@@ -84,30 +85,22 @@ class Obstacle3D:
         return (ll, ul)
 
     def dilate_obstacles(self, dilation: float):
-        print(self.name)
-        print(self.extent[0])
-        print(self.extent[1])
         for i in range(len(self.extent[0])):
             # Reduce the lower-limits by dilation value (drone radius + margin)
             self.extent[0][i] = self.extent[0][i] - dilation
             # Increase the upper-limits by dilation value (drone radius + margi>
             self.extent[1][i] = self.extent[1][i] + dilation
-
-        print(self.name)
-        print(self.extent[0])
-        print(self.extent[1])
-
+            self.bbox[i] = self.bbox[i] + 2*dilation
 
 class Cuboid(Obstacle3D):
     def __init__(self, name, origin, orientation, sides:tuple, color = Color.GRAY) -> None:
         super().__init__(name, origin, orientation, sides, color=color)
     
     def is_colliding(self, point:np.ndarray):
-        extent = self.extent
-        test = all([extent[0][i] < point[i] < extent[1][i] for i in range(point.shape[0])])
-        if test:
-            pass
-        return test
+        transformed_point = np.ones((4,1))
+        transformed_point[0:3] = np.array(point).reshape((3,1))
+        transformed_point = np.linalg.inv(self.T)@transformed_point
+        return all([-self.bbox[i]/2 < transformed_point[i] < self.bbox[i]/2 for i in range(point.shape[0])])
         
 class Cube(Cuboid):
     def __init__(self, name, origin, orientation, sides:tuple, color = Color.GRAY) -> None:
