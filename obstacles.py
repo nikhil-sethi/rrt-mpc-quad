@@ -84,11 +84,19 @@ class Obstacle3D:
         return (ll, ul)
 
     def dilate_obstacles(self, dilation: float):
+        print(self.name)
+        print(self.extent[0])
+        print(self.extent[1])
         for i in range(len(self.extent[0])):
             # Reduce the lower-limits by dilation value (drone radius + margin)
             self.extent[0][i] = self.extent[0][i] - dilation
             # Increase the upper-limits by dilation value (drone radius + margi>
             self.extent[1][i] = self.extent[1][i] + dilation
+
+        print(self.name)
+        print(self.extent[0])
+        print(self.extent[1])
+
 
 class Cuboid(Obstacle3D):
     def __init__(self, name, origin, orientation, sides:tuple, color = Color.GRAY) -> None:

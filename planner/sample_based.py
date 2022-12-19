@@ -66,6 +66,7 @@ class RRT(SamplingPlanner):
         new_node_pos = self.sample_node_position()
         collision_node = self.check_collision_node(new_node_pos)
         if collision_node:
+            print("node in box")
             return
         closest_node = self.find_closest_node(new_node_pos)
         collision_connection = self.check_collision_connection(closest_node.pos, new_node_pos)
@@ -100,6 +101,7 @@ class RRT_Star(SamplingPlanner):
         for node in close_nodes:
             collision_connection = self.check_collision_connection(node.pos, sample_point)
             if collision_connection:
+                print("connection in box")
                 continue
             dist = node.dist_from_start + np.linalg.norm(node.pos - sample_point)
             if dist < max_dist:
@@ -112,6 +114,7 @@ class RRT_Star(SamplingPlanner):
         new_node_pos = self.sample_node_position()
         collision_node = self.check_collision_node(new_node_pos)
         if collision_node:
+            print("node in box")
             return
 
         closest_node = self.find_lowest_cost_node(new_node_pos)
@@ -134,7 +137,7 @@ class RRT_Star(SamplingPlanner):
         for i in range(MAX_ITER):
             self.plan()
             i+=1
-        
+        print("Number nodes: ", self.nr_nodes)
         if self.reached_goal:
             print("GOAL REACHED")
             print("Final distance =",self.final_node.dist_from_start)

@@ -20,6 +20,7 @@ import argparse
 import numpy as np
 from maps import load_map, MAPS
 import pybullet as p
+import random
 
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
@@ -56,10 +57,12 @@ DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 DEFAULT_MAP = 4
 DEFAULT_PLANNER = 'rrt_star'
-ws_low = [-3, -3, 0] 
-ws_high = [3, 3, 1]
-drone_start = [0.5, 0, 0]
-drone_target = np.array([-0.5, 2, 0.5])
+ws_low = [-4, -4, 0] 
+ws_high = [4, 4, 4]
+drone_start = [0.6, -0.6, 0.35]
+drone_target = np.array([-0.6, 0.6, 0.35])
+np.random.seed(1)
+random.seed(1)
 
 class PlanAviary(CtrlAviary):
 	"""Multi-drone environment class for control applications."""
@@ -270,6 +273,7 @@ def run(
 			env.plot_point(node.pos)
 			# try:
 			env.plot_line(prev_pos, node.pos)
+			print( node.pos)
 			prev_pos = node.pos
 
 	#### Obtain the PyBullet Client ID from the environment ####
