@@ -16,15 +16,19 @@ def pow(n, k):
 
 
 class TrajectoryGenerator():
-    def __init__(self, n, wps, d = 100) -> None:
+    def __init__(self, n, wps, time, d = 100) -> None:
         self.wps = np.array(wps) # time constrained waypoints
-        self.t = self.wps[-1,:] # cumulative times for waypoints 
-
-        self.l  = self.wps.shape[0]-1 # number of dimensions
+    
+        self.l  = self.wps.shape[0] # number of dimensions
         self.m = self.wps.shape[1] # number of waypoints
         self.n = n # order of control/number of derivatives
 
-        self.path_wts = None
+        # time_wts = 
+        if type(time) is int:
+            self.t = np.cumsum(self.get_path_wts()*time) # cumulative times for waypoints 
+            self.t = np.insert(self.t, 0,0)
+        elif type(time) is list:
+            self.t = time
         self.constraints = np.zeros((self.l, self.m, self.n)) # a consise tensor with all n-1 derivative
 
         # doing this stuff here to increase performance. This stuff doesn't depend on constraints
@@ -37,9 +41,11 @@ class TrajectoryGenerator():
         self.T_cost = self.T_cost = self.T[:,:,:self.n] # n degree polynomial to calcualate cost 
         self.M_inv = np.linalg.inv(self.M) # inverse of the polynomial tensor. coz we need coefficients given boundary constraints
 
-    def get_wts(self):
+    def get_path_wts(self):
         """returns distance based weights of the path"""
-        pass
+        wps = self.wps
+        diffs = np.linalg.norm(wps[:,1:] - wps[:,:3], axis=0)
+        return diffs/sum(diffs)
 
     def to_constraints(self, X):
         """
@@ -71,7 +77,7 @@ class TrajectoryGenerator():
         wps = self.wps
         assert len(X) == self.l*(self.m-2)*(self.n-1), "Insufficient or extra number of decision variables"
 
-        self.constraints[:,[0,-1],0] = wps[:-1,[0,-1]]    # first point is at rest, all n-1 derivatives are zero
+        self.constraints[:,[0,-1],0] = wps[:,[0,-1]]    # first point is at rest, all n-1 derivatives are zero
         for i in range(self.l): # for all dimensions x,y,z...
             for j in range(self.m - 2): # for all points except first and last
                 idx = (i*(self.m-2) + j)*(self.n-1) # this conversion is needed becuase the decision variable is a 1D list, but constraints is 3D
@@ -129,10 +135,9 @@ class TrajectoryGenerator():
 # time bound waypoints
 # (x,y,t)   2D
 waypoints = np.array([
-    [0,4,4,7], # all xs
-    [0,4,4,7], # all ys
+    [0,2,4,7], # all xs
+    [0,4,2,7], # all ys
     [0,3,2,2], # all zs
-    [0,2,4,6]  # all ts
 ])
 
 
@@ -154,15 +159,17 @@ X = [
 # during optimization, velocity and acceleration constraints will be imposed on the magnitudes
 
 order = 4 # min snap
+time_vec = [0,2,4,6]
+total_time = time_vec[-1]
 
-tgen = TrajectoryGenerator(n = order, wps = waypoints, d = 100)
+tgen = TrajectoryGenerator(n = order, wps = waypoints, time = total_time, d = 100)
 
 tgen.to_constraints(X)
-print(time.perf_counter())
+start = time.perf_counter()
 
 traj = tgen.generate() # numpy array of dxl points of the trajectory
 print(tgen.cost)
-print(time.perf_counter())
+print(time.perf_counter()-start)
 
 tgen.plot(traj)
 
@@ -175,13 +182,13 @@ class MinVelAccJerkSnapCrackPop(): # cute name
 
     def obj(self, traj):
         """Calculates nth order derivative of the trajectory"""
-        pass
+        return traj.cost
 
     def optimize(self):
         """
 
         """
-        pass
+        scipy.minimize()
     # def constraints():
     #     pass
 
