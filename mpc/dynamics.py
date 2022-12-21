@@ -1,8 +1,8 @@
 import casadi
 
 def continuous_nonlinear_dynamics_3d(x, u):
-    m = 0.027 # [kg]
-    g = 9.81 # [m/s^2]
+    m = 0.03 # [kg]
+    g = 9.8 # [m/s^2]
     Ixx = 1.4e-5 # [kg/m^2]
     Iyy = 1.4e-5 # [kg/m^2]
     Izz = 2.17e-5 # [kg/m^2]

@@ -1,5 +1,4 @@
 import sys
-sys.path.insert(0, "/home/matthijs/Softwares/forces_pro_client")
 import numpy as np
 
 # import casadi
@@ -10,9 +9,11 @@ import matplotlib.patches
 from matplotlib.gridspec import GridSpec
 import casadi
 
-from dynamics import continuous_nonlinear_dynamics_3d as continuous_dynamics
-from util import extract_next_path_points
-from objectives import obj, objN
+from .dynamics import continuous_nonlinear_dynamics_3d as continuous_dynamics
+from .util import extract_next_path_points
+from .objectives import obj, objN
+
+
 
 class MPCSolver:
     def __init__(self, drone, dt):
@@ -24,9 +25,9 @@ class MPCSolver:
         self.max_yaw_rate = drone.max_yaw_rate
         self.x0 = np.array([])
         self.problem = {}
-        self.generate_pathplanner()
+        self.generate_solver()
 
-    def generate_pathplanner(self):        
+    def generate_solver(self):        
         self.model.N = 10  # horizon length
         self.model.nvar = 16  # number of variables
         self.model.neq = 12  # number of equality constraints
@@ -34,7 +35,7 @@ class MPCSolver:
 
         self.model.objective = obj
         self.model.objectiveN = objN 
-        integrator_stepsize = 0.1
+        integrator_stepsize = 0.05
         self.model.eq = lambda z: forcespro.nlp.integrate(continuous_dynamics, z[4:16], z[0:4],
                                                     integrator=forcespro.nlp.integrators.RK4,
                                                     stepsize=integrator_stepsize)
@@ -60,7 +61,7 @@ class MPCSolver:
         codeoptions.forcenonconvex = 1
         codeoptions.noVariableElimination = 1
         codeoptions.nohash = 1
-        codeoptions.cleanup = False
+        codeoptions.cleanup = True
         codeoptions.timing = 1
         # codeoptions.nlp.hessian_approximation = 'bfgs'
         # codeoptions.solvemethod = 'SQP_NLP' # choose the solver method Sequential 
