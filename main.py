@@ -123,6 +123,9 @@ class PlanAviary(CtrlAviary):
 		"""
 		# Dilate obstacles to drone radius plus margin also equal to drone radius 
 		load_map(self.map, self.CLIENT, dilate=True, dilation=2*self.L)
+		for obs in self.map:
+			for i in range(2): self.plot_point(obs.extent[i])
+			self.plot_line(obs.extent[0], obs.extent[1])
 
 	def plan(self, goal, method):
 		
@@ -153,7 +156,7 @@ DEFAULT_CONTROL_FREQ_HZ = 48
 DEFAULT_DURATION_SEC = 12
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
-DEFAULT_MAP = 1
+DEFAULT_MAP = 2
 DEFAULT_PLANNER = 'rrt_star'
 
 def run(

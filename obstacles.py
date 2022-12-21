@@ -3,6 +3,7 @@ import os
 from vector import Pose
 from utils import Color
 import numpy as np
+from scipy.spatial.transform import Rotation as R
 
 class Obstacle3D:
     """An intermediary class which helps management between python and pybullet obstacles"""
@@ -65,8 +66,22 @@ class Obstacle3D:
             )
 
     def get_extent(self):
-        ll = [self.pose.origin[i] - self.bbox[i]/2 for i in range(3)]
-        ul = [self.pose.origin[i] + self.bbox[i]/2 for i in range(3)]
+        r = R.from_euler('xyz', self.pose.orient, degrees=False).as_matrix()
+        T_A_B = np.eye(4)
+        T_A_B[0:3,0:3] = r
+        T_A_B[0:3,3] = np.array(self.pose.origin)
+        self.T = T_A_B
+
+        pos_half_bbox = np.array([self.bbox[0]/2, self.bbox[1]/2, self.bbox[2]/2, 1])
+        neg_half_bbox = np.array([-self.bbox[0]/2, -self.bbox[1]/2, -self.bbox[2]/2, 1])
+        ll = (T_A_B@neg_half_bbox.reshape((4,1)))[0:3]
+        ul = (T_A_B@pos_half_bbox.reshape((4,1)))[0:3]
+        # Rotations greater than 90 degrees cause +- bounding box calculations to flip. So, I manually flip them back, like a dum-dum
+        for i in range(ll.shape[0]):
+            if ll[i] > ul[i]:
+                temp = ul[i].copy()
+                ul[i] = ll[i].copy()
+                ll[i] = temp
         return (ll, ul)
 
     def dilate_obstacles(self, dilation: float):
@@ -75,14 +90,17 @@ class Obstacle3D:
             self.extent[0][i] = self.extent[0][i] - dilation
             # Increase the upper-limits by dilation value (drone radius + margi>
             self.extent[1][i] = self.extent[1][i] + dilation
+            self.bbox[i] = self.bbox[i] + 2*dilation
 
 class Cuboid(Obstacle3D):
     def __init__(self, name, origin, orientation, sides:tuple, color = Color.GRAY) -> None:
         super().__init__(name, origin, orientation, sides, color=color)
     
     def is_colliding(self, point:np.ndarray):
-        extent = self.extent
-        return all([extent[0][i] < point[i] < extent[1][i] for i in range(point.shape[0])])
+        transformed_point = np.ones((4,1))
+        transformed_point[0:3] = np.array(point).reshape((3,1))
+        transformed_point = np.linalg.inv(self.T)@transformed_point
+        return all([-self.bbox[i]/2 < transformed_point[i] < self.bbox[i]/2 for i in range(point.shape[0])])
         
 class Cube(Cuboid):
     def __init__(self, name, origin, orientation, sides:tuple, color = Color.GRAY) -> None:
