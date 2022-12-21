@@ -79,6 +79,9 @@ class RRT(SamplingPlanner):
     def run(self) -> list:
         for i in range(MAX_ITER):
             self.plan()
+            if self.reached_goal:
+                self.final_node = self.graph.nodes[-1]
+                break
             i+=1
         
         if self.reached_goal:
