@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import numpy as np
 from cvxopt import solvers, matrix
-
+from itertools import product
 
 wps = [
 	[0,2,4,7],
@@ -15,7 +15,7 @@ waypoints = np.array(wps).shape[1]
 segments = waypoints-1 # segments
 order = 2 # minimum acceleration
 
-t = [0,1,2,3]
+t = [0,1,2,4]
 T = t[-1]
 
 # decision variables
@@ -92,23 +92,39 @@ for m in range(1,segments):
 
 # combine endpoint and continuity constraints
 
-A = A_ep +A_con
+A = A_ep + A_con
 
 # function definitiion
 def get_H_1seg(T):
 	H = np.array([
 		np.zeros(4),
 		np.zeros(4),
-		[0,0,4*T, 3*T^2],
-		[0,0,3*T^2, 18*T^3]
+		[0,0,4*T, 6*T**2],
+		[0,0,6*T**2, 12*T**3]
 	])
 	return H
 
-H = np.block([
-	[get_H_1seg(t[1]), np.zeros((2*order,2*order)),np.zeros((2*order,2*order))],
-	[np.zeros((2*order,2*order)), get_H_1seg(t[2]),np.zeros((2*order,2*order))],
-	[np.zeros((2*order,2*order)), np.zeros((2*order,2*order)), get_H_1seg(t[2])],
-])
+def get_H_1seg(T, n):
+	"""Quadratic Cost matrix for integration of a squared n degree polynomial"""
+	H_seg = np.zeros((2*n, 2*n))
+
+	# The derivative coeffecients that come about after differentiating the polynomial n times
+	diff = [fact(j,n) for j in range(n, 2*n)]
+	# When sqaured and integrated the polymial will be quadratic and will have pairwise permutations of these coefficients
+	# These coefficients will come up in the matrix afterwards 
+	coeff_prods = np.prod(list(product(diff,repeat=2)),-1).reshape(n,n)
+
+	# the powers to which the time endpoint will be raised. This comes from the result of integrating the sqaure of the
+	# n times differentiated polynomial.
+	time_powers = np.sum(np.meshgrid(np.arange(n), np.arange(n)),0)+1 
+	time_poly = T**time_powers/time_powers # this result comes because of 2n-1 order integration
+	H_seg[n:,n:] = coeff_prods*time_poly
+	
+	return H_seg
+
+H = np.zeros((2*order*segments, 2*order*segments))
+for m in range(segments):
+	H[2*order*m:2*order*(m+1), 2*order*m:2*order*(m+1)] = get_H_1seg(t[m+1], n=order)
 
 f = np.zeros(len(X))
 
@@ -127,7 +143,7 @@ for l in range(dims):
 	print("cost = ", sol["primal objective"])
 	C = np.expand_dims((np.array(sol['x']).reshape(segments,2*order)),-1) # coefficients
 
-	d = 20 # discretisation
+	d = 40 # discretisation
 	pts_per_poly = d//segments
 	tvec = np.linspace(t[:-1],t[1:], pts_per_poly).T.reshape(segments, pts_per_poly,1)
 	pvec = np.tile(tvec, 2*order) ** np.arange(2*order) # (d/l x order)
