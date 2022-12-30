@@ -20,8 +20,11 @@ class TrajectoryGenerator():
         self.wps = np.array(wps) # time constrained waypoints
     
         self.l  = self.wps.shape[0] # number of dimensions
+        print("Number of dimensions: ", self.l)
         self.m = self.wps.shape[1] # number of waypoints
+        print("Number of waypoints: ", self.m)
         self.n = n # order of control/number of derivatives
+        print("Order of control: ", self.n)
 
         # time_wts = 
         if type(time) is int:
@@ -29,6 +32,7 @@ class TrajectoryGenerator():
             self.t = np.insert(self.t, 0,0)
         elif type(time) is list:
             self.t = time
+        print(self.t)
         self.constraints = np.zeros((self.l, self.m, self.n)) # a consise tensor with all n-1 derivative
 
         # doing this stuff here to increase performance. This stuff doesn't depend on constraints
@@ -44,7 +48,7 @@ class TrajectoryGenerator():
     def get_path_wts(self):
         """returns distance based weights of the path"""
         wps = self.wps
-        diffs = np.linalg.norm(wps[:,1:] - wps[:,:3], axis=0)
+        diffs = np.linalg.norm(wps[:,1:] - wps[:,:-1], axis=0)
         return diffs/sum(diffs)
 
     def to_constraints(self, X):
@@ -135,6 +139,7 @@ class TrajectoryGenerator():
 # time bound waypoints
 # (x,y,t)   2D
 waypoints = np.array([
+    # [0,2], # all xs
     [0,2,4,7], # all xs
     [0,4,2,7], # all ys
     [0,3,2,2], # all zs
@@ -152,28 +157,12 @@ X = [
     # x1_d, x1_dd, x1_ddd, x2_d, x2_dd ... m-1,
     # y1_d, y1_dd, y1_ddd, y2_d, y2_dd ... m-1,
     # z1_d, z1_dd, z1_ddd, z2_d, z2_dd ... m-1,
+    # 0, 0 
     1,0,0, 1,0,0, 
     1,0,0, 1,0,0, 
     1,0,0, 0.2,0,0, 
 ] # the optimization vector. can indlude times as well.
 # during optimization, velocity and acceleration constraints will be imposed on the magnitudes
-
-order = 4 # min snap
-time_vec = [0,2,4,6]
-total_time = time_vec[-1]
-
-tgen = TrajectoryGenerator(n = order, wps = waypoints, time = total_time, d = 100)
-
-tgen.to_constraints(X)
-start = time.perf_counter()
-
-traj = tgen.generate() # numpy array of dxl points of the trajectory
-print(tgen.cost)
-print(time.perf_counter()-start)
-
-tgen.plot(traj)
-
-plt.show()
 
 class MinVelAccJerkSnapCrackPop(): # cute name
     def __init__(self, order, waypoints) -> None:
@@ -191,6 +180,27 @@ class MinVelAccJerkSnapCrackPop(): # cute name
         scipy.minimize()
     # def constraints():
     #     pass
+
+
+if __name__ == "__main__":
+    order = 4 # min snap
+    time_vec = [0,2,4,6]
+    total_time = time_vec[-1]
+    print("sdgsdfgsd")
+    tgen = TrajectoryGenerator(n = order, wps = waypoints, time = total_time, d = 100)
+
+    tgen.to_constraints(X)
+    start = time.perf_counter()
+
+    traj = tgen.generate() # numpy array of dxl points of the trajectory
+    print(tgen.cost)
+    print(time.perf_counter()-start)
+
+    tgen.plot(traj)
+    # fig, ax = plt.figure()
+    # plt.plot(tgen.T, traj[:,0])
+    # plt.show()
+
 
 """
 ## arguments to pogram
