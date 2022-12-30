@@ -1,7 +1,6 @@
 import numpy as np
 import time
 import matplotlib.pyplot as plt
-# from .. import utils
 
 def fact(j, i):
     """factorial of j upto i. Used for derivatives"""
@@ -163,23 +162,6 @@ X = [
     1,0,0, 0.2,0,0, 
 ] # the optimization vector. can indlude times as well.
 # during optimization, velocity and acceleration constraints will be imposed on the magnitudes
-
-class MinVelAccJerkSnapCrackPop(): # cute name
-    def __init__(self, order, waypoints) -> None:
-        self.order = order 
-        self.tgen = TrajectoryGenerator(n = order, wps=waypoints)
-
-    def obj(self, traj):
-        """Calculates nth order derivative of the trajectory"""
-        return traj.cost
-
-    def optimize(self):
-        """
-
-        """
-        scipy.minimize()
-    # def constraints():
-    #     pass
 
 
 if __name__ == "__main__":
