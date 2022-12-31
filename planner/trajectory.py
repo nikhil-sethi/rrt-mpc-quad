@@ -1,6 +1,8 @@
 import numpy as np
-import time
 import matplotlib.pyplot as plt
+import numpy as np
+from cvxopt import solvers, matrix
+from itertools import product
 
 def fact(j, i):
     """factorial of j upto i. Used for derivatives"""
@@ -13,200 +15,165 @@ def pow(n, k):
         return 1
     return n**k
 
-
-class TrajectoryGenerator():
-    def __init__(self, n, wps, time, d = 100) -> None:
-        self.wps = np.array(wps) # time constrained waypoints
-    
-        self.l  = self.wps.shape[0] # number of dimensions
-        print("Number of dimensions: ", self.l)
-        self.m = self.wps.shape[1] # number of waypoints
-        print("Number of waypoints: ", self.m)
-        self.n = n # order of control/number of derivatives
-        print("Order of control: ", self.n)
-
-        # time_wts = 
+class TrajectoryManager():
+    def __init__(self, order, time, waypoints) -> None:
+        
+        self.wps = waypoints
+        
+        self.l  = len(waypoints) # number of dimensions
+        
+        self.m = len(waypoints[0])-1 # number of segments
+        
+        assert self.m >=1, "There must be at least two waypoints for a path"
+        self.n = order # order of control/number of derivatives
+        assert 0<self.n<=4, "Order of polynomial must be between 0 and 4"
+        
         if type(time) is int:
             self.t = np.cumsum(self.get_path_wts()*time) # cumulative times for waypoints 
             self.t = np.insert(self.t, 0,0)
         elif type(time) is list:
+            assert len(time) == self.m+1, "Number of timestamps must be equal to the number of waypoints."
             self.t = time
-        print(self.t)
-        self.constraints = np.zeros((self.l, self.m, self.n)) # a consise tensor with all n-1 derivative
-
-        # doing this stuff here to increase performance. This stuff doesn't depend on constraints
-        
-        pts_per_poly = d//(self.m-1)
-        
-        self.num_pts = pts_per_poly*(self.m-1) 
-        # the next line discretizes the trajectory based on the nth order polynomial
-        self.T = np.tile(np.linspace(self.t[:-1],self.t[1:], pts_per_poly).T.reshape(self.m-1, pts_per_poly,1), 2*self.n) ** np.arange(2*self.n) # (l x d/l x n)
-        self.T_cost = self.T_cost = self.T[:,:,:self.n] # n degree polynomial to calcualate cost 
-        self.M_inv = np.linalg.inv(self.M) # inverse of the polynomial tensor. coz we need coefficients given boundary constraints
 
     def get_path_wts(self):
         """returns distance based weights of the path"""
-        wps = self.wps
+        wps = np.array(self.wps)
         diffs = np.linalg.norm(wps[:,1:] - wps[:,:-1], axis=0)
         return diffs/sum(diffs)
 
-    def to_constraints(self, X):
-        """
-        X: the decision variable vector (a linear vector representation for optimization)
+    def generate(self, coeffs_raw, d=100):
+        """Takes in optimizer solution and generates a discretized trajectory"""
+        C = np.expand_dims((np.array(coeffs_raw).reshape(self.m,2*self.n)),-1) # coefficients
+
+        d = 40 # discretisation
+        pts_per_poly = d//self.m
+        tvec = np.linspace(self.t[:-1],self.t[1:], pts_per_poly).T.reshape(self.m, pts_per_poly,1)
+        pvec = np.tile(tvec, 2*self.n) ** np.arange(2*self.n) # (d/l x order)
+
+        traj = (pvec@C).flatten()
+        return traj
         
-        constraints: fully formulated boundary conditions at all points
-        axis 0: dimension (x,y,z)
-        axis 1: number of points (p1,p2,p3)
-        axis 2: number of derivatives (p',p'',p''')
-
-        ####
-        example (2,4,4) a 2D minimum snap trajectory for 4 points
-        X = [x1',x1'',x1''', x2',x2'',x2''', y1',y1'',y1''', y2',y2'',y2'''] // length = l(m-2)(n-1)
-
-        constraints =
-            [[[x0. 0. 0. 0.] // at rest
-              [x1. x1',x1'',x1''']
-              [x2. x2',x2'',x2''']
-              [x3. 0. 0. 0.]] // at rest
-  
-             [[y0. 0. 0. 0.] // at rest
-              [y1. y1',y1'',y1''']
-              [y2. y2',y2'',y2''']
-              [y3. 0. 0. 0.]] // at rest
-
-
-        """
-
-        wps = self.wps
-        assert len(X) == self.l*(self.m-2)*(self.n-1), "Insufficient or extra number of decision variables"
-
-        self.constraints[:,[0,-1],0] = wps[:,[0,-1]]    # first point is at rest, all n-1 derivatives are zero
-        for i in range(self.l): # for all dimensions x,y,z...
-            for j in range(self.m - 2): # for all points except first and last
-                idx = (i*(self.m-2) + j)*(self.n-1) # this conversion is needed becuase the decision variable is a 1D list, but constraints is 3D
-                self.constraints[i,j+1,:] = [wps[i][j+1]] + X[idx:idx + self.n-1]  # updates the n-1 derivatives for all points except first and last
-    @property
-    def A(self):
-        """The boundary condition tensor"""
-
-        # the next line creates the end conditions for all possible derivatives, dimensions and waypoints. (vector on the left side from slides)
-        _A = np.array([np.insert(self.constraints[i][1:,:], range(self.n), self.constraints[i][:-1,:], axis=1) for i in range(self.l)])
-
-        return _A.reshape(self.l, self.m-1, 2*self.n, 1)  # reshaped to make it cleaner
-
-    @property
-    def M(self):
-        """Returns the polynomial tensor"""
-        _M = np.empty((len(self.t)-1, 2*self.n, 2*self.n)) 
-        for i in range(self.n):
-            for j in range(2*self.n):
-                _M[:,2*i, j] = fact(j,i) * pow(self.t[:-1], j-i) # time derivatives for start point
-                _M[:,2*i+1, j] = fact(j,i) * pow(self.t[1:], j-i) # time derivatives for end point
-        return _M
-    
-    def generate(self):
-        C = self.M_inv @ self.A  # (l x n x m-1) The coefficients for each dimension and each polynomial
-        self.update_cost(C)
-        return (self.T@C).reshape(self.l, self.num_pts).T # (d x l)  
-
-    def update_cost(self, C):
-        """Calculate the actual cost over all time. 
-
-        cost = \sum_0^T f^n(x(t)^2) + f^n(y(t)^2) + f^n(z(t)^2)
-
-        here f^n is the nth derivative of the polynomial x(t)
-
-        =====
-        for example for minimum snap (n=4)
-        x(t) = c_0 + c_1*t + ... c_(2n-1)*t^(2n-1)
-
-        f^4(x(t)) = c_4 + c_5*t + c_6*t^2 + c_7*t^3
-                  = [c_4, c_5, c_6, c_7] * [1, t, t^2, t^3]
-        Note that we don't use the actual derivative coefficients and merge them into
-        the main poly coefficients as it won't matter while minimizing.
-        """
-        self.cost = np.sum((self.T_cost@C[:,:,self.n:])**2) # equiv
-
-    def plot(self, plan):
+    def plot(self, points)	:
+        _, dims = points.shape
         fig = plt.figure()
-        ax = plt.axes(projection='3d')
-        ax.plot(self.wps[0],self.wps[1],self.wps[2],'b-')
-        # for p_i in plan:
-        ax.plot(plan[:,0],plan[:,1],plan[:,2], 'r-')
-        # plt.show()
+        if dims == 3: # 3D
+            ax = plt.axes(projection='3d')
+            ax.plot(self.wps[0],self.wps[1],self.wps[2],'b-')
+            ax.plot(points[:,0],points[:,1],points[:,2], 'r-')
+        elif dims == 2:
+            plt.plot(self.wps[0],self.wps[1],'b--')
+            plt.plot(points[:,0],points[:,1], 'r-')
+        elif dims == 1:
+            """plot against time"""
+            pass
+        plt.show()
 
-# time bound waypoints
-# (x,y,t)   2D
-waypoints = np.array([
-    # [0,2], # all xs
-    [0,2,4,7], # all xs
-    [0,4,2,7], # all ys
-    [0,3,2,2], # all zs
-])
+class MinVelAccJerkSnapCrackPop(TrajectoryManager): # cute name
+    def __init__(self, order, time, waypoints) -> None:
+        super().__init__(order, time, waypoints)
+
+        # setup constraints
+        self.setup_constraints()
+
+        # setup objectives
+        self.setup_objectives()
+
+    def setup_constraints(self):
+        # Endpoint constraints
+        A_ep = []
+        # first waypoint
+        m=0
+        for n in range(self.n):
+            A_ep_i = [0]*2*self.n*m
+            A_ep_i.extend([fact(j,n)*pow(self.t[m], j-n) for j in range(2*self.n)])	
+            A_ep_i.extend([0]*2*self.n*(self.m-m-1))
+            A_ep.append(A_ep_i)
+
+        # last waypoint
+        m = self.m
+        for n in range(self.n):
+            A_ep_i = [0]*2*self.n*(m-1)
+            A_ep_i.extend([fact(j,n)*pow(self.t[m], j-n) for j in range(2*self.n)])	
+            A_ep_i.extend([0]*2*self.n*(self.m-m))
+            A_ep.append(A_ep_i)
+
+        # Continuity constraints
+        A_con = []
+        for m in range(1,self.m):
+            for n in range(self.n+1):
+                tpoly = [fact(j,n)*pow(self.t[m], j-n) for j in range(2*self.n)]
+                if n==0:
+                    A_con_i = [0]*2*self.n*(m-1)
+                    # add 2 position constraints at same time index
+                    A_con_i.extend(tpoly + [0]*2*self.n)	# end position of prev poly
+                    A_con_i.extend([0]*2*self.n*(self.m-m-1))
+                    A_con.append(A_con_i)
+
+                    A_con_i = [0]*2*self.n*(m-1)
+                    # add 2 position constraints at same time index
+                    A_con_i.extend([0]*2*self.n + tpoly)	# end position of prev poly
+                    A_con_i.extend([0]*2*self.n*(self.m-m-1))
+                    A_con.append(A_con_i)
+
+                else: # add self.n-1 continuity constraints
+                    A_con_i = [0]*2*self.n*(m-1)
+                    A_con_i.extend(tpoly + [-a for a in tpoly])
+                    A_con_i.extend([0]*2*self.n*(self.m-m-1))
+                    A_con.append(A_con_i)
+
+        # combine endpoint and continuity constraints
+        self.A = A_ep + A_con
+
+    def setup_objectives(self):
+        self.H = np.zeros((2*self.n*self.m, 2*self.n*self.m))
+        for m in range(self.m):
+            self.H[2*self.n*m:2*self.n*(m+1), 2*self.n*m:2*self.n*(m+1)] = self.get_H_1seg(self.t[m+1])
+
+        self.f = np.zeros(2*self.n*self.m)
+
+    def get_H_1seg(self, T):
+        """Quadratic Cost matrix for integration of a squared n degree polynomial"""
+        H_seg = np.zeros((2*self.n, 2*self.n))
+
+        # The derivative coeffecients that come about after differentiating the polynomial n times
+        diff = [fact(j,self.n) for j in range(self.n, 2*self.n)]
+        # When sqaured and integrated the polymial will be quadratic and will have pairwise permutations of these coefficients
+        # These coefficients will come up in the matrix afterwards 
+        coeff_prods = np.prod(list(product(diff,repeat=2)),-1).reshape(self.n,self.n)
+
+        # the powers to which the time endpoint will be raised. This comes from the result of integrating the sqaure of the
+        # n times differentiated polynomial.
+        time_powers = np.sum(np.meshgrid(np.arange(self.n), np.arange(self.n)),0)+1 
+        time_poly = T**time_powers/time_powers # this result comes because of 2n-1 order integration
+        H_seg[self.n:,self.n:] = coeff_prods*time_poly
+        
+        return H_seg
 
 
-# l: number of dimensions
-# m: number of waypoints
-# n: number of derivatives/order
+    def optimize(self):
+        """
+        Return an optimized plan for all dimensions
+        """
+        plan = []
+        for l in range(self.l):
+            b_ep = [self.wps[l][0]] + [0]*(self.n-1) + [self.wps[l][-1]] + [0]*(self.n-1)
+            b_con = []
+            for i in range(1, self.m):
+                b_con += [self.wps[l][i]]*2 + [0]*self.n 
+            b = b_ep + b_con	# continuity RHS
 
-# decision vector
-# (n-1)(m-2)l variables without time optimization 
+            sol = solvers.qp(P = matrix(self.H), q=matrix(self.f), A=matrix(np.array(self.A), tc='d'), b=matrix(b, tc='d'))
 
-X = [
-    # x1_d, x1_dd, x1_ddd, x2_d, x2_dd ... m-1,
-    # y1_d, y1_dd, y1_ddd, y2_d, y2_dd ... m-1,
-    # z1_d, z1_dd, z1_ddd, z2_d, z2_dd ... m-1,
-    # 0, 0 
-    1,0,0, 1,0,0, 
-    1,0,0, 1,0,0, 
-    1,0,0, 0.2,0,0, 
-] # the optimization vector. can indlude times as well.
-# during optimization, velocity and acceleration constraints will be imposed on the magnitudes
+            plan.append(self.generate(sol["x"], d=50))
+        return np.array(plan).T
 
+if __name__=="__main__":
+    wps = [
+        [0,1,4],
+        [0,4,2],
+        [0,5,5],
+    ]
 
-if __name__ == "__main__":
-    order = 4 # min snap
-    time_vec = [0,2,4,6]
-    total_time = time_vec[-1]
-    print("sdgsdfgsd")
-    tgen = TrajectoryGenerator(n = order, wps = waypoints, time = total_time, d = 100)
-
-    tgen.to_constraints(X)
-    start = time.perf_counter()
-
-    traj = tgen.generate() # numpy array of dxl points of the trajectory
-    print(tgen.cost)
-    print(time.perf_counter()-start)
-
-    tgen.plot(traj)
-    # fig, ax = plt.figure()
-    # plt.plot(tgen.T, traj[:,0])
-    # plt.show()
-
-
-"""
-## arguments to pogram
-- model // str: cf2x
-- map_id // int: 0,1,2,3
-- global_planner // str: 'rrt', 'rrt_star'
-- min_snap // bool
-- local_planner // str: 'mpc', 'bug', 'orca'
-
-env = Env(model = drone)
-env.load_map(map_id) // map has start, goal, 
-plan = env.plan(global = global_planner, min_snap = min_snap) // list of x,yz coordinates. run will take care of rest
-env.run(plan, local_planner =)
-
-env.plan
-    if method is rrt
-        wps = RRT(map) # map includes start, goal and obstacles
-    elif method is rrt
-        wps = RRT_star(map) # map includes start, goal and obstacles
-
-    if min_snap:
-        plan = MinSnap(order=4, waypoints = wps).optimize()
-    else:
-        plan = self.discretise_wps(wps)
-    return plan
-
-"""
+    mvajscp = MinVelAccJerkSnapCrackPop(order=4, time=10, waypoints=wps)
+    plan = mvajscp.optimize()
+    mvajscp.plot(plan)
