@@ -28,14 +28,14 @@ class MPCSolver:
         self.generate_solver()
 
     def generate_solver(self):        
-        self.model.N = 10  # horizon length
+        self.model.N = 15  # horizon length
         self.model.nvar = 16  # number of variables
         self.model.neq = 12  # number of equality constraints
         self.model.npar = 3 # number of runtime parameters
 
         self.model.objective = obj
         self.model.objectiveN = objN 
-        integrator_stepsize = 0.05
+        integrator_stepsize = self.dt
         self.model.eq = lambda z: forcespro.nlp.integrate(continuous_dynamics, z[4:16], z[0:4],
                                                     integrator=forcespro.nlp.integrators.RK4,
                                                     stepsize=integrator_stepsize)
@@ -45,7 +45,7 @@ class MPCSolver:
 
         #                     inputs                 |  states
         #                                       omega1,                omega2,               omega3,               omega4,       x,       y,       z,      vx,      vy,      vz,                   roll,                pitch,    yaw,                   roll_rate,                pitch_rate,           yaw_rate
-        self.model.lb = np.array([                 0.0,                   0.0,                  0.0,                  0.0, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf,   -self.max_pitch_roll, -self.max_pitch_roll, -np.pi,   -self.max_pitch_roll_rate, -self.max_pitch_roll_rate, -self.max_yaw_rate])
+        self.model.lb = np.array([                 0.0,                   0.0,                  0.0,                  0.0, -np.inf, -np.inf, 0, -np.inf, -np.inf, -np.inf,   -self.max_pitch_roll, -self.max_pitch_roll, -np.pi,   -self.max_pitch_roll_rate, -self.max_pitch_roll_rate, -self.max_yaw_rate])
         self.model.ub = np.array([self.max_rotor_speed,  self.max_rotor_speed, self.max_rotor_speed, self.max_rotor_speed,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf,    self.max_pitch_roll,  self.max_pitch_roll,  np.pi,    self.max_pitch_roll_rate,  self.max_pitch_roll_rate,  self.max_yaw_rate])
 
         # Initial condition on vehicle states x
