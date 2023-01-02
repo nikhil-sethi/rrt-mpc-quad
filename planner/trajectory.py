@@ -16,7 +16,7 @@ def pow(n, k):
     return n**k
 
 class TrajectoryManager():
-    def __init__(self, order, time, waypoints) -> None:
+    def __init__(self, order, waypoints, time=1) -> None:
         
         self.wps = waypoints
         
@@ -28,7 +28,7 @@ class TrajectoryManager():
         self.n = order # order of control/number of derivatives
         assert 0<self.n<=4, "Order of polynomial must be between 0 and 4"
         
-        if type(time) is int:
+        if type(time) is int or type(time) is float:
             self.t = np.cumsum(self.get_path_wts()*time) # cumulative times for waypoints 
             self.t = np.insert(self.t, 0,0)
         elif type(time) is list:
@@ -45,7 +45,7 @@ class TrajectoryManager():
         """Takes in optimizer solution and generates a discretized trajectory"""
         C = np.expand_dims((np.array(coeffs_raw).reshape(self.m,2*self.n)),-1) # coefficients
 
-        d = 40 # discretisation
+        # d = 40 # discretisation
         pts_per_poly = d//self.m
         tvec = np.linspace(self.t[:-1],self.t[1:], pts_per_poly).T.reshape(self.m, pts_per_poly,1)
         pvec = np.tile(tvec, 2*self.n) ** np.arange(2*self.n) # (d/l x order)
@@ -69,8 +69,8 @@ class TrajectoryManager():
         plt.show()
 
 class MinVelAccJerkSnapCrackPop(TrajectoryManager): # cute name
-    def __init__(self, order, time, waypoints) -> None:
-        super().__init__(order, time, waypoints)
+    def __init__(self, order, waypoints, time = 1) -> None:
+        super().__init__(order, waypoints, time)
 
         # setup constraints
         self.setup_constraints()
@@ -81,6 +81,8 @@ class MinVelAccJerkSnapCrackPop(TrajectoryManager): # cute name
     def setup_constraints(self):
         # Endpoint constraints
         A_ep = []
+
+        # CLEAN THIS SHIT UP
         # first waypoint
         m=0
         for n in range(self.n):
@@ -150,7 +152,7 @@ class MinVelAccJerkSnapCrackPop(TrajectoryManager): # cute name
         return H_seg
 
 
-    def optimize(self):
+    def optimize(self, num_pts=150):
         """
         Return an optimized plan for all dimensions
         """
@@ -161,19 +163,20 @@ class MinVelAccJerkSnapCrackPop(TrajectoryManager): # cute name
             for i in range(1, self.m):
                 b_con += [self.wps[l][i]]*2 + [0]*self.n 
             b = b_ep + b_con	# continuity RHS
-
+            # print(np.array(self.A))
             sol = solvers.qp(P = matrix(self.H), q=matrix(self.f), A=matrix(np.array(self.A), tc='d'), b=matrix(b, tc='d'))
 
-            plan.append(self.generate(sol["x"], d=50))
+            plan.append(self.generate(sol["x"], d=num_pts))
         return np.array(plan).T
 
 if __name__=="__main__":
-    wps = [
-        [0,1,4],
-        [0,4,2],
-        [0,5,5],
-    ]
+    wps = np.array([
+        [0.,1.,4.,7.],
+        [0.,4.,2.,7.],
+        [0.,5.,5.,7.],
+    ])
 
-    mvajscp = MinVelAccJerkSnapCrackPop(order=4, time=10, waypoints=wps)
-    plan = mvajscp.optimize()
+    mvajscp = MinVelAccJerkSnapCrackPop(order=2, waypoints=wps, time=1)
+    plan = mvajscp.optimize(num_pts=100)
+    # print(plan)
     mvajscp.plot(plan)
