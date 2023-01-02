@@ -38,7 +38,7 @@ from planner.sample_based import RRT
 from planner.sample_based import RRT_Star
 from planner.spaces import Space
 from planner.graph import Node
-
+from planner.trajectory import MinVelAccJerkSnapCrackPop
 
 class PlanAviary(CtrlAviary):
 	"""Multi-drone environment class for control applications."""
@@ -127,8 +127,7 @@ class PlanAviary(CtrlAviary):
 			for i in range(2): self.plot_point(obs.extent[i])
 			self.plot_line(obs.extent[0], obs.extent[1])
 
-	def plan(self, goal, method):
-		
+	def plan(self, goal, method="rrt_star", min_snap=False, d=100):	
 		start = Node(pos = np.array(self.INIT_XYZS[0]))
 		goal = Node(pos = np.array([-0.6, 0.6, 0.5]))
 		ws = Space(low=[-1, -1, 0], high=[1, 1, 1])
@@ -138,8 +137,31 @@ class PlanAviary(CtrlAviary):
 			planner = RRT_Star(space=ws, start=start, goal=goal, map=self.map)
 		else:
 			raise NotImplementedError()
+		wps = planner.run()
 
-		return planner.run()
+		plan_dist = planner.fastest_route_to_end # total distance covered by waypoints
+		num_pts = int(plan_dist//0.01) # trajectory seems to work best with current control system when discretisation is around 1 cm. Weird but ok.
+
+		# some preprocessing on waypoints
+		# convert to numpy array
+		wps = planner.nodes_to_array(wps)
+
+		# making sure waypoints are unique. RRT can be glitch sometimes
+		wps, idx = np.unique(wps, axis=0, return_index=True)
+		wps = wps[idx,:]	# np unique returns sorted values for some reason. undo that shit
+
+		# path optimization 
+		if min_snap:
+			try:
+				traj_opt = MinVelAccJerkSnapCrackPop(order=2, waypoints = wps.T, time=8)	# don't worry about time argument too much. it's all relative
+				plan = traj_opt.optimize(num_pts=num_pts)
+			except: # because min snap fails sometimes because of rank errors. still to debug
+				# in that case, just go ahead with original waypoints and discretisation
+				plan = discretize_path(wps, num_steps=int(num_pts/len(wps)))		
+				# traj_opt.plot(plan)
+		else: # discretise the plan 
+			plan = discretize_path(wps, num_steps=int(num_pts/len(wps)))	
+		return plan
 					   
 DEFAULT_DRONES = DroneModel("cf2x")
 DEFAULT_NUM_DRONES = 1
@@ -158,6 +180,7 @@ DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 DEFAULT_MAP = 2
 DEFAULT_PLANNER = 'rrt_star'
+DEFAULT_MINSNAP = False
 
 def run(
 		drone=DEFAULT_DRONES,
@@ -176,7 +199,8 @@ def run(
 		output_folder=DEFAULT_OUTPUT_FOLDER,
 		colab=DEFAULT_COLAB,
 		map = DEFAULT_MAP,
-		planner = DEFAULT_PLANNER
+		planner = DEFAULT_PLANNER,
+		min_snap = DEFAULT_MINSNAP
 		):
 	#### Initialize the simulation #############################
 	H = .1
@@ -240,19 +264,16 @@ def run(
 						planner=planner
 						)
 
-	plan = env.plan(goal=np.array([-0.6,0.6,0.3]), method=planner)
-	
-	# Create TARGET_POS variable from planned waypoints
-	TARGET_POS = discretize_path(plan, num_steps=int(300/len(plan)))
-	NUM_WP = TARGET_POS.shape[0]
+	plan = env.plan(goal=np.array([-0.6,0.6,0.3]), method=planner, min_snap=min_snap)
+	NUM_WP = plan.shape[0]
 	wp_counters = np.array([0 for i in range(num_drones)])
 
 	prev_pos = env.INIT_XYZS[0]
-	for node in plan:
-		env.plot_point(node.pos)
+	for pos in plan:
+		env.plot_point(pos)
 		# try:
-		env.plot_line(prev_pos, node.pos)
-		prev_pos = node.pos
+		env.plot_line(prev_pos, pos)
+		prev_pos = pos
 
 	#### Obtain the PyBullet Client ID from the environment ####
 	PYB_CLIENT = env.getPyBulletClient()
@@ -285,7 +306,7 @@ def run(
 			for j in range(num_drones):
 				action[str(j)], _, _ = ctrl[j].computeControlFromState(control_timestep=CTRL_EVERY_N_STEPS*env.TIMESTEP,
 																	   state=obs[str(j)]["state"],
-																	   target_pos=TARGET_POS[wp_counters[j], 0:3],
+																	   target_pos=plan[wp_counters[j], 0:3],
 																	   # target_pos=INIT_XYZS[j, :] + TARGET_POS[wp_counters[j], :],
 																	   target_rpy=INIT_RPYS[j, :]
 																	   )
@@ -302,7 +323,7 @@ def run(
 			logger.log(drone=j,
 					   timestamp=i/env.SIM_FREQ,
 					   state=obs[str(j)]["state"],
-					   control=np.hstack([TARGET_POS[wp_counters[j], 0:2], INIT_XYZS[j, 2], INIT_RPYS[j, :], np.zeros(6)])
+					   control=np.hstack([plan[wp_counters[j], 0:2], INIT_XYZS[j, 2], INIT_RPYS[j, :], np.zeros(6)])
 					   # control=np.hstack([INIT_XYZS[j, :]+TARGET_POS[wp_counters[j], :], INIT_RPYS[j, :], np.zeros(6)])
 					   )
 
@@ -345,6 +366,7 @@ if __name__ == "__main__":
 	parser.add_argument('--colab',              default=DEFAULT_COLAB, type=bool,           help='Whether example is being run by a notebook (default: "False")', metavar='')
 	parser.add_argument('--map',              default=DEFAULT_MAP, type=int,           help='Map number (default: "Map 1")', metavar='')
 	parser.add_argument('--planner',              default=DEFAULT_PLANNER, type=str,           help='Planner (default: "rrt_star")', metavar='')
+	parser.add_argument('--min_snap',              default=DEFAULT_MINSNAP, type=str2bool,           help='Planner (default: False)', metavar='')
 	ARGS = parser.parse_args()
 
 	run(**vars(ARGS))

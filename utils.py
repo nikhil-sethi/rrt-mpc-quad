@@ -23,11 +23,11 @@ def discretize_path(connections, num_steps=200) -> list:
     # need to define a line/vector from parent pos to node position
     traj = np.empty((0,3))
     for i in range(len((connections))-1):
-        node_start = np.asarray(connections[i].pos)
-        node_end = np.asarray(connections[i+1].pos)
+        node_start = connections[i] 
+        node_end = connections[i+1]  
         traj_btw_nodes = np.linspace(node_start, node_end, num=num_steps, endpoint=False)
         traj = np.append(traj, traj_btw_nodes, axis=0)
-    traj = np.append(traj, np.asarray(connections[-1].pos).reshape(1,3), axis=0)
+    traj = np.append(traj, connections[-1][None,:], axis=0)
     return traj
 
 # def urdf2obs(file):

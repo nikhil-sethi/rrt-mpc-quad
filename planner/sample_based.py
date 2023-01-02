@@ -54,6 +54,11 @@ class SamplingPlanner:
     def plan(self):
         raise NotImplementedError()
 
+    @staticmethod
+    def nodes_to_array(nodes):
+        """Converts list of nodes to array of waypoints"""
+        return np.array([node.pos for node in nodes])
+
 class RRT(SamplingPlanner):
     def __init__(self,start:Node, goal:Node, space:Space, map):
         super().__init__(start, goal, space, map)
