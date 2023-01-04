@@ -14,7 +14,7 @@ MAP_2 = MAP_0 + [
 
 MAP_3 = MAP_0 + [
     Cuboid(name = "wall_c", origin = [0, 0, 0.35], orientation = [0,0, 3.14/4], sides=[2, 0.1, 0.7], color = Color.BLUE),
-    Cuboid(name = "wall_d", origin = [0.5, 0.5, 1.2], orientation = [0,0, 3.14/4], sides=[1, 0.1, 1], color = Color.BLUE)
+    Cuboid(name = "wall_d", origin = [0, 0, 1.2], orientation = [0,0, 3.14/4], sides=[1, 0.1, 1], color = Color.BLUE)
 ]
 
 MAPS = [MAP_0, MAP_1, MAP_2, MAP_3]
