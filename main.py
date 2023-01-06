@@ -5,12 +5,18 @@ Example
 -------
 In a terminal, run as:
 
-	$ python main.py --map 2 --planner "rrt" --min_snap True
+	$ python main.py --map 2 --planner "rrt_star" --min_snap True
 
 """
 import time
 import argparse
 import numpy as np
+import sys
+import os
+
+# to include subdirs as modules
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 from gym_pybullet_drones.utils.enums import DroneModel
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
@@ -18,7 +24,7 @@ from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.utils.utils import sync, str2bool
 from gym_pybullet_drones.utils.enums import DroneModel
 
-from utils import Color
+from utils.color import Color
 from environment import Env
 
 

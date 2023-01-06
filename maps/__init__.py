@@ -1,5 +1,5 @@
-from obstacles import Cuboid, Cube
-from utils import Color
+from .obstacles import Cuboid, Cube
+from utils.color import Color
 
 MAP_0 = [Cube(name = "landing", origin=[-0.6, 0.6, 0.15], orientation = [0,0,0], sides=[0.3, 0.3, 0.3], color = Color.GREEN),
         Cube(name = "take_off", origin=[0.6, -0.6, 0.15], orientation = [0,0,0], sides=[0.3, 0.3, 0.3], color = Color.RED)]

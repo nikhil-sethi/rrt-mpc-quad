@@ -11,7 +11,7 @@ from planner.graph import Node
 from planner.trajectory import MinVelAccJerkSnapCrackPop
 
 from maps import load_map, MAPS
-from utils import Color, discretize_path
+from utils.color import Color
 
 class Env(CtrlAviary):
 	"""Multi-drone environment class for control applications."""
@@ -138,10 +138,10 @@ class Env(CtrlAviary):
 				plan = traj_opt.optimize(num_pts=num_pts)
 			except: # because min snap fails sometimes because of rank errors. still to debug
 				# in that case, just go ahead with original waypoints and discretisation
-				plan = discretize_path(wps, num_steps=int(num_pts/len(wps)))		
+				plan = planner.discretize_path(wps, num_steps=int(num_pts/len(wps)))		
 				# traj_opt.plot(plan)
 		else: # discretise the plan 
-			plan = discretize_path(wps, num_steps=int(num_pts/len(wps)))	
+			plan = planner.discretize_path(wps, num_steps=int(num_pts/len(wps)))	
 		return plan
 					   
 	def plot_plan(self, plan):

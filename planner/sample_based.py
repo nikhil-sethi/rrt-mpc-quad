@@ -1,6 +1,5 @@
 from .spaces import Space#, Workspace
 from .graph import Graph, Node
-from utils import Quadrotor
 import matplotlib.pyplot as plt
 import numpy as np
 

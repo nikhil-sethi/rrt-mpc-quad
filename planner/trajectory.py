@@ -129,6 +129,7 @@ class MinVelAccJerkSnapCrackPop(TrajectoryManager): # cute name
     def setup_objectives(self):
         self.H = np.zeros((2*self.n*self.m, 2*self.n*self.m))
         for m in range(self.m):
+            # only n coefficients out of 2n will be active. Need to set H accordingly
             self.H[2*self.n*m:2*self.n*(m+1), 2*self.n*m:2*self.n*(m+1)] = self.get_H_1seg(self.t[m+1])
 
         self.f = np.zeros(2*self.n*self.m)
