@@ -42,7 +42,7 @@ def run(
 		control_freq_hz=48,
 		duration_sec=12,
 		output_folder="results",
-		map = 1,
+		map_number = 0,
 		planner = "rrt_star",
 		min_snap = True,
 		seed = None
@@ -53,24 +53,23 @@ def run(
 
 	## Initialize the simulation 
 	# setup states
-	start_pos = [0.6,-0.6,0.5]
-	goal_pos = [-0.6,0.6,0.5]
+	# start_pos = [0.6,-0.6,0.5]
+	# goal_pos = [-0.6,0.6,0.5]
 	init_att = [0, 0,  (np.pi/2)]
 
 	AGGR_PHY_STEPS = int(simulation_freq_hz/control_freq_hz) if aggregate else 1
 	
 	#### Create the environment with or without video capture ##
 
-	env = Env(start = start_pos,
-			goal = goal_pos,
-			map = map,
-			freq=simulation_freq_hz,
-			aggregate_phy_steps=AGGR_PHY_STEPS,
-			gui=gui,
-			record=record_video,
-			obstacles=obstacles,
-			user_debug_gui=user_debug_gui,
-			)
+	env = Env(
+		map_number = map_number,
+		freq=simulation_freq_hz,
+		aggregate_phy_steps=AGGR_PHY_STEPS,
+		gui=gui,
+		record=record_video,
+		obstacles=obstacles,
+		user_debug_gui=user_debug_gui,
+		)
 
 	plan = env.plan(method=planner, min_snap=min_snap)
 	NUM_WP = plan.shape[0]
@@ -119,7 +118,7 @@ def run(
 		logger.log(drone=0,
 				timestamp=i/env.SIM_FREQ,
 				state=obs["0"]["state"],
-				control=np.hstack([plan[wp_counter, 0:2], start_pos[2], init_att, np.zeros(6)])
+				control=np.hstack([plan[wp_counter, 0:2], env.start_pos[2], init_att, np.zeros(6)])
 				# control=np.hstack([INIT_XYZS[j, :]+TARGET_POS[wp_counters[j], :], INIT_RPYS[j, :], np.zeros(6)])
 				)
 			
@@ -144,15 +143,15 @@ if __name__ == "__main__":
 	parser.add_argument('--num_drones',         default=1,          type=int,           help='Number of drones (default: 3)', metavar='')
 	parser.add_argument('--gui',                default=True,       type=str2bool,      help='Whether to use PyBullet GUI (default: True)', metavar='')
 	parser.add_argument('--record_video',       default=False,      type=str2bool,      help='Whether to record a video (default: False)', metavar='')
-	parser.add_argument('--plot',               default=False,       type=str2bool,      help='Whether to plot the simulation results (default: True)', metavar='')
+	parser.add_argument('--plot',               default=False,      type=str2bool,      help='Whether to plot the simulation results (default: True)', metavar='')
 	parser.add_argument('--simulation_freq_hz', default=240,        type=int,           help='Simulation frequency in Hz (default: 240)', metavar='')
 	parser.add_argument('--control_freq_hz',    default=48,         type=int,           help='Control frequency in Hz (default: 48)', metavar='')
 	parser.add_argument('--duration_sec',       default=12,         type=int,           help='Duration of the simulation in seconds (default: 5)', metavar='')
-	parser.add_argument('--output_folder',     default='results', type=str,           help='Folder where to save logs (default: "results")', metavar='')
-	parser.add_argument('--map',              default=1, type=int,           help='Map number (default: "Map 1")', metavar='')
-	parser.add_argument('--planner',              default="rrt_star", type=str,           help='Planner (default: "rrt_star")', metavar='')
-	parser.add_argument('--min_snap',              default=True, type=str2bool,           help='Planner (default: False)', metavar=''),
-	parser.add_argument('--seed',              default=None, type=int,           help='Planner (default: None)', metavar='')
+	parser.add_argument('--output_folder',     	default='results', 	type=str,           help='Folder where to save logs (default: "results")', metavar='')
+	parser.add_argument('--map',            	default=1, 			type=int,           help='Map number (default: "Map 1")', metavar='')
+	parser.add_argument('--planner',            default="rrt_star", type=str,           help='Planner (default: "rrt_star")', metavar='')
+	parser.add_argument('--min_snap',           default=True, 		type=str2bool,      help='Planner (default: False)', metavar=''),
+	parser.add_argument('--seed',              	default=None, 		type=int,           help='Planner (default: None)', metavar='')
 	ARGS = parser.parse_args()
 
 	run(**vars(ARGS))
