@@ -4,13 +4,16 @@ import numpy as np
 
 class Map:
 
-    def __init__(self, map_number=0):
-        if map_number not in [0,1,2,3]:
-            print("Chosen map number not defined. Resorting to default map, Map 0.")
-            self.map_number = 0
+    def __init__(self, map_number = 1):
+        self.map_indices = [0,1,2,3]
+        self.num_maps = len(self.map_indices)
+        if map_number not in self.map_indices:
+            print(f"Chosen map number not defined. Map options are {self.map_indices}. Resorting to default map, Map 1.")
+            self.map_number = 1
         else:
             self.map_number = map_number
         self.load_obstacles()
+        self.define_ws_size()
 
     def load_obstacles(self):
         if self.map_number == 0:
@@ -43,20 +46,29 @@ class Map:
                 Cuboid(name = "wall_d", origin = [0, 0, 1.2], orientation = [0,0, 3.14/4], sides=[1, 0.1, 1], color = Color.BLUE)]
 
     def define_ws_size(self):
-        all_ll = []
-        all_ul = []
+        ws_dilation = np.array([0.5, 0.5, 0.5])
+        all_limits = []
         for obs in self.obstacles:
-            all_ll.append(obs.extent[0].flatten())
-            all_ul.append(obs.extent[1].flatten())
-        all_ll = np.array(all_ll)
-        all_ul = np.array(all_ul)
-        print(all_ll)
-        print(all_ul)
-        self.ws_ll = np.min(all_ll, axis = 0)
-        self.ws_ul = np.max(all_ul, axis = 0)
+            all_limits.append(obs.extent[0].flatten())
+            all_limits.append(obs.extent[1].flatten())
+            # print(f"{obs.name} LL = {obs.extent[0].flatten()}")
+            # print(f"{obs.name} UL = {obs.extent[1].flatten()}")
+        # Also include starting and goal positions, in case they do note correspond to obstacles
+        all_limits.append(self.starting_pos)
+        all_limits.append(self.goal_pos)
+        all_limits = np.array(all_limits)
+        self.ws_ll = np.min(all_limits, axis = 0) - ws_dilation
+        self.ws_ul = np.max(all_limits, axis = 0) + ws_dilation
+        # Exclude ws below floor
+        if self.ws_ll[2] <= 0: self.ws_ll[2] = 0
+        # print(f"all_limits = \n{all_limits}")
+        # print(f"ws_ll = {self.ws_ll}")
+        # print(f"ws_ul = {self.ws_ul}")
 
     def load_map(self, client, dilate=False, dilation=0):
         for obs in self.obstacles:
             obs.load_urdf(client)
             if dilate:
                 obs.dilate_obstacles(dilation)
+        if dilate:
+            self.define_ws_size()

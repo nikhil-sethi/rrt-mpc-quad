@@ -10,7 +10,7 @@ from planner.spaces import Space
 from planner.graph import Node
 from planner.trajectory import MinVelAccJerkSnapCrackPop
 
-from maps import Map
+from maps.map import Map
 from utils.color import Color
 
 class Env(CtrlAviary):
@@ -70,7 +70,7 @@ class Env(CtrlAviary):
 		super().__init__(drone_model=drone_model,
 						 num_drones=num_drones,
 						 neighbourhood_radius=neighbourhood_radius,
-						 initial_xyzs=np.array([self.map.starting_position]),
+						 initial_xyzs=np.array([self.map.starting_pos]),
 						 initial_rpys=np.array([initial_rpys]),
 						 physics=physics,
 						 freq=freq,
@@ -98,22 +98,23 @@ class Env(CtrlAviary):
 		# Dilate obstacles to drone radius plus margin also equal to drone radius 
 		self.map.load_map(self.CLIENT, dilate=True, dilation=2*self.L)
 		
-		## uncomment below snippet to plot extents for obstacles
-		# for obs in self.map:
+		# # uncomment below snippet to plot extents for obstacles
+		# for obs in self.map.obstacles:
 		# 	for i in range(2): 
 		# 		self.plot_point(obs.extent[i])
 		# 	self.plot_line(obs.extent[0], obs.extent[1])
 
 	def plan(self, method="rrt_star", min_snap=False, d=100):	
-		start = Node(pos = self.map.starting_position)
-		goal = Node(pos = self.map.goal_position)
+		start = Node(pos = self.map.starting_pos)
+		goal = Node(pos = self.map.goal_pos)
 		ws = Space(low = self.map.ws_ll, high = self.map.ws_ul)
 		if method == 'rrt':
-			planner = RRT(space=ws, start=start, goal=goal, map=self.map)
+			planner = RRT(space=ws, start=start, goal=goal, map=self.map.obstacles)
 		elif method == 'rrt_star':
-			planner = RRT_Star(space=ws, start=start, goal=goal, map=self.map)
+			planner = RRT_Star(space=ws, start=start, goal=goal, map=self.map.obstacles)
 		else:
 			raise NotImplementedError()
+		print(f"Planning trajectory with {method}...")
 		wps = planner.run()
 		
 		plan_dist = planner.fastest_route_to_end # total distance covered by waypoints
