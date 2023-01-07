@@ -1,6 +1,6 @@
 import pybullet as p
 import os
-from vector import Pose
+from maps.vector import Pose
 from utils.color import Color
 import numpy as np
 from scipy.spatial.transform import Rotation as R
