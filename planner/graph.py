@@ -2,9 +2,9 @@ import math
 import numpy as np
 
 class Node:
-     def __init__(self, pos: np.ndarray, parent=None, id=0):
+     def __init__(self, pos: list, parent=None, id=0):
         self.id = id  # Only for debugging
-        self.pos = pos
+        self.pos = np.array(pos)
         self.parent = parent
         if parent is None:
             self.connections = [self]
