@@ -110,7 +110,7 @@ class Env(CtrlAviary):
 	def plan(self, method="rrt_star", min_snap=False, d=100):	
 		start = Node(pos = self.start)
 		goal = Node(pos = self.goal)
-		ws = Space(low=[-1, -1, 0], high=[1, 1, 1])
+		ws = Space(low=[-1.5, -1.5, 0], high=[1.5, 1.5, 1.5])
 		if method == 'rrt':
 			planner = RRT(space=ws, start=start, goal=goal, map=self.map)
 		elif method == 'rrt_star':
@@ -118,7 +118,7 @@ class Env(CtrlAviary):
 		else:
 			raise NotImplementedError()
 		wps = planner.run()
-
+		
 		plan_dist = planner.fastest_route_to_end # total distance covered by waypoints
 
 		num_pts = int(plan_dist//0.01) # trajectory seems to work best with current control system when discretisation is around 1 cm. Weird but ok.
@@ -126,16 +126,22 @@ class Env(CtrlAviary):
 		# some preprocessing on waypoints
 		# convert to numpy array
 		wps = planner.nodes_to_array(wps)
-
+		
 		# making sure waypoints are unique. RRT can be glitch sometimes
-		wps, idx = np.unique(wps, axis=0, return_index=True)
-		wps = wps[idx,:]	# np unique returns sorted values for some reason. undo that shit
+		wps_sorted, _, idx = np.unique(wps, axis=0, return_index=True, return_inverse=True)
+		
+		if len(idx)!=len(wps):
+			wps = wps_sorted[idx[:-1],:] # np unique returns sorted values for some reason. undo that shit
+		else: # if everything was already unique. Need to this stuff coz np unique gives wrong vals sometimes
+			wps = wps_sorted[idx,:]
 
+		self.plot_plan(wps)
 		# path optimization 
 		if min_snap:
 			try:
 				traj_opt = MinVelAccJerkSnapCrackPop(order=2, waypoints = wps.T, time=8)	# don't worry about time argument too much. it's all relative
 				plan = traj_opt.optimize(num_pts=num_pts)
+				# traj_opt.plot(plan)
 			except: # because min snap fails sometimes because of rank errors. still to debug
 				# in that case, just go ahead with original waypoints and discretisation
 				plan = planner.discretize_path(wps, num_steps=int(num_pts/len(wps)))		

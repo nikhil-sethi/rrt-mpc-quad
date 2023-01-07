@@ -100,7 +100,10 @@ class Cuboid(Obstacle3D):
         transformed_point = np.ones((4,1))
         transformed_point[0:3] = np.array(point).reshape((3,1))
         transformed_point = np.linalg.inv(self.T)@transformed_point
-        return all([-self.bbox[i]/2 < transformed_point[i] < self.bbox[i]/2 for i in range(point.shape[0])])
+        
+        ret =  all([-self.bbox[i]/2 < transformed_point[i] < self.bbox[i]/2 for i in range(point.shape[0])])
+        # print(transformed_point, self.name, self.extent, ret)
+        return ret
         
 class Cube(Cuboid):
     def __init__(self, name, origin, orientation, sides:tuple, color = Color.GRAY) -> None:

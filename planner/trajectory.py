@@ -58,6 +58,9 @@ class TrajectoryManager():
         fig = plt.figure()
         if dims == 3: # 3D
             ax = plt.axes(projection='3d')
+            # ax.set_xlim(-1.5,1.5)
+            # ax.set_ylim(-1.5,1.5)
+            # ax.set_zlim(-1.5,1.5)
             ax.plot(self.wps[0],self.wps[1],self.wps[2],'b-')
             ax.plot(points[:,0],points[:,1],points[:,2], 'r-')
         elif dims == 2:
@@ -175,9 +178,18 @@ if __name__=="__main__":
         [0.,1.,4.,7.],
         [0.,4.,2.,7.],
         [0.,5.,5.,7.],
-    ])
-
-    mvajscp = MinVelAccJerkSnapCrackPop(order=2, waypoints=wps, time=1)
-    plan = mvajscp.optimize(num_pts=100)
+    ]).T
+    # wps = np.array([[ 0.6       , -0.6,         0.5       ],
+    #                 [ 0.636843  , -0.33789508,  0.62039724],
+    #                 [-0.17777323,  0.55622033,  0.75059858],
+    #                 [-0.6       ,  0.6,         0.5      ]])
+    wps_sorted, _, idx = np.unique(wps, axis=0, return_index=True, return_inverse=True)
+    if len(idx)!=len(wps):
+        wps = wps_sorted[idx[:-1],:]
+    else:
+        wps = wps_sorted[idx,:]
+    print(wps, idx)
+    mvajscp = MinVelAccJerkSnapCrackPop(order=2, waypoints=wps.T, time=1)
+    plan = mvajscp.optimize(num_pts=200)
     # print(plan)
     mvajscp.plot(plan)

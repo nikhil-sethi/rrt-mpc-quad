@@ -60,6 +60,7 @@ class SamplingPlanner:
     def run(self) -> list:
         for i in range(MAX_ITER):
             self.plan()
+            # print("dfg")
             
         if self.reached_goal:
             print("[Planner] Goal Reached! Total distance: ", self.final_node.dist_from_start)
@@ -68,6 +69,19 @@ class SamplingPlanner:
         else:
             print("[Planner] Goal not reached")
             return self.graph.nodes[-1].connections
+
+    @staticmethod
+    def discretize_path(connections, num_steps=200) -> np.ndarray:
+        # each node in connections has a position (list of x,y,z)
+        # need to define a line/vector from parent pos to node position
+        traj = np.empty((0,3))
+        for i in range(len((connections))-1):
+            node_start = connections[i] 
+            node_end = connections[i+1]  
+            traj_btw_nodes = np.linspace(node_start, node_end, num=num_steps, endpoint=False)
+            traj = np.append(traj, traj_btw_nodes, axis=0)
+        traj = np.append(traj, connections[-1][None,:], axis=0)
+        return traj
 
 class RRT(SamplingPlanner):
     def __init__(self,start:Node, goal:Node, space:Space, map):
@@ -126,8 +140,8 @@ class RRT_Star(SamplingPlanner):
         self.nr_nodes+=1
         self.check_shortcut_for_nodes(new_node)
         if (np.linalg.norm(self.graph.nodes[-1].pos -self.goal.pos)<DIST_TH) and (self.graph.nodes[-1].dist_from_start < self.fastest_route_to_end):
-            self.fastest_route_to_end = self.graph.nodes[-1].dist_from_start
             self.final_node = self.graph.nodes[-1]
+            self.fastest_route_to_end = self.graph.nodes[-1].dist_from_start
             self.reached_goal = True
         
         self.garbage_collection()

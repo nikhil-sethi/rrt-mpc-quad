@@ -13,6 +13,7 @@ import argparse
 import numpy as np
 import sys
 import os
+import random
 
 # to include subdirs as modules
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -43,8 +44,12 @@ def run(
 		output_folder="results",
 		map = 1,
 		planner = "rrt_star",
-		min_snap = True
+		min_snap = True,
+		seed = None
 		):
+
+	random.seed(seed)
+	np.random.seed(seed)
 
 	## Initialize the simulation 
 	# setup states
@@ -132,7 +137,7 @@ def run(
 	## Plot the simulation results 
 	if plot:
 		logger.plot()
-
+	
 if __name__ == "__main__":
 	## Define and parse (optional) arguments for the script ##
 	parser = argparse.ArgumentParser(description='Helix flight script using CtrlAviary or VisionAviary and DSLPIDControl')
@@ -146,7 +151,8 @@ if __name__ == "__main__":
 	parser.add_argument('--output_folder',     default='results', type=str,           help='Folder where to save logs (default: "results")', metavar='')
 	parser.add_argument('--map',              default=1, type=int,           help='Map number (default: "Map 1")', metavar='')
 	parser.add_argument('--planner',              default="rrt_star", type=str,           help='Planner (default: "rrt_star")', metavar='')
-	parser.add_argument('--min_snap',              default=True, type=str2bool,           help='Planner (default: False)', metavar='')
+	parser.add_argument('--min_snap',              default=True, type=str2bool,           help='Planner (default: False)', metavar=''),
+	parser.add_argument('--seed',              default=None, type=int,           help='Planner (default: None)', metavar='')
 	ARGS = parser.parse_args()
 
 	run(**vars(ARGS))
