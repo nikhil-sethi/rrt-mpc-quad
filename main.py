@@ -5,7 +5,7 @@ Example
 -------
 In a terminal, run as:
 
-	$ python main.py --map 2 --planner "rrt_star" --min_snap True
+	$ python3 main.py --map_number 2 --planner "rrt_star" --min_snap True
 
 """
 import time
