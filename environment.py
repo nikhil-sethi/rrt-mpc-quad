@@ -65,8 +65,6 @@ class Env(CtrlAviary):
 		"""
 		# Initiate Map
 		self.map = Map(map_number=map_number)
-		# self.start_pos = self.map.starting_position
-		# self.goal_pos = self.map.goal_position
 		super().__init__(drone_model=drone_model,
 						 num_drones=num_drones,
 						 neighbourhood_radius=neighbourhood_radius,
