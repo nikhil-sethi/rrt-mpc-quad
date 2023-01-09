@@ -5,7 +5,7 @@ import numpy as np
 from utils import printRed
 
 DIST_TH = 0.01
-MAX_ITER = 200
+MAX_ITER = 400
 MAX_IMPR = 10 # number of improvements the rrt* algorithm makes before it stops
 PERC_2_GOAL = 0.05 # This is the percentage of evaluations at the goal position
 
@@ -19,6 +19,7 @@ class SamplingPlanner:
         self.reached_goal = False
         self.perc_goal = PERC_2_GOAL
         self.nr_nodes = 1
+        self.nr_nodes_gc = 1
         self.fastest_route_to_end = np.inf
         self.final_node:Node = None
         self.result = result
@@ -70,12 +71,15 @@ class SamplingPlanner:
         assert(self.reached_goal, "\033[91m [Planner] Goal not reached \033[00m")
 
         printRed(f"[Planner] Goal Reached! Total distance: {self.final_node.dist_from_start}")
-        self.fastest_route_to_end = self.final_node.dist_from_start
-        return self.final_node.connections
-            
 
         # compile results/metrics
+        self.result["global_planner"]["metrics"]["path_length"] = self.fastest_route_to_end
+        self.result["global_planner"]["metrics"]["nodes_wo_gc"] = self.nr_nodes
+        self.result["global_planner"]["metrics"]["nodes_w_gc"] = self.nr_nodes_gc
 
+        self.fastest_route_to_end = self.final_node.dist_from_start
+        return self.final_node.connections
+    
     @staticmethod
     def discretize_path(connections, num_steps=200) -> np.ndarray:
         # each node in connections has a position (list of x,y,z)
@@ -218,23 +222,22 @@ class RRT_Star(SamplingPlanner):
             for node in self.graph.nodes:
                 if node.dist_from_start + np.linalg.norm(self.goal.pos - node.pos) > self.fastest_route_to_end:
                     self.graph.remove_node(node)
+                    self.nr_nodes_gc += 1
         elif self.graph.nodes[-1].dist_from_start + np.linalg.norm(self.goal.pos - self.graph.nodes[-1].pos) > self.fastest_route_to_end:
             self.graph.remove_node(self.graph.nodes[-1])
+            self.nr_nodes_gc += 1
 
-    def reroute(self, node_s, new_node):
-        collision_connection = self.check_collision_connection(node_s.pos, new_node.pos)
+    def reroute(self, shortcut_node, current_node):
+        collision_connection = self.check_collision_connection(shortcut_node.pos, current_node.pos)
         if collision_connection:
             return
-        rerouted_node = Node(pos=node_s.pos, parent=new_node, id=self.nr_nodes)
-        self.graph.add_node(rerouted_node)
+        current_node.parent = shortcut_node
 
-        self.nr_nodes+=1
-        self.graph.remove_node(node_s)
- 
     def check_shortcut_for_nodes(self, new_node):
         close_nodes = sorted(self.graph.nodes, key=lambda n: np.linalg.norm(n.pos - new_node.pos))[1:max(len(self.graph.nodes), 10)]
         for node in close_nodes:
-            shortcut_bool = new_node.dist_from_start + np.linalg.norm(node.pos - new_node.pos) < node.dist_from_start - 0.0000001
+            # if we find a close node whose potential path (LHS) is shorter than current path (RHS)
+            shortcut_bool = node.dist_from_start + np.linalg.norm(node.pos - new_node.pos) < new_node.dist_from_start
             if shortcut_bool:
                 self.reroute(node, new_node)
 

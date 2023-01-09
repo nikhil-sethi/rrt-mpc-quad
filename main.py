@@ -95,7 +95,8 @@ def run(
 	NUM_WP = plan.shape[0]
 	wp_counter = 0
 
-	env.plot_plan(plan)
+	if gui:
+		env.plot_plan(plan)
 
 	## Initialize the logger 
 	logger = Logger(logging_freq_hz=int(simulation_freq_hz/AGGR_PHY_STEPS),
@@ -127,8 +128,9 @@ def run(
 																	target_pos=plan[wp_counter, 0:3],
 																	target_rpy=init_att
 																	)
-			pos = obs["0"]["state"][:3]								
-			env.plot_point(pos, color=Color.BLUE)
+			pos = obs["0"]["state"][:3]
+			if gui:								
+				env.plot_point(pos, color=Color.BLUE)
 			
 			# Go to the next way point and loop 
 			# Changed "else 0" to "else wp_counters[j]" to keep drone at endpoint
@@ -169,7 +171,7 @@ if __name__ == "__main__":
 	parser.add_argument('--simulation_freq_hz', default=240,        type=int,           help='Simulation frequency in Hz (default: 240)', metavar='')
 	parser.add_argument('--control_freq_hz',    default=48,         type=int,           help='Control frequency in Hz (default: 48)', metavar='')
 	parser.add_argument('--duration_sec',       default=12,         type=int,           help='Duration of the simulation in seconds (default: 5)', metavar='')
-	parser.add_argument('--output_folder',     	default='results', 	type=str,           help='Folder where to save logs (default: "results")', metavar='')
+	parser.add_argument('--output_folder',     	default='results/logs/', 	type=str,           help='Folder where to save logs (default: "results")', metavar='')
 	parser.add_argument('--map_number',         default=1, 			type=int,           help='Map number (default: "Map 0")', metavar='')
 	parser.add_argument('--planner',            default="rrt_star", type=str,           help='Planner (default: "rrt_star")', metavar='')
 	parser.add_argument('--min_snap',           default=True, 		type=str2bool,      help='Min Snap (default: False)', metavar=''),

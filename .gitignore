@@ -1,6 +1,6 @@
-results
 maps/obstacles
 __pycache__/
 maps/__pycache__/
 planner/__pycache__/
 utils/__pycache__/
+results/logs
