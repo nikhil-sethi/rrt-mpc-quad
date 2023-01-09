@@ -10,7 +10,7 @@ MAX_IMPR = 10 # number of improvements the rrt* algorithm makes before it stops
 PERC_2_GOAL = 0.05 # This is the percentage of evaluations at the goal position
 
 class SamplingPlanner:
-    def __init__(self, start:Node, goal:Node, space:Space, map) -> None:
+    def __init__(self, start:Node, goal:Node, space:Space, map, result:dict = {}) -> None:
         self.start = start
         self.goal = goal
         self.map:list = map # list of obstacles
@@ -21,6 +21,7 @@ class SamplingPlanner:
         self.nr_nodes = 1
         self.fastest_route_to_end = np.inf
         self.final_node:Node = None
+        self.result = result
     
     def check_collision_connection(self, node_a_pos:np.ndarray, node_b_pos:np.ndarray):
         N = int(np.linalg.norm(node_a_pos - node_b_pos)/0.05) + 1
@@ -71,6 +72,8 @@ class SamplingPlanner:
             printRed("[Planner] Goal not reached")
             return self.graph.nodes[-1].connections
 
+        # compile results/metrics
+
     @staticmethod
     def discretize_path(connections, num_steps=200) -> np.ndarray:
         # each node in connections has a position (list of x,y,z)
@@ -85,8 +88,8 @@ class SamplingPlanner:
         return traj
 
 class RRT(SamplingPlanner):
-    def __init__(self,start:Node, goal:Node, space:Space, map):
-        super().__init__(start, goal, space, map)
+    def __init__(self,start:Node, goal:Node, space:Space, map, result:dict = {}):
+        super().__init__(start, goal, space, map, result)
 
     def find_closest_node(self, sample_point: np.ndarray) -> bool:
         closest_node = self.graph.nodes[np.argmin(np.linalg.norm(sample_point - np.array([self.graph.nodes[i].pos for i in range(len(self.graph.nodes))]), axis=1))]
@@ -107,8 +110,8 @@ class RRT(SamplingPlanner):
         self.check_reached_goal()
 
 class RRT_Star(SamplingPlanner):
-    def __init__(self,start:Node, goal:Node, space:Space, map):
-        super().__init__(start, goal, space, map)
+    def __init__(self,start:Node, goal:Node, space:Space, map, result:dict = {}):
+        super().__init__(start, goal, space, map, result)
     
     def find_lowest_cost_node(self, sample_point: np.ndarray):
         close_nodes = sorted(self.graph.nodes, key=lambda n: np.linalg.norm(n.pos - sample_point))[:max(len(self.graph.nodes), 20)]
