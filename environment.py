@@ -69,6 +69,7 @@ class Env(CtrlAviary):
 		# Initiate Map
 		self.map = Map(map_number=map_number)
 		self.result = result
+		self.gui = gui
 		super().__init__(drone_model=drone_model,
 						 num_drones=num_drones,
 						 neighbourhood_radius=neighbourhood_radius,
@@ -121,7 +122,6 @@ class Env(CtrlAviary):
 		start_time = time.perf_counter()
 		wps = planner.run()
 		elapsed_time_planner = time.perf_counter() - start_time
-		print(self.result)
 		self.result["global_planner"]["metrics"]["time"] = elapsed_time_planner
 
 		printRed(f"Planning complete. Elapsed time: {elapsed_time_planner} seconds")
@@ -149,7 +149,8 @@ class Env(CtrlAviary):
 		else: # if everything was already unique. Need this stuff coz np unique gives wrong vals sometimes
 			wps = wps_sorted[idx,:]
 
-		self.plot_plan(wps)
+		if self.gui:
+			self.plot_plan(wps)
 		# path optimization 
 		if min_snap:
 			try:
