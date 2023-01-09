@@ -71,6 +71,7 @@ class Obstacle3D:
         T_A_B[0:3,0:3] = r
         T_A_B[0:3,3] = np.array(self.pose.origin)
         self.T = T_A_B
+        self.T_inv = np.linalg.inv(self.T)
 
         pos_half_bbox = np.array([self.bbox[0]/2, self.bbox[1]/2, self.bbox[2]/2, 1])
         neg_half_bbox = np.array([-self.bbox[0]/2, -self.bbox[1]/2, -self.bbox[2]/2, 1])
@@ -99,7 +100,7 @@ class Cuboid(Obstacle3D):
     def is_colliding(self, point:np.ndarray):
         transformed_point = np.ones((4,1))
         transformed_point[0:3] = np.array(point).reshape((3,1))
-        transformed_point = np.linalg.inv(self.T)@transformed_point
+        transformed_point = self.T_inv@transformed_point
         
         ret =  all([-self.bbox[i]/2 < transformed_point[i] < self.bbox[i]/2 for i in range(point.shape[0])])
         # print(transformed_point, self.name, self.extent, ret)

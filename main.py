@@ -170,14 +170,16 @@ if __name__ == "__main__":
 	parser.add_argument('--control_freq_hz',    default=48,         type=int,           help='Control frequency in Hz (default: 48)', metavar='')
 	parser.add_argument('--duration_sec',       default=12,         type=int,           help='Duration of the simulation in seconds (default: 5)', metavar='')
 	parser.add_argument('--output_folder',     	default='results', 	type=str,           help='Folder where to save logs (default: "results")', metavar='')
-	parser.add_argument('--map_number',         default=1, 			type=int,           help='Map number (default: "Map 0")', metavar='')
-	parser.add_argument('--planner',            default="rrt_star", type=str,           help='Planner (default: "rrt_star")', metavar='')
+	parser.add_argument('--map_number',         default=3, 			type=int,           help='Map number (default: "Map 0")', metavar='')
+	parser.add_argument('--planner',            default="rrt_star", type=str,           help='Planner options (rrt, inf_rrt, rec_rrt, rrt_star, inf_rrt_star) (default: "rrt_star")', metavar='')
 	parser.add_argument('--min_snap',           default=True, 		type=str2bool,      help='Min Snap (default: False)', metavar=''),
 	parser.add_argument('--seed',              	default=None, 		type=int,           help='Seed (default: None)', metavar=''),
-	parser.add_argument('--plot_all',           default=False, 		type=str2bool,      help='Will plot all nodes and connections (default: False)', metavar='')
+	parser.add_argument('--plot_all',           default=True, 		type=str2bool,      help='Will plot all nodes and connections (default: False)', metavar='')
 	ARGS = parser.parse_args()
 
 	result = run(**vars(ARGS))
+
+	result["text_output"] += " -----"
 	printRed("============== Results ==============")
 	for key in result:
 		printRed(f"{key} -> {result[key]}")
