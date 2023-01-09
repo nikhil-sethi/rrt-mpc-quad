@@ -5,8 +5,8 @@ import time
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 
-from planner.sample_based import RRT
-from planner.sample_based import RRT_Star
+from planner.sample_based import RRT, Informed_RRT
+from planner.sample_based import RRT_Star, Informed_RRT_Star
 from planner.spaces import Space
 from planner.graph import Node
 from planner.trajectory import MinVelAccJerkSnapCrackPop
