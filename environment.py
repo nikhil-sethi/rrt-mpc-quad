@@ -5,8 +5,8 @@ import time
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 
-from planner.sample_based import RRT
-from planner.sample_based import RRT_Star
+from planner.sample_based import RRT, Informed_RRT
+from planner.sample_based import RRT_Star, Informed_RRT_Star
 from planner.spaces import Space
 from planner.graph import Node
 from planner.trajectory import MinVelAccJerkSnapCrackPop
@@ -34,7 +34,8 @@ class Env(CtrlAviary):
 				 obstacles=False,
 				 user_debug_gui=True,
 				 output_folder='results',
-				 result = {}
+				 result = {},
+				 plot_all = False
 				 ):
 		"""Initialization of an aviary environment for control applications.
 
@@ -69,6 +70,7 @@ class Env(CtrlAviary):
 		# Initiate Map
 		self.map = Map(map_number=map_number)
 		self.result = result
+		self.plot_all = plot_all
 		super().__init__(drone_model=drone_model,
 						 num_drones=num_drones,
 						 neighbourhood_radius=neighbourhood_radius,
@@ -126,6 +128,11 @@ class Env(CtrlAviary):
 
 		printRed(f"Planning complete. Elapsed time: {elapsed_time_planner} seconds")
 		printRed("---")
+
+		# Uncomment below to plot all nodes and connections for RRT and RRT_Star
+		if self.plot_all:
+			planner.plot_all_nodes(self)
+
 		if min_snap:
 			printRed(f"Begin trajectory optimization with Minimum Snap")
 		else:
