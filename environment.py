@@ -11,7 +11,7 @@ from planner.spaces import Space
 from planner.graph import Node
 from planner.trajectory import MinVelAccJerkSnapCrackPop
 
-from maps.map import Map
+from maps import Map
 from utils.color import Color
 
 class Env(CtrlAviary):
