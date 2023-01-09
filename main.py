@@ -15,6 +15,7 @@ import sys
 import os
 import random
 
+
 # to include subdirs as modules
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
@@ -71,8 +72,13 @@ def run(
 			obstacles=obstacles,
 			user_debug_gui=user_debug_gui,
 			)
-
-	plan = env.plan(method=planner, min_snap=min_snap)
+	import cProfile
+	import pstats
+	with cProfile.Profile() as pr:
+		plan = env.plan(method=planner, min_snap=min_snap)
+	stats = pstats.Stats(pr)
+	stats.sort_stats(pstats.SortKey.TIME)
+	stats.print_stats()
 	NUM_WP = plan.shape[0]
 	wp_counter = 0
 
@@ -154,5 +160,5 @@ if __name__ == "__main__":
 	parser.add_argument('--min_snap',              default=True, type=str2bool,           help='Planner (default: False)', metavar=''),
 	parser.add_argument('--seed',              default=None, type=int,           help='Planner (default: None)', metavar='')
 	ARGS = parser.parse_args()
-
 	run(**vars(ARGS))
+
