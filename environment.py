@@ -13,6 +13,7 @@ from planner.trajectory import MinVelAccJerkSnapCrackPop
 
 from maps import Map
 from utils.color import Color
+from utils import printRed
 
 class Env(CtrlAviary):
 	"""Multi-drone environment class for control applications."""
@@ -113,15 +114,15 @@ class Env(CtrlAviary):
 			planner = RRT_Star(space=ws, start=start, goal=goal, map=self.map.obstacles)
 		else:
 			raise NotImplementedError()
-		print(f"Begin waypoint planning with {method}...")
+		printRed(f"Begin waypoint planning with {method}...")
 		t = time.time()
 		wps = planner.run()
-		print(f"Planning complete. Elapsed time: {time.time()-t} seconds")
-		print("---")
+		printRed(f"Planning complete. Elapsed time: {time.time()-t} seconds")
+		printRed("---")
 		if min_snap:
-			print(f"Begin trajectory optimization with Minimum Snap")
+			printRed(f"Begin trajectory optimization with Minimum Snap")
 		else:
-			print(f"Begin trajectory optimization with Linear Discretization")
+			printRed(f"Begin trajectory optimization with Linear Discretization")
 		t = time.time()
 		
 		plan_dist = planner.fastest_route_to_end # total distance covered by waypoints
@@ -149,12 +150,12 @@ class Env(CtrlAviary):
 				# traj_opt.plot(plan)
 			except: # because min snap fails sometimes because of rank errors. still to debug
 				# in that case, just go ahead with original waypoints and discretisation
-				print("Minimum Snap failed. Resorting to linear discretization.")
+				printRed("Minimum Snap failed. Resorting to linear discretization.")
 				plan = planner.discretize_path(wps, num_steps=int(num_pts/len(wps)))		
 				# traj_opt.plot(plan)
 		else: # discretise the plan 
 			plan = planner.discretize_path(wps, num_steps=int(num_pts/len(wps)))	
-		print(f"Optimization complete. Elapsed time: {time.time()-t} seconds")
+		printRed(f"Optimization complete. Elapsed time: {time.time()-t} seconds")
 		return plan
 					   
 	def plot_plan(self, plan):
