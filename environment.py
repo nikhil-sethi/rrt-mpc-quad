@@ -13,6 +13,7 @@ from planner.trajectory import MinVelAccJerkSnapCrackPop
 
 from maps import Map
 from utils.color import Color
+from utils import printRed
 
 class Env(CtrlAviary):
 	"""Multi-drone environment class for control applications."""
@@ -33,6 +34,7 @@ class Env(CtrlAviary):
 				 obstacles=False,
 				 user_debug_gui=True,
 				 output_folder='results',
+				 result = {}
 				 ):
 		"""Initialization of an aviary environment for control applications.
 
@@ -66,6 +68,7 @@ class Env(CtrlAviary):
 		"""
 		# Initiate Map
 		self.map = Map(map_number=map_number)
+		self.result = result
 		super().__init__(drone_model=drone_model,
 						 num_drones=num_drones,
 						 neighbourhood_radius=neighbourhood_radius,
@@ -108,21 +111,27 @@ class Env(CtrlAviary):
 		goal = Node(pos = self.map.goal_pos)
 		ws = Space(low = self.map.ws_ll, high = self.map.ws_ul)
 		if method == 'rrt':
-			planner = RRT(space=ws, start=start, goal=goal, map=self.map.obstacles)
+			planner = RRT(space=ws, start=start, goal=goal, map=self.map.obstacles, result = self.result)
 		elif method == 'rrt_star':
-			planner = RRT_Star(space=ws, start=start, goal=goal, map=self.map.obstacles)
+			planner = RRT_Star(space=ws, start=start, goal=goal, map=self.map.obstacles, result = self.result)
 		else:
 			raise NotImplementedError()
-		print(f"Begin waypoint planning with {method}...")
-		t = time.time()
+		printRed(f"Begin waypoint planning with {method}...")
+		
+		start_time = time.perf_counter()
 		wps = planner.run()
-		print(f"Planning complete. Elapsed time: {time.time()-t} seconds")
-		print("---")
+		elapsed_time_planner = time.perf_counter() - start_time
+		print(self.result)
+		self.result["global_planner"]["metrics"]["time"] = elapsed_time_planner
+
+		printRed(f"Planning complete. Elapsed time: {elapsed_time_planner} seconds")
+		printRed("---")
 		if min_snap:
-			print(f"Begin trajectory optimization with Minimum Snap")
+			printRed(f"Begin trajectory optimization with Minimum Snap")
 		else:
-			print(f"Begin trajectory optimization with Linear Discretization")
-		t = time.time()
+			printRed(f"Begin trajectory optimization with Linear Discretization")
+		
+		start_time = time.perf_counter()
 		
 		plan_dist = planner.fastest_route_to_end # total distance covered by waypoints
 
@@ -132,12 +141,12 @@ class Env(CtrlAviary):
 		# convert to numpy array
 		wps = planner.nodes_to_array(wps)
 		
-		# making sure waypoints are unique. RRT can be glitch sometimes
+		# making sure waypoints are unique. RRT can glitch sometimes
 		wps_sorted, _, idx = np.unique(wps, axis=0, return_index=True, return_inverse=True)
 		
 		if len(idx)!=len(wps):
 			wps = wps_sorted[idx[:-1],:] # np unique returns sorted values for some reason. undo that shit
-		else: # if everything was already unique. Need to this stuff coz np unique gives wrong vals sometimes
+		else: # if everything was already unique. Need this stuff coz np unique gives wrong vals sometimes
 			wps = wps_sorted[idx,:]
 
 		self.plot_plan(wps)
@@ -146,15 +155,19 @@ class Env(CtrlAviary):
 			try:
 				traj_opt = MinVelAccJerkSnapCrackPop(order=2, waypoints = wps.T, time=8)	# don't worry about time argument too much. it's all relative
 				plan = traj_opt.optimize(num_pts=num_pts)
-				# traj_opt.plot(plan)
+				elapsed_time_opt = time.perf_counter() - start_time
+				self.result["traj_opt"]["metrics"]["time"] = elapsed_time_opt 
+				
+				printRed(f"Optimization complete. Elapsed time: {elapsed_time_opt} seconds")
+
+				# traj_opt.plot(plan) # uncomment to plot plan in matplotlib. but note that --gui must be False
 			except: # because min snap fails sometimes because of rank errors. still to debug
 				# in that case, just go ahead with original waypoints and discretisation
-				print("Minimum Snap failed. Resorting to linear discretization.")
+				printRed("Minimum Snap failed. Resorting to linear discretization.")
 				plan = planner.discretize_path(wps, num_steps=int(num_pts/len(wps)))		
-				# traj_opt.plot(plan)
 		else: # discretise the plan 
-			plan = planner.discretize_path(wps, num_steps=int(num_pts/len(wps)))	
-		print(f"Optimization complete. Elapsed time: {time.time()-t} seconds")
+			plan = planner.discretize_path(wps, num_steps=int(num_pts/len(wps)))
+		
 		return plan
 					   
 	def plot_plan(self, plan):

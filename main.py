@@ -26,6 +26,7 @@ from gym_pybullet_drones.utils.utils import sync, str2bool
 from gym_pybullet_drones.utils.enums import DroneModel
 
 from utils.color import Color
+from utils import printRed
 from environment import Env
 
 
@@ -41,7 +42,7 @@ def run(
 		simulation_freq_hz=240,
 		control_freq_hz=48,
 		duration_sec=12,
-		output_folder="results",
+		output_folder="results/logs/",
 		map_number = 1,
 		planner = "rrt_star",
 		min_snap = True,
@@ -51,6 +52,24 @@ def run(
 	random.seed(seed)
 	np.random.seed(seed)
 
+	# dictionary which stores all evaluations + info. should be passed around to objects to collect data
+	# some fields can be empty depending on cmdline options
+	result = {
+		"seed":seed,
+		"global_planner":{
+			"name":planner,
+			"metrics":{
+			
+			}
+		},
+		"traj_opt":{
+			"state":min_snap,
+			"metrics":{
+
+			}
+		}
+		
+	}
 	## Initialize the simulation 
 	# setup states
 	init_att = [0, 0,  (np.pi/2)]
@@ -67,6 +86,7 @@ def run(
 		record=record_video,
 		obstacles=obstacles,
 		user_debug_gui=user_debug_gui,
+		result = result
 		)
 
 	plan = env.plan(method=planner, min_snap=min_snap)
@@ -135,6 +155,8 @@ def run(
 	if plot:
 		logger.plot()
 	
+	return result
+
 if __name__ == "__main__":
 	## Define and parse (optional) arguments for the script ##
 	parser = argparse.ArgumentParser(description='Helix flight script using CtrlAviary or VisionAviary and DSLPIDControl')
@@ -152,4 +174,7 @@ if __name__ == "__main__":
 	parser.add_argument('--seed',              	default=None, 		type=int,           help='Planner (default: None)', metavar='')
 	ARGS = parser.parse_args()
 
-	run(**vars(ARGS))
+	result = run(**vars(ARGS))
+	printRed("============== Results ==============")
+	printRed(result)
+	printRed("=====================================")
