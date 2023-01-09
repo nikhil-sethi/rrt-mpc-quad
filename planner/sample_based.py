@@ -7,7 +7,7 @@ from utils import printRed
 DIST_TH = 0.01
 MAX_ITER = 500
 MAX_IMPR = 10 # number of improvements the rrt* algorithm makes before it stops
-PERC_2_GOAL = 0.05 # This is the percentage of evaluations at the goal position
+PERC_2_GOAL = 0.25 # This is the percentage of evaluations at the goal position
 
 class SamplingPlanner:
     def __init__(self, start:Node, goal:Node, space:Space, map) -> None:
@@ -69,6 +69,8 @@ class SamplingPlanner:
             return self.final_node.connections
         else:
             printRed("[Planner] Goal not reached")
+            printRed(f"Number of nodes: {self.nr_nodes}")
+            # assert(self.reached_goal)
             return self.graph.nodes[-1].connections
 
     @staticmethod
@@ -104,7 +106,26 @@ class RRT(SamplingPlanner):
         new_node = Node(pos=new_node_pos, parent=closest_node, id=self.nr_nodes)
         self.nr_nodes+=1
         self.graph.add_node(new_node)
+        if self.nr_nodes == 1: self.final_node = self.graph.nodes[-1]
         self.check_reached_goal()
+        if self.final_node != None:
+            if self.graph.nodes[-1].dist_from_start < self.final_node.dist_from_start:
+                self.final_node = self.graph.nodes[-1]
+
+    # def run(self) -> list:
+    #     for i in range(MAX_ITER):
+    #         self.plan()
+    #         # print("dfg")
+            
+    #         if self.reached_goal:
+    #             printRed(f"[Planner] Goal Reached! Total distance: {self.final_node.dist_from_start}")
+    #             self.fastest_route_to_end = self.final_node.dist_from_start
+    #             return self.final_node.connections
+    #     else:
+    #         assert(self.reached_goal, "\033[91m [Planner] Goal not reached \033[00m")
+    #         return self.graph.nodes[-1].connections
+
+
 
 class RRT_Star(SamplingPlanner):
     def __init__(self,start:Node, goal:Node, space:Space, map):
