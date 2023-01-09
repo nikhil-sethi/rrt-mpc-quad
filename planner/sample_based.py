@@ -92,13 +92,16 @@ class SamplingPlanner:
     def plot_all_nodes(self, env):
         # Print all nodes
         for end_node in self.graph.nodes:
-            connections = end_node.connections
-            prev_pos = env.INIT_XYZS[0]		
-            for node in connections:
-                env.plot_point(node.pos)
-                # try:
-                env.plot_line(prev_pos, node.pos)
-                prev_pos = node.pos
+            env.plot_point(end_node.pos)
+            if end_node.parent is not None:
+                env.plot_line(end_node.parent.pos, end_node.pos)
+            # connections = end_node.connections
+            # prev_pos = env.INIT_XYZS[0]		
+            # for node in connections:
+            #     env.plot_point(node.pos)
+            #     # try:
+            #     env.plot_line(prev_pos, node.pos)
+            #     prev_pos = node.pos
 
     def constrict_WS(self):
         dil = 0
@@ -141,7 +144,6 @@ class RRT(SamplingPlanner):
                 self.final_node = self.graph.nodes[-1]
             elif self.graph.nodes[-1].dist_from_start < self.final_node.dist_from_start:
                 self.final_node = self.graph.nodes[-1]
-            printRed(self.graph.nodes[-1].dist_from_start)
 
 class Informed_RRT(RRT):
     def __init__(self, start:Node, goal:Node, space:Space, map):
