@@ -2,6 +2,7 @@ from .spaces import Space#, Workspace
 from .graph import Graph, Node
 import matplotlib.pyplot as plt
 import numpy as np
+from utils import printRed
 
 DIST_TH = 0.01
 MAX_ITER = 500
@@ -63,11 +64,11 @@ class SamplingPlanner:
             # print("dfg")
             
         if self.reached_goal:
-            print("[Planner] Goal Reached! Total distance: ", self.final_node.dist_from_start)
+            printRed(f"[Planner] Goal Reached! Total distance: {self.final_node.dist_from_start}")
             self.fastest_route_to_end = self.final_node.dist_from_start
             return self.final_node.connections
         else:
-            print("[Planner] Goal not reached")
+            printRed("[Planner] Goal not reached")
             return self.graph.nodes[-1].connections
 
     @staticmethod
