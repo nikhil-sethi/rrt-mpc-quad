@@ -68,8 +68,9 @@ def run(
 			"metrics":{
 
 			}
-		}
-		
+		},
+		"pos_error_mean": 0,
+		"pos_error_std": 0,
 	}
 	## Initialize the simulation 
 	# setup states
@@ -113,6 +114,8 @@ def run(
 	action = {"0": np.array([0,0,0,0])}
 	
 	START = time.time()
+	pos_err = []
+
 	for i in range(0, int(duration_sec*env.SIM_FREQ), AGGR_PHY_STEPS):
 
 		## Step the simulation 
@@ -129,6 +132,9 @@ def run(
 																	target_rpy=init_att
 																	)
 			pos = obs["0"]["state"][:3]
+			# record error in trajectory
+			pos_err.append(np.linalg.norm(pos - plan[wp_counter, 0:3]))
+
 			if gui:								
 				env.plot_point(pos, color=Color.BLUE)
 			
@@ -147,6 +153,10 @@ def run(
 		## Sync the simulation 
 		if gui:
 			sync(i, START, env.TIMESTEP)
+
+	# compile metrics
+	result['pos_error_mean'] = np.mean(pos_err)
+	result['pos_error_std'] = np.std(pos_err)
 
 	## Close the environment 
 	env.close()
