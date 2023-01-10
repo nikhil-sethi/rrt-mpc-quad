@@ -104,7 +104,7 @@ class Map:
         # print(f"ws_ll = {self.ws_ll}")
         # print(f"ws_ul = {self.ws_ul}")
 
-    def load_map(self, client, dilate=False, dilation=0):
+    def load_map(self, client, dilate=False, dilation=0.0):
         for obs in self.obstacles:
             obs.load_urdf(client)
             if dilate:
