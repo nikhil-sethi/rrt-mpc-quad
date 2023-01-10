@@ -33,7 +33,7 @@ orientation = [0,0,1.57] # list of roll, pitch and yaw angles: a positive(CCW) 9
 side = [0.4, 0.4, 0.4] # side lengths of the cube. Have to be equal. for a cuboid, import a cuboid 
 color = Color.GLASS # a gray tranluscent color
 
-cube = Cube(name="new_cube", origin = [1,3,4], orientation = orientation, color = color)
+cube = Cube(name = name, origin = origin, orientation = orientation, color = color)
 ```
 
 You can use the cube object in the planning implementation for collision checking. The URDF file is now automatically genereated and we don't need to worry about interfacing with pybullet and python.

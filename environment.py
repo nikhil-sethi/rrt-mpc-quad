@@ -1,5 +1,6 @@
 import numpy as np
 import pybullet as p
+import time
 
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
@@ -10,8 +11,9 @@ from planner.spaces import Space
 from planner.graph import Node
 from planner.trajectory import MinVelAccJerkSnapCrackPop
 
-from maps import load_map, MAPS
+from maps import Map
 from utils.color import Color
+from utils import printRed
 
 class Env(CtrlAviary):
 	"""Multi-drone environment class for control applications."""
@@ -19,9 +21,7 @@ class Env(CtrlAviary):
 	################################################################################
 
 	def __init__(self,
-				 start, 
-				 goal,
-				 map = 1,
+				 map_number = 0,
 				 drone_model: DroneModel=DroneModel.CF2X,
 				 num_drones: int=1,
 				 neighbourhood_radius: float=np.inf,
@@ -65,15 +65,12 @@ class Env(CtrlAviary):
 			Whether to draw the drones' axes and the GUI RPMs sliders.
 
 		"""
-		self.start = start
-		self.goal = goal
-		# print(self.start, self.goal)
-		print(map)
-		self.map = MAPS[map]
+		# Initiate Map
+		self.map = Map(map_number=map_number)
 		super().__init__(drone_model=drone_model,
 						 num_drones=num_drones,
 						 neighbourhood_radius=neighbourhood_radius,
-						 initial_xyzs=np.array([start]),
+						 initial_xyzs=np.array([self.map.starting_pos]),
 						 initial_rpys=np.array([initial_rpys]),
 						 physics=physics,
 						 freq=freq,
@@ -99,25 +96,34 @@ class Env(CtrlAviary):
 		"""Add obstacles to the environment.
 		"""
 		# Dilate obstacles to drone radius plus margin also equal to drone radius 
-		load_map(self.map, self.CLIENT, dilate=True, dilation=2*self.L)
+		self.map.load_map(self.CLIENT, dilate=True, dilation=2*self.L)
 		
-		## uncomment below snippet to plot extents for obstacles
-		# for obs in self.map:
+		# # uncomment below snippet to plot extents for obstacles
+		# for obs in self.map.obstacles:
 		# 	for i in range(2): 
 		# 		self.plot_point(obs.extent[i])
 		# 	self.plot_line(obs.extent[0], obs.extent[1])
 
 	def plan(self, method="rrt_star", min_snap=False, d=100):	
-		start = Node(pos = self.start)
-		goal = Node(pos = self.goal)
-		ws = Space(low=[-1.5, -1.5, 0], high=[1.5, 1.5, 1.5])
+		start = Node(pos = self.map.starting_pos)
+		goal = Node(pos = self.map.goal_pos)
+		ws = Space(low = self.map.ws_ll, high = self.map.ws_ul)
 		if method == 'rrt':
-			planner = RRT(space=ws, start=start, goal=goal, map=self.map)
+			planner = RRT(space=ws, start=start, goal=goal, map=self.map.obstacles)
 		elif method == 'rrt_star':
-			planner = RRT_Star(space=ws, start=start, goal=goal, map=self.map)
+			planner = RRT_Star(space=ws, start=start, goal=goal, map=self.map.obstacles)
 		else:
 			raise NotImplementedError()
+		printRed(f"Begin waypoint planning with {method}...")
+		t = time.time()
 		wps = planner.run()
+		printRed(f"Planning complete. Elapsed time: {time.time()-t} seconds")
+		printRed("---")
+		if min_snap:
+			printRed(f"Begin trajectory optimization with Minimum Snap")
+		else:
+			printRed(f"Begin trajectory optimization with Linear Discretization")
+		t = time.time()
 		
 		plan_dist = planner.fastest_route_to_end # total distance covered by waypoints
 
@@ -144,10 +150,12 @@ class Env(CtrlAviary):
 				# traj_opt.plot(plan)
 			except: # because min snap fails sometimes because of rank errors. still to debug
 				# in that case, just go ahead with original waypoints and discretisation
+				printRed("Minimum Snap failed. Resorting to linear discretization.")
 				plan = planner.discretize_path(wps, num_steps=int(num_pts/len(wps)))		
 				# traj_opt.plot(plan)
 		else: # discretise the plan 
 			plan = planner.discretize_path(wps, num_steps=int(num_pts/len(wps)))	
+		printRed(f"Optimization complete. Elapsed time: {time.time()-t} seconds")
 		return plan
 					   
 	def plot_plan(self, plan):

@@ -57,12 +57,12 @@ class Obstacle3D:
         </link>
         </robot>
         """
-        with open(f"./maps/{self.name}.urdf", 'w') as f:
+        with open(f"./maps/obstacles/{self.name}.urdf", 'w') as f:
             f.write(archetype)
         
 
     def load_urdf(self, client):
-        p.loadURDF(os.getcwd() + f"/maps/{self.name}.urdf",
+        p.loadURDF(os.getcwd() + f"/maps/obstacles/{self.name}.urdf",
             self.pose.origin,
             p.getQuaternionFromEuler(self.pose.orient),
             physicsClientId=client
