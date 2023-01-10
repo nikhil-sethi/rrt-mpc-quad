@@ -8,6 +8,9 @@ sed -i '/torch/d' pyproject.toml
 sed -i '/stable-baselines/d' pyproject.toml
 sed -i '/tensorboard/d' pyproject.toml
 
+# libraries
+pip3 install cvxopt
+
 # install gym-pybullet
 pip3 install -e .
 cd ..

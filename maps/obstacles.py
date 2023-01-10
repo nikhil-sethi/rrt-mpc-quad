@@ -1,7 +1,7 @@
 import pybullet as p
 import os
-from vector import Pose
-from utils import Color
+from maps.vector import Pose
+from utils.color import Color
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
@@ -54,12 +54,12 @@ class Obstacle3D:
         </link>
         </robot>
         """
-        with open(f"./maps/{self.name}.urdf", 'w') as f:
+        with open(f"./maps/obstacles/{self.name}.urdf", 'w') as f:
             f.write(archetype)
         
 
     def load_urdf(self, client):
-        p.loadURDF(os.getcwd() + f"/maps/{self.name}.urdf",
+        p.loadURDF(os.getcwd() + f"/maps/obstacles/{self.name}.urdf",
             self.pose.origin,
             p.getQuaternionFromEuler(self.pose.orient),
             physicsClientId=client
@@ -71,6 +71,7 @@ class Obstacle3D:
         T_A_B[0:3,0:3] = r
         T_A_B[0:3,3] = np.array(self.pose.origin)
         self.T = T_A_B
+        self.T_inv = np.linalg.inv(self.T)
 
         pos_half_bbox = np.array([self.bbox[0]/2, self.bbox[1]/2, self.bbox[2]/2, 1])
         neg_half_bbox = np.array([-self.bbox[0]/2, -self.bbox[1]/2, -self.bbox[2]/2, 1])
@@ -99,8 +100,11 @@ class Cuboid(Obstacle3D):
     def is_colliding(self, point:np.ndarray):
         transformed_point = np.ones((4,1))
         transformed_point[0:3] = np.array(point).reshape((3,1))
-        transformed_point = np.linalg.inv(self.T)@transformed_point
-        return all([-self.bbox[i]/2 < transformed_point[i] < self.bbox[i]/2 for i in range(point.shape[0])])
+        transformed_point = self.T_inv@transformed_point
+        
+        ret =  all([-self.bbox[i]/2 < transformed_point[i] < self.bbox[i]/2 for i in range(point.shape[0])])
+        # print(transformed_point, self.name, self.extent, ret)
+        return ret
         
 class Cube(Cuboid):
     def __init__(self, name, origin, orientation, sides:tuple, color = Color.GRAY) -> None:
