@@ -80,7 +80,7 @@ class SamplingPlanner:
         # compile results/metrics
 
     @staticmethod
-    def discretize_path(connections, num_steps=200) -> np.ndarray:
+    def discretize_path(connections, num_steps=50) -> np.ndarray:
         # each node in connections has a position (list of x,y,z)
         # need to define a line/vector from parent pos to node position
         traj = np.empty((0,3))

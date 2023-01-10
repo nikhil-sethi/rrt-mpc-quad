@@ -24,9 +24,9 @@ class Drone(CtrlAviary):
     def __init__(self):
         super().__init__()
         self.max_rotor_speed = self.MAX_RPM
-        self.max_pitch_roll = 0.1
-        self.max_pitch_roll_rate = 0.8
-        self.max_yaw_rate = 0.8
+        self.max_pitch_roll = 0.05
+        self.max_pitch_roll_rate = 0.1
+        self.max_yaw_rate = 0.1
 
 """ =========== main.py ============
 Main script to start environment and planner
@@ -69,7 +69,7 @@ def run(
         aggregate=True,
         obstacles=True,
         simulation_freq_hz=240,
-        control_freq_hz=48,
+        control_freq_hz=20,
         duration_sec=12,
         output_folder="results/logs/",
         map_number=1,
@@ -120,19 +120,20 @@ def run(
         plot_all=plot_all
     )
     drone_constraints = Drone()
-    mpc_solver = MPCSolver(drone_constraints, dt=1/30)
+    mpc_solver = MPCSolver(drone_constraints, dt=1/control_freq_hz)
 
     import cProfile
     import pstats
     with cProfile.Profile() as pr:
         plan = env.plan(method=planner, min_snap=min_snap)
+        print(plan)
     stats = pstats.Stats(pr)
     stats.sort_stats(pstats.SortKey.TIME)
     stats.print_stats()
     NUM_WP = plan.shape[0]
     wp_counter = 0
 
-    env.plot_plan(plan)
+    #env.plot_plan(plan)
 
     ## Initialize the logger
     logger = Logger(logging_freq_hz=int(simulation_freq_hz / AGGR_PHY_STEPS),
