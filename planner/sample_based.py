@@ -6,15 +6,17 @@ import numpy as np
 from utils import printRed
 
 DIST_TH = 0.01
-MAX_ITER = 90
-MAX_IMPR = 10 # number of improvements the rrt* algorithm makes before it stops
-PERC_2_GOAL = 0.05 # This is the percentage of evaluations at the goal position
+MAX_ITER = 10000
+MAX_IMPR = 0 # number of improvements the rrt* algorithm makes before it stops
+PERC_2_GOAL = 0.1 # This is the percentage of evaluations at the goal position
 
 class SamplingPlanner:
     def __init__(self, start:Node, goal:Node, space:Space, map, env, result:dict = {}) -> None:
         self.start = start
         self.goal = goal
         self.map:list = map # list of obstacles
+        self.combined_T_inv = np.array([obs.T_inv for obs in map])
+        self.combined_bbox = np.array([obs.bbox_arr for obs in map])
         self.space = space
         self.graph = Graph(start_node=start)
         self.reached_goal = False
@@ -24,6 +26,7 @@ class SamplingPlanner:
         self.final_node:Node = None
         self.result = result
         self.env = env
+        self.transformed_point = np.ones((4,1))
     
     def check_collision_connection(self, node_a_pos:np.ndarray, node_b_pos:np.ndarray):
         N = int(np.linalg.norm(node_a_pos - node_b_pos)/0.05) + 1
@@ -37,15 +40,28 @@ class SamplingPlanner:
         return False
 
     def check_collision_node(self, point:np.ndarray) -> bool:
-        for obs in self.map:
-            if obs.is_colliding(point):
-                return True
-        return False
-    
+        # ret = False
+        # for obs in self.map:
+        #     if obs.is_colliding(point):
+        #         ret = True
+        #         break
+        ret = self.are_colliding(point)
+        return ret
+        # return False
+        # print("2", False)
+        # return self.are_colliding(point)
+
+    def are_colliding(self, point):
+        self.transformed_point[0:3] = point[:, None]
+        self.transformed_point[3] = 1
+        transformed_points = self.combined_T_inv @ self.transformed_point
+        ret = any(np.all(((-self.combined_bbox/2 < transformed_points[:,:3]) * (self.combined_bbox/2 > transformed_points[:,:3])), axis=1))
+        return ret
+
     def sample_node_position(self) -> np.ndarray:
         x_sample = np.array(list(np.random.uniform(self.space.bounds_x[0],self.space.bounds_x[1], int(1//self.perc_goal))) + [self.goal.pos[0]])
         y_sample = np.array(list(np.random.uniform(self.space.bounds_y[0],self.space.bounds_y[1], int(1//self.perc_goal))) + [self.goal.pos[1]])
-        z_sample =  np.array(list(np.random.uniform(self.space.bounds_z[0], self.space.bounds_z[1], int(1//self.perc_goal))) + [self.goal.pos[2]])
+        z_sample = np.array(list(np.random.uniform(self.space.bounds_z[0], self.space.bounds_z[1], int(1//self.perc_goal))) + [self.goal.pos[2]])
         samples = np.vstack((x_sample, y_sample, z_sample)).T
         chosen_sample = samples[np.random.choice(len(samples))]
         return chosen_sample
@@ -68,6 +84,10 @@ class SamplingPlanner:
     def run(self) -> list:
         for i in range(MAX_ITER):
             self.plan()
+            print(i)
+            if self.reached_goal:
+                break
+
         # self.plot_all_nodes()
         assert (self.reached_goal == True), "\033[91m [Planner] Goal not reached \033[00m"
 
@@ -212,7 +232,7 @@ class Recycle_RRT(RRT):
                 self.clear_unused_nodes()
 
 class RRT_Star(SamplingPlanner):
-    def __init__(self,start:Node, goal:Node, space:Space, map, env, result:dict = {}):
+    def __init__(self, start: Node, goal: Node, space: Space, map, env, result: dict = {}):
         super().__init__(start, goal, space, map, env, result)
     
     def find_lowest_cost_node(self, sample_point: np.ndarray):
@@ -267,7 +287,7 @@ class RRT_Star(SamplingPlanner):
         rerouted_node = Node(pos=node_s.pos, parent=new_node, id=self.nr_nodes)
         self.graph.add_node(rerouted_node)
 
-        self.nr_nodes+=1
+        self.nr_nodes += 1
         self.graph.remove_node(node_s)
  
     def check_shortcut_for_nodes(self, new_node):
@@ -278,7 +298,7 @@ class RRT_Star(SamplingPlanner):
                 self.reroute(node, new_node)
 
 class Informed_RRT_Star(RRT_Star):
-    def __init__(self,start:Node, goal:Node, space:Space, map, env, result:dict = {}):
+    def __init__(self,start: Node, goal: Node, space: Space, map, env, result: dict = {}):
         super().__init__(start, goal, space, map, env, result)
         printRed(f"Starting WS: UL: {self.space.hl}, LL: {self.space.ll}")
 

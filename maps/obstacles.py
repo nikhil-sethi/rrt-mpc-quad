@@ -12,11 +12,15 @@ class Obstacle3D:
         self.name = name
         self.pose = Pose(origin, orientation)
         self.bbox = bbox
+        self.bbox_arr = np.array(bbox).reshape(3,1)
         assert bbox[0] > 0, "Sides of the bounding box should be positive"
         assert bbox[1] > 0, "Sides of the bounding box should be positive"
         assert bbox[2] > 0, "Sides of the bounding box should be positive"
         self.mesh = mesh
         self.color:tuple = color # RGBA
+        self.T = np.array([])
+        self.T_inv = np.array([])
+        self.transformed_point = np.ones((4,1))
 
         self.extent = self.get_extent()
         self.create_urdf()
@@ -92,18 +96,17 @@ class Obstacle3D:
             # Increase the upper-limits by dilation value (drone radius + margi>
             self.extent[1][i] = self.extent[1][i] + dilation
             self.bbox[i] = self.bbox[i] + 2*dilation
+            self.bbox_arr = np.array(self.bbox).reshape(3, 1)
 
 class Cuboid(Obstacle3D):
     def __init__(self, name, origin, orientation, sides:tuple, color = Color.GRAY) -> None:
         super().__init__(name, origin, orientation, sides, color=color)
     
     def is_colliding(self, point:np.ndarray):
-        transformed_point = np.ones((4,1))
-        transformed_point[0:3] = np.array(point).reshape((3,1))
-        transformed_point = self.T_inv@transformed_point
-        
-        ret =  all([-self.bbox[i]/2 < transformed_point[i] < self.bbox[i]/2 for i in range(point.shape[0])])
-        # print(transformed_point, self.name, self.extent, ret)
+        self.transformed_point[0:3] = point[:,None]
+        self.transformed_point[3] = 1
+        transformed_point = self.T_inv@self.transformed_point
+        ret =  all([(-self.bbox[i]/2 < transformed_point[i] < self.bbox[i]/2) for i in range(point.shape[0])])
         return ret
         
 class Cube(Cuboid):
