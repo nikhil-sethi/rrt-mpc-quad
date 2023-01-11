@@ -70,29 +70,15 @@ class Map:
                 Cube(name = "landing2", origin=[-2, 2, 0.15], orientation = [0,0,0], sides=[0.3, 0.3, 0.3], color = Color.GREEN),
                 Cube(name = "take_off2", origin=[2, -2, 0.15], orientation = [0,0,0], sides=[0.3, 0.3, 0.3], color = Color.RED)]
             self.obstacles += [
-                Cuboid(name = "pillar_01", origin = [0, 0, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS),
-                #Cuboid(name = "pillar_02", origin = [-1.5, -1.2, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS),
-                Cuboid(name = "pillar_03", origin = [-1.5, 0.4, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS),
-                #Cuboid(name = "pillar_04", origin = [-1.2, 1.2, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS),
-                Cuboid(name = "pillar_05", origin = [-1.2, -1.3, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS),
-                #Cuboid(name = "pillar_06", origin = [-0.9, 1.8, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS),
-                Cuboid(name = "pillar_07", origin = [-0.9, 1.4, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS),
-                #Cuboid(name = "pillar_08", origin = [-0.6, 1.5, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS),
-                #Cuboid(name = "pillar_09", origin = [-0.6, -0.3, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS),
-                #Cuboid(name = "pillar_10", origin = [-0.3, -0.9, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS),
-                Cuboid(name = "pillar_11", origin = [0, -0.9, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS),
-                #Cuboid(name = "pillar_12", origin = [0, 0, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS),
-                #Cuboid(name = "pillar_13", origin = [0.3, -0.3, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS),
-                #Cuboid(name = "pillar_14", origin = [0.3, -1.5, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS),
-                Cuboid(name = "pillar_15", origin = [0.6, 0.5, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS),
-                #Cuboid(name = "pillar_16", origin = [0.6, 1.2, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS),
-                Cuboid(name = "pillar_17", origin = [0.9, -0.9, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS),
-                #Cuboid(name = "pillar_18", origin = [0.9, -1.7, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS),
-                Cuboid(name = "pillar_19", origin = [1.2, 0.7, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS),
-                #Cuboid(name = "pillar_20", origin = [1.2, -0.7, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS),
-                Cuboid(name = "pillar_21", origin = [1.5, 1.7, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS),
-                #Cuboid(name = "pillar_22", origin = [1.5, -0.1, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS),
-            ]
+                Cuboid(name = "pillar_01", origin = [-1.2, 0.6, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS),
+                Cuboid(name = "pillar_02", origin = [-0.9, -0.6, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS),
+                Cuboid(name = "pillar_03", origin = [-0.6, 1.5, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS),
+                Cuboid(name = "pillar_04", origin = [0.3, 0.3, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS),
+                Cuboid(name = "pillar_05", origin = [0.3, -0.6, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS),
+                Cuboid(name = "pillar_06", origin = [0.9, -1.5, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS),
+                Cuboid(name = "pillar_07", origin = [1.2, 0.9, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS),
+                Cuboid(name = "pillar_08", origin = [1.2, -0.6, 0.75], orientation = [0, 0, 0], sides=pillar_sides, color = Color.REDGLASS)
+                ]
         elif self.map_number == 5:
             # EXTRA: TUNNEL
             self.obstacles = [
