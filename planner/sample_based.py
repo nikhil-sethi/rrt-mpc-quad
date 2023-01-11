@@ -84,11 +84,8 @@ class SamplingPlanner:
     def run(self) -> list:
         for i in range(MAX_ITER):
             self.plan()
-            print(i)
-            if self.reached_goal:
-                break
 
-        # self.plot_all_nodes()
+        self.plot_all_nodes()
         assert (self.reached_goal == True), "\033[91m [Planner] Goal not reached \033[00m"
 
         printRed(f"[Planner] Goal Reached! Total distance: {self.final_node.dist_from_start}")

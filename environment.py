@@ -102,7 +102,7 @@ class Env(CtrlAviary):
 		"""Add obstacles to the environment.
 		"""
 		# Dilate obstacles to drone radius plus margin also equal to drone radius 
-		self.map.load_map(self.CLIENT, dilate=True, dilation=0*self.L)
+		self.map.load_map(self.CLIENT, dilate=True, dilation=2*self.L)
 		
 		# # uncomment below snippet to plot extents for obstacles
 		# for obs in self.map.obstacles:
