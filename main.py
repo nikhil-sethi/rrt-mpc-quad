@@ -67,7 +67,7 @@ def run(
 		"traj_opt":{
 			"state":min_snap,
 			"metrics":{
-
+				"time": 0
 			}
 		},
 		"pos_error_mean": 0,
@@ -133,7 +133,8 @@ def run(
 
 		#### Compute control at the desired frequency ##############
 		if i%CTRL_EVERY_N_STEPS == 0:
-
+			plan = env.replan(plan)
+			NUM_WP = plan.shape[0]
 			## Compute control for the current way point 
 			action["0"], _, _ = controller.computeControlFromState(control_timestep=CTRL_EVERY_N_STEPS*env.TIMESTEP,
 																	state=obs["0"]["state"],

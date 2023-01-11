@@ -192,4 +192,4 @@ if __name__=="__main__":
     mvajscp = MinVelAccJerkSnapCrackPop(order=2, waypoints=wps.T, time=1)
     plan = mvajscp.optimize(num_pts=200)
     # print(plan)
-    mvajscp.plot(plan)
+    # mvajscp.plot(plan)
