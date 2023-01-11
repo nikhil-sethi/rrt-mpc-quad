@@ -6,7 +6,7 @@ import numpy as np
 from utils import printRed
 
 DIST_TH = 0.01
-MAX_ITER = 500
+MAX_ITER = 200
 MAX_IMPR = 10 # number of improvements the rrt* algorithm makes before it stops
 PERC_2_GOAL = 0.1 # This is the percentage of evaluations at the goal position
 
