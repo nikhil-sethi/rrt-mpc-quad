@@ -72,6 +72,8 @@ def run(
 		},
 		"pos_error_mean": 0,
 		"pos_error_std": 0,
+		"text_output": "\n ---- \n",
+		"map": map_number
 	}
 	## Initialize the simulation
 	# setup states
@@ -95,11 +97,11 @@ def run(
 
 	import cProfile
 	import pstats
-	with cProfile.Profile() as pr:
-		plan = env.plan(method=planner, min_snap=min_snap)
-	stats = pstats.Stats(pr)
-	stats.sort_stats(pstats.SortKey.TIME)
-	stats.print_stats()
+	# with cProfile.Profile() as pr:
+	plan = env.plan(method=planner, min_snap=min_snap)
+	# stats = pstats.Stats(pr)
+	# stats.sort_stats(pstats.SortKey.TIME)
+	# stats.print_stats()
 	NUM_WP = plan.shape[0]
 	wp_counter = 0
 
