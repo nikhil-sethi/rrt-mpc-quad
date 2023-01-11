@@ -15,6 +15,7 @@ import sys
 import os
 import random
 
+
 # to include subdirs as modules
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
@@ -60,7 +61,7 @@ def run(
 		"global_planner":{
 			"name":planner,
 			"metrics":{
-			
+
 			}
 		},
 		"traj_opt":{
@@ -72,7 +73,7 @@ def run(
 		"pos_error_mean": 0,
 		"pos_error_std": 0,
 	}
-	## Initialize the simulation 
+	## Initialize the simulation
 	# setup states
 	init_att = [0, 0,  (np.pi/2)]
 
@@ -92,7 +93,13 @@ def run(
 		plot_all = plot_all
 		)
 
-	plan = env.plan(method=planner, min_snap=min_snap)
+	import cProfile
+	import pstats
+	with cProfile.Profile() as pr:
+		plan = env.plan(method=planner, min_snap=min_snap)
+	stats = pstats.Stats(pr)
+	stats.sort_stats(pstats.SortKey.TIME)
+	stats.print_stats()
 	NUM_WP = plan.shape[0]
 	wp_counter = 0
 
@@ -190,6 +197,8 @@ if __name__ == "__main__":
 	ARGS = parser.parse_args()
 
 	result = run(**vars(ARGS))
+
+	result["text_output"] += " -----"
 	printRed("============== Results ==============")
 	for key in result:
 		printRed(f"{key} -> {result[key]}")

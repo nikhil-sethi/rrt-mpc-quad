@@ -5,7 +5,7 @@ import time
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 
-from planner.sample_based import RRT, Informed_RRT
+from planner.sample_based import RRT, Informed_RRT, Recycle_RRT
 from planner.sample_based import RRT_Star, Informed_RRT_Star
 from planner.spaces import Space
 from planner.graph import Node
@@ -114,13 +114,19 @@ class Env(CtrlAviary):
 		goal = Node(pos = self.map.goal_pos)
 		ws = Space(low = self.map.ws_ll, high = self.map.ws_ul)
 		if method == 'rrt':
-			planner = RRT(space=ws, start=start, goal=goal, map=self.map.obstacles, result = self.result)
+			planner = RRT(space=ws, start=start, goal=goal, map=self.map.obstacles, env=self, result = self.result)
+		elif method == 'inf_rrt':
+			planner = Informed_RRT(space=ws, start=start, goal=goal, map=self.map.obstacles, env=self, result = self.result)
+		elif method == 'rec_rrt':
+			planner = Recycle_RRT(space=ws, start=start, goal=goal, map=self.map.obstacles, env=self, result = self.result)
 		elif method == 'rrt_star':
-			planner = RRT_Star(space=ws, start=start, goal=goal, map=self.map.obstacles, result = self.result)
+			planner = RRT_Star(space=ws, start=start, goal=goal, map=self.map.obstacles, env=self, result = self.result)
+		elif method == 'inf_rrt_star':
+			planner = Informed_RRT_Star(space=ws, start=start, goal=goal, map=self.map.obstacles, env=self, result = self.result)
 		else:
 			raise NotImplementedError()
 		printRed(f"Begin waypoint planning with {method}...")
-		
+		self.result["text_output"] += f" Begin waypoint planning with {method}...\n"
 		start_time = time.perf_counter()
 		wps = planner.run()
 		elapsed_time_planner = time.perf_counter() - start_time
@@ -128,19 +134,21 @@ class Env(CtrlAviary):
 
 		printRed(f"Planning complete. Elapsed time: {elapsed_time_planner} seconds")
 		printRed("---")
+		self.result["text_output"] += f" Planning complete. Elapsed time: {elapsed_time_planner} seconds\n ---\n"
 
 		# Uncomment below to plot all nodes and connections for RRT and RRT_Star
 		if self.plot_all:
-			planner.plot_all_nodes(self)
+			planner.plot_all_nodes()
 
 		if min_snap:
 			printRed(f"Begin trajectory optimization with Minimum Snap")
+			self.result["text_output"] += f" Begin trajectory optimization with Minimum Snap\n"
 		else:
 			printRed(f"Begin trajectory optimization with Linear Discretization")
-		
-		start_time = time.perf_counter()
+			self.result["text_output"] += f" Begin trajectory optimization with Linear Discretization\n"
 		
 		plan_dist = planner.fastest_route_to_end # total distance covered by waypoints
+		self.result["global_planner"]["metrics"]["dist"] = plan_dist
 
 		num_pts = int(plan_dist//0.01) # trajectory seems to work best with current control system when discretisation is around 1 cm. Weird but ok.
 
@@ -162,20 +170,35 @@ class Env(CtrlAviary):
 		# path optimization 
 		if min_snap:
 			try:
+				start_time = time.perf_counter()
 				traj_opt = MinVelAccJerkSnapCrackPop(order=2, waypoints = wps.T, time=8)	# don't worry about time argument too much. it's all relative
 				plan = traj_opt.optimize(num_pts=num_pts)
 				elapsed_time_opt = time.perf_counter() - start_time
 				self.result["traj_opt"]["metrics"]["time"] = elapsed_time_opt 
 				
 				printRed(f"Optimization complete. Elapsed time: {elapsed_time_opt} seconds")
+				self.result["text_output"] += f" Optimization complete. Elapsed time: {elapsed_time_opt} seconds\n"
 
 				# traj_opt.plot(plan) # uncomment to plot plan in matplotlib. but note that --gui must be False
 			except: # because min snap fails sometimes because of rank errors. still to debug
 				# in that case, just go ahead with original waypoints and discretisation
 				printRed("Minimum Snap failed. Resorting to linear discretization.")
-				plan = planner.discretize_path(wps, num_steps=int(num_pts/len(wps)))		
+				self.result["text_output"] += " Minimum Snap failed. Resorting to linear discretization.\n"
+				start_time = time.perf_counter()
+				plan = planner.discretize_path(wps, num_steps=int(num_pts/len(wps)))
+				elapsed_time_opt = time.perf_counter() - start_time
+				self.result["traj_opt"]["metrics"]["time"] = elapsed_time_opt 		
+				
+				printRed(f"Optimization complete. Elapsed time: {elapsed_time_opt} seconds")
+				self.result["text_output"] += f" Optimization complete. Elapsed time: {elapsed_time_opt} seconds\n"
 		else: # discretise the plan 
+			start_time = time.perf_counter()
 			plan = planner.discretize_path(wps, num_steps=int(num_pts/len(wps)))
+			elapsed_time_opt = time.perf_counter() - start_time
+			self.result["traj_opt"]["metrics"]["time"] = elapsed_time_opt 		
+			
+			printRed(f"Optimization complete. Elapsed time: {elapsed_time_opt} seconds")
+			self.result["text_output"] += f" Optimization complete. Elapsed time: {elapsed_time_opt} seconds\n"
 		
 		return plan
 					   
