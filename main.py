@@ -24,7 +24,7 @@ from gym_pybullet_drones.utils.enums import DroneModel
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.utils.utils import sync, str2bool
-from gym_pybullet_drones.utils.enums import DroneModel
+from gym_pybullet_drones.utils.enums import DroneModel, Physics
 
 from utils.color import Color
 from utils import printRed
@@ -124,11 +124,11 @@ def run(
 	
 	START = time.time()
 	pos_err = []
-
 	for i in range(0, int(duration_sec*env.SIM_FREQ), AGGR_PHY_STEPS):
 
 		## Step the simulation 
 		# action = {str(i): np.array([0,0,0,0]) for i in range(num_drones)}
+		
 		obs, reward, done, info = env.step(action)
 
 		#### Compute control at the desired frequency ##############
@@ -141,24 +141,30 @@ def run(
 																	target_rpy=init_att
 																	)
 			pos = obs["0"]["state"][:3]
-			# record error in trajectory
-			pos_err.append(np.linalg.norm(pos - plan[wp_counter, 0:3]))
-
+			
 			if gui:								
 				env.plot_point(pos, color=Color.BLUE)
 			
 			# Go to the next way point and loop 
 			# Changed "else 0" to "else wp_counters[j]" to keep drone at endpoint
-			wp_counter = wp_counter+ 1 if wp_counter < (NUM_WP-1) else wp_counter
+			if wp_counter<(NUM_WP-1):
+				wp_counter += 1
+				count = i + 70*CTRL_EVERY_N_STEPS	# num steps to wait after reaching the goal
 
+				# record error in trajectory. Only record upto
+				pos_err.append(np.linalg.norm(pos - plan[wp_counter, 0:3]))	
+				
+			else: 
+				wp_counter = wp_counter
+				if count%i ==0:
+					break
 		# Log the simulation 
 		logger.log(drone=0,
 				timestamp=i/env.SIM_FREQ,
 				state=obs["0"]["state"],
 				control=np.hstack([plan[wp_counter, 0:2], env.map.starting_pos[2], init_att, np.zeros(6)])
 				# control=np.hstack([INIT_XYZS[j, :]+TARGET_POS[wp_counters[j], :], INIT_RPYS[j, :], np.zeros(6)])
-				)
-			
+				)	
 		## Sync the simulation 
 		if gui:
 			sync(i, START, env.TIMESTEP)
@@ -172,7 +178,7 @@ def run(
 
 	## Save the simulation results 
 	logger.save()
-	logger.save_as_csv("pid") # Optional CSV save
+	# logger.save_as_csv("pid") # Optional CSV save
 
 	## Plot the simulation results 
 	if plot:
