@@ -88,14 +88,14 @@ class Env(CtrlAviary):
 						 )
 	
 	@staticmethod
-	def plot_point(position, color:Color = Color.BLUE):
+	def plot_point(position, color:Color = Color.RED):
 		"""Used to plot trajectories"""
-		p.addUserDebugPoints(pointPositions = [position], pointColorsRGB = [color.value[:-1]])
+		p.addUserDebugPoints(pointPositions = [position], pointColorsRGB = [color.value[:-1]], pointSize=2)
 
 	@staticmethod
 	def plot_line(from_pos, to_pos, color:Color = Color.BLUE):
 		"""Used to plot trajectories"""
-		p.addUserDebugLine(lineFromXYZ = from_pos, lineToXYZ = to_pos, lineColorRGB = [color.value[:-1]])
+		p.addUserDebugLine(lineFromXYZ = from_pos, lineToXYZ = to_pos, lineColorRGB=list(color.value[:-1]), lineWidth=1.4)
 
 	def _addObstacles(self):
 		"""Add obstacles to the environment.
