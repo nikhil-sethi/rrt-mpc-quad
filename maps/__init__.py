@@ -1,6 +1,7 @@
 from maps.obstacles import Cuboid, Cube
 from utils.color import Color
 import numpy as np
+import pybullet as p
 
 class Map:
 
@@ -129,3 +130,18 @@ class Map:
                 obs.dilate_obstacles(dilation)
         if dilate:
             self.define_ws_size()
+
+    def view_map(self):
+        """Use this function in isolation just to test!! Not with the simulation"""
+        client = p.connect(p.GUI)
+        p.resetDebugVisualizerCamera(cameraDistance=3,
+                                         cameraYaw=-30,
+                                         cameraPitch=-30,
+                                         cameraTargetPosition=[0, 0, 0],
+                                         physicsClientId=client
+                                         )
+        self.load_map(client=client)
+
+if __name__=="__main__":
+    map = Map(map_number=1)
+    map.view_map()
