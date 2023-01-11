@@ -85,6 +85,11 @@ class SamplingPlanner:
     def run(self) -> list:
         for i in range(MAX_ITER):
             self.plan()
+            if self.reached_goal:
+                for end_node in self.final_node.connections:
+                    if end_node.parent is not None:
+                        self.env.plot_line(end_node.parent.pos, end_node.pos)  
+                break
 
         # self.plot_all_nodes()
         assert (self.reached_goal == True), "\033[91m [Planner] Goal not reached \033[00m"

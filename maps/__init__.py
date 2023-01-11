@@ -31,8 +31,7 @@ class Map:
             # SINGLE WALL MAP
             self.obstacles = self.landing_pads
             self.obstacles += [
-                Cuboid(name = "wall_a", origin = [0, 0, 0.3], orientation = [0,0, 3.14/4], sides=[1.5, 0.1, 0.6], color = Color.BLUEGLASS),
-                Cuboid(name = "wall_a", origin = [0, 0, 0.3], orientation = [0,0, 0], sides=[1.5, 0.1, 0.6], color = Color.BLUEGLASS)
+                Cuboid(name = "wall_a", origin = [0, 0, 0.3], orientation = [0,0, 3.14/4], sides=[1.5, 0.1, 0.6], color = Color.BLUEGLASS)
                 ]
         elif self.map_number == 2:
             # ZIGZAG MAP

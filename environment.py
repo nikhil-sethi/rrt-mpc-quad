@@ -210,7 +210,7 @@ class Env(CtrlAviary):
 			self.plot_line(prev_pos, pos)
 			prev_pos = pos
 
-	def replan(self, old_plan, method="rrt_star", min_snap=False, d=100):
+	def replan(self, old_plan, method="rrt", min_snap=False, d=100):
 
 		# # AT BOTTOM OF FUNCTION: Merge last split-portion of new plan onto old plan
 		# new_plan = np.vstack(
@@ -218,7 +218,7 @@ class Env(CtrlAviary):
 		# 	plan
 		# )
 		plan_length = old_plan.shape[0]
-		split = plan_length//4
+		split = plan_length//2
 		new_start_pos = old_plan[split]
 
 		start = Node(pos = new_start_pos)

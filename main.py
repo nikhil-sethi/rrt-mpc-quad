@@ -30,6 +30,8 @@ from utils.color import Color
 from utils import printRed
 from environment import Env
 
+from threading import Thread
+
 
 def run(
 		drone=DroneModel("cf2x"),
@@ -99,14 +101,35 @@ def run(
 	import pstats
 	# with cProfile.Profile() as pr:
 	plan = env.plan(method=planner, min_snap=min_snap)
+
+	class CustomReplanThread(Thread):
+		def __init__(self, env:Env, plan):
+			# execute the base constructor
+			Thread.__init__(self)
+			# store the value
+			self.env = env
+			self.plan = plan.copy()
+			self.NUM_WP = 0
+		
+		def run(self):
+			while True:
+				self.plan = self.env.replan(self.plan)
+				self.NUM_WP = self.plan.shape[0]
+
+	replan_thread = CustomReplanThread(env, plan)
+
 	# stats = pstats.Stats(pr)
 	# stats.sort_stats(pstats.SortKey.TIME)
 	# stats.print_stats()
 	NUM_WP = plan.shape[0]
 	wp_counter = 0
 
-	if gui:
-		env.plot_plan(plan)
+	replan_thread.start()
+	plan = replan_thread.plan
+	NUM_WP = replan_thread.NUM_WP
+
+	# if gui:
+	# 	env.plot_plan(plan)
 
 	## Initialize the logger 
 	logger = Logger(logging_freq_hz=int(simulation_freq_hz/AGGR_PHY_STEPS),
@@ -131,10 +154,11 @@ def run(
 		
 		obs, reward, done, info = env.step(action)
 
+		plan = replan_thread.plan
+		NUM_WP = replan_thread.NUM_WP
 		#### Compute control at the desired frequency ##############
 		if i%CTRL_EVERY_N_STEPS == 0:
-			plan = env.replan(plan)
-			NUM_WP = plan.shape[0]
+			# replan_thread.start()
 			## Compute control for the current way point 
 			action["0"], _, _ = controller.computeControlFromState(control_timestep=CTRL_EVERY_N_STEPS*env.TIMESTEP,
 																	state=obs["0"]["state"],
@@ -184,6 +208,8 @@ def run(
 	## Plot the simulation results 
 	if plot:
 		logger.plot()
+	
+	replan_thread.join()
 	
 	return result
 
