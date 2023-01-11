@@ -71,8 +71,7 @@ class Env(CtrlAviary):
 		self.map = Map(map_number=map_number)
 		self.result = result
 		self.plot_all = plot_all
-		self.result["map"] = map_number
-		self.result["text_output"] = "\n ----- \n"
+		self.gui = gui
 		super().__init__(drone_model=drone_model,
 						 num_drones=num_drones,
 						 neighbourhood_radius=neighbourhood_radius,
@@ -131,7 +130,6 @@ class Env(CtrlAviary):
 		start_time = time.perf_counter()
 		wps = planner.run()
 		elapsed_time_planner = time.perf_counter() - start_time
-		# print(self.result)
 		self.result["global_planner"]["metrics"]["time"] = elapsed_time_planner
 
 		printRed(f"Planning complete. Elapsed time: {elapsed_time_planner} seconds")
@@ -160,13 +158,15 @@ class Env(CtrlAviary):
 		
 		# making sure waypoints are unique. RRT can glitch sometimes
 		wps_sorted, _, idx = np.unique(wps, axis=0, return_index=True, return_inverse=True)
-		
-		if len(idx)!=len(wps):
+		# print(wps_sorted, idx)
+		if len(idx)!=len(wps_sorted):
+			
 			wps = wps_sorted[idx[:-1],:] # np unique returns sorted values for some reason. undo that shit
 		else: # if everything was already unique. Need this stuff coz np unique gives wrong vals sometimes
 			wps = wps_sorted[idx,:]
 
-		self.plot_plan(wps)
+		if self.gui:
+			self.plot_plan(wps)
 		# path optimization 
 		if min_snap:
 			try:
