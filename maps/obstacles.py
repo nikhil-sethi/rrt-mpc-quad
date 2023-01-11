@@ -12,7 +12,7 @@ class Obstacle3D:
         self.name = name
         self.pose = Pose(origin, orientation)
         self.bbox = bbox
-        self.bbox_arr = np.vstack((np.array(bbox).reshape(3,1), np.array([1])))
+        self.bbox_arr = np.array(bbox).reshape(3,1)
         assert bbox[0] > 0, "Sides of the bounding box should be positive"
         assert bbox[1] > 0, "Sides of the bounding box should be positive"
         assert bbox[2] > 0, "Sides of the bounding box should be positive"
@@ -96,6 +96,7 @@ class Obstacle3D:
             # Increase the upper-limits by dilation value (drone radius + margi>
             self.extent[1][i] = self.extent[1][i] + dilation
             self.bbox[i] = self.bbox[i] + 2*dilation
+            self.bbox_arr = np.array(self.bbox).reshape(3, 1)
 
 class Cuboid(Obstacle3D):
     def __init__(self, name, origin, orientation, sides:tuple, color = Color.GRAY) -> None:
@@ -105,19 +106,7 @@ class Cuboid(Obstacle3D):
         self.transformed_point[0:3] = point[:,None]
         self.transformed_point[3] = 1
         transformed_point = self.T_inv@self.transformed_point
-        #print(self.bbox_arr/2)
-        #print(transformed_point)
-        #print(self.T_inv, self.transformed_point)
-        # for i in range(point.shape[0]):
-        #     if ((-self.bbox[i]/2 < self.transformed_point[i]) and (self.transformed_point[i] < self.bbox[i]/2)):
-        #         return True
-        # return False
-        # print((-self.bbox_arr/2 < self.transformed_point[:3,:]))
-        # print(-self.bbox_arr/2, self.transformed_point[:3].reshape(3,))
-        # print((self.transformed_point < self.bbox_arr/2))
-        #ret = all(((-self.bbox_arr/2 < transformed_point) * (self.bbox_arr/2 > transformed_point))[:3])
         ret =  all([(-self.bbox[i]/2 < transformed_point[i] < self.bbox[i]/2) for i in range(point.shape[0])])
-        #print(transformed_point, self.name, self.extent, ret)
         return ret
         
 class Cube(Cuboid):

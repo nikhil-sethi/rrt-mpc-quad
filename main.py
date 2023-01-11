@@ -175,7 +175,7 @@ if __name__ == "__main__":
 	parser.add_argument('--plot',               default=False,      type=str2bool,      help='Whether to plot the simulation results (default: True)', metavar='')
 	parser.add_argument('--simulation_freq_hz', default=240,        type=int,           help='Simulation frequency in Hz (default: 240)', metavar='')
 	parser.add_argument('--control_freq_hz',    default=48,         type=int,           help='Control frequency in Hz (default: 48)', metavar='')
-	parser.add_argument('--duration_sec',       default=12,         type=int,           help='Duration of the simulation in seconds (default: 5)', metavar='')
+	parser.add_argument('--duration_sec',       default=24,         type=int,           help='Duration of the simulation in seconds (default: 5)', metavar='')
 	parser.add_argument('--output_folder',     	default='results', 	type=str,           help='Folder where to save logs (default: "results")', metavar='')
 	parser.add_argument('--map_number',         default=3, 			type=int,           help='Map number (default: "Map 0")', metavar='')
 	parser.add_argument('--planner',            default="rrt_star", type=str,           help='Planner options (rrt, inf_rrt, rec_rrt, rrt_star, inf_rrt_star) (default: "rrt_star")', metavar='')

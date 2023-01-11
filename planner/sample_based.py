@@ -6,7 +6,7 @@ import numpy as np
 from utils import printRed
 
 DIST_TH = 0.01
-MAX_ITER = 2000
+MAX_ITER = 10000
 MAX_IMPR = 0 # number of improvements the rrt* algorithm makes before it stops
 PERC_2_GOAL = 0.1 # This is the percentage of evaluations at the goal position
 
@@ -17,7 +17,6 @@ class SamplingPlanner:
         self.map:list = map # list of obstacles
         self.combined_T_inv = np.array([obs.T_inv for obs in map])
         self.combined_bbox = np.array([obs.bbox_arr for obs in map])
-        print(self.combined_T_inv)
         self.space = space
         self.graph = Graph(start_node=start)
         self.reached_goal = False
@@ -41,16 +40,13 @@ class SamplingPlanner:
         return False
 
     def check_collision_node(self, point:np.ndarray) -> bool:
-        retis = False
-        for obs in self.map:
-            if obs.is_colliding(point):
-                retis = True
-                break
-                # return True
-        #retare = self.are_colliding(point)
-        #if retis!=retare:
-        #    print(retis, retare)
-        return retis
+        # ret = False
+        # for obs in self.map:
+        #     if obs.is_colliding(point):
+        #         ret = True
+        #         break
+        ret = self.are_colliding(point)
+        return ret
         # return False
         # print("2", False)
         # return self.are_colliding(point)
@@ -59,29 +55,7 @@ class SamplingPlanner:
         self.transformed_point[0:3] = point[:, None]
         self.transformed_point[3] = 1
         transformed_points = self.combined_T_inv @ self.transformed_point
-        #print(transformed_points[j])
-        #transformed_points = np.array([self.combined_T_inv[i] @ self.transformed_point for i in range(3)])
-        #print(self.combined_T_inv[0], self.transformed_point)
-        # for i in range(point.shape[0]):
-        #     if ((-self.bbox[i]/2 < self.transformed_point[i]) and (self.transformed_point[i] < self.bbox[i]/2)):
-        #         return True
-        # return False
-        # print((-self.bbox_arr/2 < self.transformed_point[:3,:]))
-        # print(-self.bbox_arr/2, self.transformed_point[:3].reshape(3,))
-        # print((self.transformed_point < self.bbox_arr/2))
-        #print((-self.combined_bbox/2 < self.transformed_point) * (self.combined_bbox/2 > self.transformed_point))
-        # for j in range(len(self.map)):
-        #     #print(self.combined_bbox[j] / 2)
-        #     #print(transformed_points[j])
-        #     if (all(((-self.combined_bbox[j] / 2 < transformed_points[j]) * (self.combined_bbox[j] / 2 > transformed_points[j]))[:3])):
-        #         return True
-        #print(((-self.combined_bbox/2 < transformed_points) * (self.combined_bbox/2 > transformed_points)))
-        ret = any(np.all(((-self.combined_bbox/2 < transformed_points) * (self.combined_bbox/2 > transformed_points))[:,:3], axis=1))
-        #print((-self.combined_bbox/2 < transformed_points))
-        #print("hi", np.all(((-self.combined_bbox/2 < self.transformed_point) * (self.combined_bbox/2 > self.transformed_point)), axis=1))
-        #print("1", ret)
-        #ret = all([(-self.bbox[i] / 2 < self.transformed_point[i] < self.bbox[i] / 2) for i in range(point.shape[0])])
-        # print(transformed_point, self.name, self.extent, ret)
+        ret = any(np.all(((-self.combined_bbox/2 < transformed_points[:,:3]) * (self.combined_bbox/2 > transformed_points[:,:3])), axis=1))
         return ret
 
     def sample_node_position(self) -> np.ndarray:
@@ -113,6 +87,7 @@ class SamplingPlanner:
             print(i)
             if self.reached_goal:
                 break
+
         # self.plot_all_nodes()
         assert (self.reached_goal == True), "\033[91m [Planner] Goal not reached \033[00m"
 
