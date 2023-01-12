@@ -42,7 +42,7 @@ def run(
 		obstacles=True,
 		simulation_freq_hz=240,
 		control_freq_hz=48,
-		duration_sec=12,
+		duration_sec=60,
 		output_folder="results/logs/",
 		map_number = 1,
 		planner = "rrt_star",
@@ -106,7 +106,7 @@ def run(
 	wp_counter = 0
 
 	if gui:
-		env.plot_plan(plan)
+		env.plot_plan(plan, WPS=False)
 
 	## Initialize the logger 
 	logger = Logger(logging_freq_hz=int(simulation_freq_hz/AGGR_PHY_STEPS),
@@ -195,7 +195,7 @@ if __name__ == "__main__":
 	parser.add_argument('--plot',               default=False,      type=str2bool,      help='Whether to plot the simulation results (default: True)', metavar='')
 	parser.add_argument('--simulation_freq_hz', default=240,        type=int,           help='Simulation frequency in Hz (default: 240)', metavar='')
 	parser.add_argument('--control_freq_hz',    default=48,         type=int,           help='Control frequency in Hz (default: 48)', metavar='')
-	parser.add_argument('--duration_sec',       default=12,         type=int,           help='Duration of the simulation in seconds (default: 5)', metavar='')
+	parser.add_argument('--duration_sec',       default=60,         type=int,           help='Duration of the simulation in seconds (default: 5)', metavar='')
 	parser.add_argument('--output_folder',     	default='results/logs/', 	type=str,           help='Folder where to save logs (default: "results")', metavar='')
 	parser.add_argument('--map_number',         default=1, 			type=int,           help='Map number (default: "Map 0")', metavar='')
 	parser.add_argument('--planner',            default="rrt_star", type=str,           help='Planner (default: "rrt_star")', metavar='')

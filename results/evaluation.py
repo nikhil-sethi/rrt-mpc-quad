@@ -14,7 +14,7 @@ def run_stat(n_evals = 1):
     planner_nodes = []
     planner_nodes_gc = []
     for seed in range(n_evals):
-        res = run(seed = seed, gui=True, map_number=4, planner='rrt_star')
+        res = run(seed = seed+10, gui=True, map_number=4, planner='rrt_star')
         planner_ct.append(res["global_planner"]["metrics"]["time"])
         planner_nodes.append(res["global_planner"]["metrics"]["nodes_wo_gc"])
         planner_nodes_gc.append(res["global_planner"]["metrics"]["nodes_w_gc"])

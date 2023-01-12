@@ -8,5 +8,5 @@ class Color(enum.Enum):
     BLUE = (0,0,1,1)
     BLUEGLASS = (0,0,0.8,0.8)
     GRAY = (0.8,0.8,0.8,1)
-    GLASS = (0.8,0.8,0.8,0.6)
-    
+    GLASS = (0.8,0.8,0.8,0)
+    WHITE = (1,1,1,1)

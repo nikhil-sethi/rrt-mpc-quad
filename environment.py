@@ -88,14 +88,14 @@ class Env(CtrlAviary):
 						 )
 	
 	@staticmethod
-	def plot_point(position, color:Color = Color.RED):
+	def plot_point(position, color:Color = Color.WHITE, pointSize=2):
 		"""Used to plot trajectories"""
-		p.addUserDebugPoints(pointPositions = [position], pointColorsRGB = [color.value[:-1]], pointSize=2)
+		p.addUserDebugPoints(pointPositions = [position], pointColorsRGB = [color.value[:-1]], pointSize=pointSize)
 
 	@staticmethod
-	def plot_line(from_pos, to_pos, color:Color = Color.BLUE):
+	def plot_line(from_pos, to_pos, color:Color = Color.WHITE, lineWidth=1.4):
 		"""Used to plot trajectories"""
-		p.addUserDebugLine(lineFromXYZ = from_pos, lineToXYZ = to_pos, lineColorRGB=list(color.value[:-1]), lineWidth=1.4)
+		p.addUserDebugLine(lineFromXYZ = from_pos, lineToXYZ = to_pos, lineColorRGB=list(color.value[:-1]), lineWidth=lineWidth)
 
 	def _addObstacles(self):
 		"""Add obstacles to the environment.
@@ -166,7 +166,7 @@ class Env(CtrlAviary):
 			wps = wps_sorted[idx,:]
 
 		if self.gui:
-			self.plot_plan(wps)
+			self.plot_plan(wps, WPS=True)
 		# path optimization 
 		if min_snap:
 			try:
@@ -202,10 +202,19 @@ class Env(CtrlAviary):
 		
 		return plan
 					   
-	def plot_plan(self, plan):
-		prev_pos = plan[0]
-		for pos in plan:
-			self.plot_point(pos)
-			# try:
-			self.plot_line(prev_pos, pos)
-			prev_pos = pos
+	def plot_plan(self, plan, WPS=False, Nodes=False, color:Color = Color.WHITE):
+		if WPS:
+			prev_pos = plan[0]
+			for pos in plan:
+				self.plot_point(pos, color = color, pointSize=4)
+				self.plot_line(prev_pos, pos, color = color, lineWidth=8)
+				prev_pos = pos
+		elif Nodes:
+			prev_pos = plan[0].pos
+			for node in plan:
+				self.plot_point(node.pos, color = color, pointSize=2)
+				self.plot_line(prev_pos, node.pos, color = color, lineWidth=3)
+				prev_pos = node.pos
+		else:
+			for pos in plan:
+				self.plot_point(pos, color = Color.RED, pointSize=5)
