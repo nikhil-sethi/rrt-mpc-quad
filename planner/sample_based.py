@@ -1,12 +1,13 @@
 from .spaces import Space
 from .graph import Graph, Node
+from utils.color import Color
 import matplotlib.pyplot as plt
 import numpy as np
 # from environment import Env
 from utils import printRed
 
 DIST_TH = 0.01
-MAX_ITER = 200
+MAX_ITER = 2500
 MAX_IMPR = 10 # number of improvements the rrt* algorithm makes before it stops
 PERC_2_GOAL = 0.1 # This is the percentage of evaluations at the goal position
 
@@ -86,7 +87,7 @@ class SamplingPlanner:
         for i in range(MAX_ITER):
             self.plan()
 
-        self.plot_all_nodes()
+        # self.plot_all_nodes()
         assert (self.reached_goal == True), "\033[91m [Planner] Goal not reached \033[00m"
 
         printRed(f"[Planner] Goal Reached! Total distance: {self.final_node.dist_from_start}")
@@ -266,6 +267,8 @@ class RRT_Star(SamplingPlanner):
         self.nr_nodes+=1
         self.check_shortcut_for_nodes(new_node)
         if (np.linalg.norm(self.graph.nodes[-1].pos -self.goal.pos)<DIST_TH) and (self.graph.nodes[-1].dist_from_start < self.fastest_route_to_end):
+            if self.final_node is not None:
+                self.env.plot_plan(self.final_node.connections, Nodes=True, color=Color.GREEN)
             self.final_node = self.graph.nodes[-1]
             self.fastest_route_to_end = self.graph.nodes[-1].dist_from_start
             self.reached_goal = True

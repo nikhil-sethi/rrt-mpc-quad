@@ -31,8 +31,7 @@ class Map:
             # SINGLE WALL MAP
             self.obstacles = self.landing_pads
             self.obstacles += [
-                Cuboid(name = "wall_a", origin = [0, 0, 0.3], orientation = [0,0, 3.14/4], sides=[1.5, 0.1, 0.6], color = Color.BLUEGLASS),
-                Cuboid(name = "wall_a", origin = [0, 0, 0.3], orientation = [0,0, 0], sides=[1.5, 0.1, 0.6], color = Color.BLUEGLASS)
+                Cuboid(name = "wall_a", origin = [0, 0, 0.3], orientation = [0,0, 3.14/4], sides=[1.5, 0.1, 0.6], color = Color.BLUEGLASS)
                 ]
         elif self.map_number == 2:
             # ZIGZAG MAP
@@ -40,9 +39,7 @@ class Map:
             self.obstacles += [
                 Cuboid(name = "wall_b", origin = [-0.7, -0.2, 0.6], orientation = [0,0, 3.14/4], sides=[1.3, 0.1, 1.2], color = Color.BLUEGLASS),
                 Cuboid(name = "wall_c", origin = [0.7, 0.2, 0.6], orientation = [0,0, 3.14/4], sides=[1.3, 0.1, 1.2], color = Color.BLUEGLASS),
-                Cuboid(name = "wall_b", origin = [-0.8, 0.3, 0.6], orientation = [0, 0, 0], sides=[1.4, 0.1, 1.2], color = Color.BLUEGLASS),
-                Cuboid(name = "wall_c", origin = [0.8, -0.3, 0.6], orientation = [0, 0, 0], sides=[1.4, 0.1, 1.2], color = Color.BLUEGLASS),
-                Cuboid(name = "wall_d", origin = [0, 0, 1.25], orientation = [0, 0, 0], sides=[3, 3, 0.1], color = Color.GLASS)
+                # Cuboid(name = "wall_d", origin = [0, 0, 1.25], orientation = [0, 0, 0], sides=[3, 3, 0.1], color = Color.GLASS)
                 ]
         elif self.map_number == 3:
             # COMPLEX BUILDING MAP
