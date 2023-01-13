@@ -186,12 +186,25 @@ class MinVelAccJerkSnapCrackPop(TrajectoryManager): # cute name
             plan.append(self.generate(self.sol["x"], order = plan_order, d=num_pts))
         return np.array(plan).T
 
+class MinVelAccJerkSnapCrackPopCorridor(MinVelAccJerkSnapCrackPop):
+    def __init__(self, order, waypoints, time=1) -> None:
+        # discretize waypoints
+        num = 2
+        temp = np.linspace(waypoints[:,:-1], waypoints[:,1:], num=num, axis=-1, endpoint=False).reshape(waypoints.shape[0], (waypoints.shape[1]-1)*num)
+        print(waypoints[:,-1], temp)
+        waypoints = np.append(temp, waypoints[:,-1][:,None], axis=1)
+        
+        super().__init__(order, waypoints, time)
+
+
+
 if __name__=="__main__":
     wps = np.array([
         [0.,1.,4.,7.],
         [0.,4.,2.,7.],
-        # [0.,5.,5.,7.],
+        [0.,5.,5.,7.],
     ]).T
+
     # wps = np.array([[ 0.6       , -0.6,         0.5       ],
     #                 [ 0.636843  , -0.33789508,  0.62039724],
     #                 [-0.17777323,  0.55622033,  0.75059858],
@@ -201,20 +214,21 @@ if __name__=="__main__":
         wps = wps_sorted[idx[:-1],:]
     else:
         wps = wps_sorted[idx,:]
-    mvajscp = MinVelAccJerkSnapCrackPop(order=2, waypoints=wps.T, time=5)
+    # mvajscp = MinVelAccJerkSnapCrackPop(order=2, waypoints=wps.T, time=5)
+    mvajscp = MinVelAccJerkSnapCrackPopCorridor(order=2, waypoints=wps.T, time=5)
     pos = mvajscp.optimize(plan_order = 0, num_pts=200)
-
+    print(pos)
     # Uncomment the following lines to plot further derivatives
-    vel = mvajscp.optimize(plan_order = 1, num_pts=200)
-    acc = mvajscp.optimize(plan_order = 2, num_pts=200)
-    jerk = mvajscp.optimize(plan_order = 3, num_pts=200)
-    snap = mvajscp.optimize(plan_order = 4, num_pts=200)
+    # vel = mvajscp.optimize(plan_order = 1, num_pts=200)
+    # acc = mvajscp.optimize(plan_order = 2, num_pts=200)
+    # jerk = mvajscp.optimize(plan_order = 3, num_pts=200)
+    # snap = mvajscp.optimize(plan_order = 4, num_pts=200)
     
     plt.figure()
-    mvajscp.plot_vec(pos, vel, color='gray')
+    # mvajscp.plot_vec(pos, vel, color='gray')
     mvajscp.plot(pos)
     
-    plt.figure()
-    mvajscp.plot_vec(pos, acc, color='gray')
-    mvajscp.plot(pos)
+    # plt.figure()
+    # mvajscp.plot_vec(pos, acc, color='gray')
+    # mvajscp.plot(pos)
     

@@ -9,7 +9,7 @@ from planner.sample_based import RRT, Informed_RRT, Recycle_RRT
 from planner.sample_based import RRT_Star, Informed_RRT_Star
 from planner.spaces import Space
 from planner.graph import Node
-from planner.trajectory import MinVelAccJerkSnapCrackPop
+from planner.trajectory import MinVelAccJerkSnapCrackPop,MinVelAccJerkSnapCrackPopCorridor
 
 from maps import Map
 from utils.color import Color
@@ -171,7 +171,8 @@ class Env(CtrlAviary):
 		if min_snap:
 			try:
 				start_time = time.perf_counter()
-				traj_opt = MinVelAccJerkSnapCrackPop(order=2, waypoints = wps.T, time=8)	# don't worry about time argument too much. it's all relative
+				# traj_opt = MinVelAccJerkSnapCrackPop(order=2, waypoints = wps.T, time=8)	# don't worry about time argument too much. it's all relative
+				traj_opt = MinVelAccJerkSnapCrackPopCorridor(order=2, waypoints = wps.T, time=8)
 				plan = traj_opt.optimize(num_pts=num_pts)
 				elapsed_time_opt = time.perf_counter() - start_time
 				self.result["traj_opt"]["metrics"]["time"] = elapsed_time_opt 
@@ -206,8 +207,8 @@ class Env(CtrlAviary):
 		if WPS:
 			prev_pos = plan[0]
 			for pos in plan:
-				self.plot_point(pos, color = color, pointSize=4)
-				self.plot_line(prev_pos, pos, color = color, lineWidth=8)
+				self.plot_point(pos, color = color.BLACK, pointSize=6)
+				self.plot_line(prev_pos, pos, color = color, lineWidth=4)
 				prev_pos = pos
 		elif Nodes:
 			prev_pos = plan[0].pos

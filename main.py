@@ -149,7 +149,7 @@ def run(
 			# Changed "else 0" to "else wp_counters[j]" to keep drone at endpoint
 			if wp_counter<(NUM_WP-1):
 				wp_counter += 1
-				count = i + 70*CTRL_EVERY_N_STEPS	# num steps to wait after reaching the goal
+				count = i + 150*CTRL_EVERY_N_STEPS	# num steps to wait after reaching the goal
 
 				# record error in trajectory. Only record upto
 				pos_err.append(np.linalg.norm(pos - plan[wp_counter, 0:3]))	

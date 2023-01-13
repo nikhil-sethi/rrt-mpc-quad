@@ -10,3 +10,4 @@ class Color(enum.Enum):
     GRAY = (0.8,0.8,0.8,1)
     GLASS = (0.8,0.8,0.8,0)
     WHITE = (1,1,1,1)
+    BLACK = (0,0,0,1)
