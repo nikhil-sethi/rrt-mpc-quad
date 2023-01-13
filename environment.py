@@ -114,15 +114,15 @@ class Env(CtrlAviary):
 		goal = Node(pos = self.map.goal_pos)
 		ws = Space(low = self.map.ws_ll, high = self.map.ws_ul)
 		if method == 'rrt':
-			planner = RRT(space=ws, start=start, goal=goal, map=self.map.obstacles, env=self, result = self.result)
+			planner = RRT(space=ws, start=start, goal=goal, map=self.map.obstacles, env=self, result = self.result, map_number=self.map.map_number)
 		elif method == 'inf_rrt':
-			planner = Informed_RRT(space=ws, start=start, goal=goal, map=self.map.obstacles, env=self, result = self.result)
+			planner = Informed_RRT(space=ws, start=start, goal=goal, map=self.map.obstacles, env=self, result = self.result, map_number=self.map.map_number)
 		elif method == 'rec_rrt':
-			planner = Recycle_RRT(space=ws, start=start, goal=goal, map=self.map.obstacles, env=self, result = self.result)
+			planner = Recycle_RRT(space=ws, start=start, goal=goal, map=self.map.obstacles, env=self, result = self.result, map_number=self.map.map_number)
 		elif method == 'rrt_star':
-			planner = RRT_Star(space=ws, start=start, goal=goal, map=self.map.obstacles, env=self, result = self.result)
+			planner = RRT_Star(space=ws, start=start, goal=goal, map=self.map.obstacles, env=self, result = self.result, map_number=self.map.map_number)
 		elif method == 'inf_rrt_star':
-			planner = Informed_RRT_Star(space=ws, start=start, goal=goal, map=self.map.obstacles, env=self, result = self.result)
+			planner = Informed_RRT_Star(space=ws, start=start, goal=goal, map=self.map.obstacles, env=self, result = self.result, map_number=self.map.map_number)
 		else:
 			raise NotImplementedError()
 		printRed(f"Begin waypoint planning with {method}...")
