@@ -1,27 +1,35 @@
-from .spaces import Space#, Workspace
+from .spaces import Space
 from .graph import Graph, Node
-from utils import Quadrotor
+from utils.color import Color
 import matplotlib.pyplot as plt
 import numpy as np
+# from environment import Env
+from utils import printRed
 
 DIST_TH = 0.01
-MAX_ITER = 100
+MAX_ITER = [100,200,300,1300,600]
 MAX_IMPR = 10 # number of improvements the rrt* algorithm makes before it stops
-PERC_2_GOAL = 0.05 # This is the percentage of evaluations at the goal position
+PERC_2_GOAL = 0.1 # This is the percentage of evaluations at the goal position
 
 class SamplingPlanner:
-    def __init__(self, start:Node, goal:Node, space:Space, map) -> None:
+    def __init__(self, start:Node, goal:Node, space:Space, map, env, result:dict = {}, map_number:int=0) -> None:
         self.start = start
         self.goal = goal
         self.map:list = map # list of obstacles
+        self.combined_T_inv = np.array([obs.T_inv for obs in map])
+        self.combined_bbox = np.array([obs.bbox_arr for obs in map])
         self.space = space
         self.graph = Graph(start_node=start)
         self.reached_goal = False
         self.perc_goal = PERC_2_GOAL
         self.nr_nodes = 1
+        self.nr_nodes_gc = 1
         self.fastest_route_to_end = np.inf
-        self.final_node = None
-        print(self.start.pos,self.goal.pos)
+        self.final_node:Node = None
+        self.result = result
+        self.env = env
+        self.transformed_point = np.ones((4,1))
+        self.max_iter = MAX_ITER[map_number]
     
     def check_collision_connection(self, node_a_pos:np.ndarray, node_b_pos:np.ndarray):
         N = int(np.linalg.norm(node_a_pos - node_b_pos)/0.05) + 1
@@ -35,28 +43,111 @@ class SamplingPlanner:
         return False
 
     def check_collision_node(self, point:np.ndarray) -> bool:
-        for obs in self.map:
-            if obs.is_colliding(point):
-                return True
-        return False
-    
+        # ret = False
+        # for obs in self.map:
+        #     if obs.is_colliding(point):
+        #         ret = True
+        #         break
+        ret = self.are_colliding(point)
+        return ret
+        # return False
+        # print("2", False)
+        # return self.are_colliding(point)
+
+    def are_colliding(self, point):
+        self.transformed_point[0:3] = point[:, None]
+        self.transformed_point[3] = 1
+        transformed_points = self.combined_T_inv @ self.transformed_point
+        ret = any(np.all(((-self.combined_bbox/2 < transformed_points[:,:3]) * (self.combined_bbox/2 > transformed_points[:,:3])), axis=1))
+        return ret
+
     def sample_node_position(self) -> np.ndarray:
         x_sample = np.array(list(np.random.uniform(self.space.bounds_x[0],self.space.bounds_x[1], int(1//self.perc_goal))) + [self.goal.pos[0]])
         y_sample = np.array(list(np.random.uniform(self.space.bounds_y[0],self.space.bounds_y[1], int(1//self.perc_goal))) + [self.goal.pos[1]])
-        z_sample =  np.array(list(np.random.uniform(self.space.bounds_z[0], self.space.bounds_z[1], int(1//self.perc_goal))) + [self.goal.pos[2]])
+        z_sample = np.array(list(np.random.uniform(self.space.bounds_z[0], self.space.bounds_z[1], int(1//self.perc_goal))) + [self.goal.pos[2]])
         samples = np.vstack((x_sample, y_sample, z_sample)).T
         chosen_sample = samples[np.random.choice(len(samples))]
         return chosen_sample
     
     def check_reached_goal(self):
-        self.reached_goal = (np.linalg.norm((self.graph.nodes[-1].pos - self.goal.pos)) < DIST_TH)
+        # Function only used by RRT planner
+        # Separate booleans are tracked for graph and last node
+        self.last_node_in_goal = (np.linalg.norm((self.graph.nodes[-1].pos - self.goal.pos)) < DIST_TH)
+        if not self.reached_goal and self.last_node_in_goal:
+            self.reached_goal = True
     
     def plan(self):
         raise NotImplementedError()
 
+    @staticmethod
+    def nodes_to_array(nodes):
+        """Converts list of nodes to array of waypoints"""
+        return np.array([node.pos for node in nodes])
+
+    def run(self) -> list:
+        for i in range(self.max_iter):
+            self.plan()
+        print(f"Max iterations: {self.max_iter}")
+
+        # self.plot_all_nodes()
+        assert (self.reached_goal == True), "\033[91m [Planner] Goal not reached \033[00m"
+
+        printRed(f"[Planner] Goal Reached! Total distance: {self.final_node.dist_from_start}")
+        self.result['text_output'] += f"[Planner] Goal Reached! Total distance: {self.final_node.dist_from_start}\n"
+
+        # compile results/metrics
+        # self.result["global_planner"]["metrics"]["path_length"] = self.fastest_route_to_end
+        self.result["global_planner"]["metrics"]["nodes_wo_gc"] = self.nr_nodes
+        self.result["global_planner"]["metrics"]["nodes_w_gc"] = self.nr_nodes_gc
+
+        self.fastest_route_to_end = self.final_node.dist_from_start
+        return self.final_node.connections
+    
+    @staticmethod
+    def discretize_path(connections, num_steps=200) -> np.ndarray:
+        # each node in connections has a position (list of x,y,z)
+        # need to define a line/vector from parent pos to node position
+        traj = np.empty((0,3))
+        for i in range(len((connections))-1):
+            node_start = connections[i] 
+            node_end = connections[i+1]  
+            traj_btw_nodes = np.linspace(node_start, node_end, num=num_steps, endpoint=False)
+            traj = np.append(traj, traj_btw_nodes, axis=0)
+        traj = np.append(traj, connections[-1][None,:], axis=0)
+        return traj
+
+    def plot_all_nodes(self):
+        # Print all nodes
+        for end_node in self.graph.nodes:
+            self.env.plot_point(end_node.pos)
+            if end_node.parent is not None:
+                self.env.plot_line(end_node.parent.pos, end_node.pos)
+            # connections = end_node.connections
+            # prev_pos = env.INIT_XYZS[0]		
+            # for node in connections:
+            #     env.plot_point(node.pos)
+            #     # try:
+            #     env.plot_line(prev_pos, node.pos)
+            #     prev_pos = node.pos
+
+    def constrict_WS(self):
+        dil = 0
+        ws_dilation = np.array([dil, dil, dil])
+        all_limits = []
+        for node in self.final_node.connections:
+            all_limits.append(np.abs(node.pos))
+        all_limits.append(self.start.pos)
+        all_limits.append(self.goal.pos)
+        all_limits = np.array(all_limits)
+        new_ul = np.max(all_limits, axis = 0) + ws_dilation
+        new_ll = np.min(all_limits, axis = 0) - ws_dilation
+        if new_ll[2] <= 0: new_ll[2] = 0
+        self.space = Space(low = new_ll, high = new_ul)
+        printRed(f"Constricting. New UL: {self.space.hl}, New LL: {self.space.ll}")
+
 class RRT(SamplingPlanner):
-    def __init__(self,start:Node, goal:Node, space:Space, map):
-        super().__init__(start, goal, space, map)
+    def __init__(self,start:Node, goal:Node, space:Space, map, env, result:dict = {}, map_number:int=0):
+        super().__init__(start, goal, space, map, env, result, map_number)
 
     def find_closest_node(self, sample_point: np.ndarray) -> bool:
         closest_node = self.graph.nodes[np.argmin(np.linalg.norm(sample_point - np.array([self.graph.nodes[i].pos for i in range(len(self.graph.nodes))]), axis=1))]
@@ -76,23 +167,91 @@ class RRT(SamplingPlanner):
         self.nr_nodes+=1
         self.graph.add_node(new_node)
         self.check_reached_goal()
+        if self.last_node_in_goal:
+            if self.final_node == None: 
+                self.final_node = self.graph.nodes[-1]
+            elif self.graph.nodes[-1].dist_from_start < self.final_node.dist_from_start:
+                self.final_node = self.graph.nodes[-1]
 
-    def run(self) -> list:
-        for i in range(MAX_ITER):
-            self.plan()
-            i+=1
-        
-        if self.reached_goal:
-            print("GOAL REACHED")            
-            print("Final distance =",self.final_node.dist_from_start)
-            return self.graph.nodes[-1].connections, self.graph.nodes
-        else:
-            print("GOAL NOT REACHED")
-            return self.graph.nodes[-1].connections, self.graph.nodes
+class Informed_RRT(RRT):
+    def __init__(self, start:Node, goal:Node, space:Space, map, env, result:dict = {}, map_number:int=0):
+        super().__init__(start, goal, space, map, env, result, map_number)
+        printRed(f"Starting WS: UL: {self.space.hl}, LL: {self.space.ll}")
+        self.far_nodes_discarded = 0
+
+    def plan(self):
+        new_node_pos = self.sample_node_position()
+        node_further = self.check_if_further(new_node_pos)
+        if node_further:    
+            return
+        collision_node = self.check_collision_node(new_node_pos)
+        if collision_node:
+            return
+        closest_node = self.find_closest_node(new_node_pos)
+        collision_connection = self.check_collision_connection(closest_node.pos, new_node_pos)
+        if collision_connection:
+            return
+        new_node = Node(pos=new_node_pos, parent=closest_node, id=self.nr_nodes)
+        self.nr_nodes+=1
+        self.graph.add_node(new_node)
+        self.check_reached_goal()
+        if self.last_node_in_goal:
+            if self.final_node == None: 
+                self.final_node = self.graph.nodes[-1]
+                self.constrict_WS()
+                printRed(self.graph.nodes[-1].dist_from_start)
+            elif self.graph.nodes[-1].dist_from_start < self.final_node.dist_from_start:
+                self.final_node = self.graph.nodes[-1]
+                self.constrict_WS()
+                printRed(self.graph.nodes[-1].dist_from_start)
+
+    def check_if_further(self, new_node_pos):
+        if self.final_node is not None:
+            if np.linalg.norm(new_node_pos-self.start.pos) + np.linalg.norm(new_node_pos-self.goal.pos) > self.final_node.dist_from_start:
+                self.far_nodes_discarded += 1
+                print(f"Discared {self.far_nodes_discarded} nodes so far")
+                return True
+            else:
+                return False
+
+class Recycle_RRT(RRT):
+    def __init__(self,start:Node, goal:Node, space:Space, map, env, result:dict = {}, map_number:int=0):
+        super().__init__(start, goal, space, map, env, result, map_number)
+
+    def clear_unused_nodes(self):
+        used_idxs = []
+        printRed(f"Initial Number of Nodes {self.nr_nodes}")
+        for node in self.final_node.connections:
+            used_idxs.append(self.graph.nodes.index(node))
+        for i in reversed(range(len(self.graph.nodes))):
+            if i not in used_idxs:
+                self.graph.nodes.pop(i)
+        self.nr_nodes = len(self.graph.nodes)
+        printRed(f"Reduced Number of Nodes {self.nr_nodes}")
+
+    def plan(self):
+        new_node_pos = self.sample_node_position()
+        collision_node = self.check_collision_node(new_node_pos)
+        if collision_node:
+            return
+        closest_node = self.find_closest_node(new_node_pos)
+        collision_connection = self.check_collision_connection(closest_node.pos, new_node_pos)
+        if collision_connection:
+            return
+        new_node = Node(pos=new_node_pos, parent=closest_node, id=self.nr_nodes)
+        self.nr_nodes+=1
+        self.graph.add_node(new_node)
+        self.check_reached_goal()
+        if self.last_node_in_goal:
+            if self.final_node == None: 
+                self.final_node = self.graph.nodes[-1]
+            elif self.graph.nodes[-1].dist_from_start < self.final_node.dist_from_start:
+                self.final_node = self.graph.nodes[-1]
+                self.clear_unused_nodes()
 
 class RRT_Star(SamplingPlanner):
-    def __init__(self,start:Node, goal:Node, space:Space, map):
-        super().__init__(start, goal, space, map)
+    def __init__(self, start: Node, goal: Node, space: Space, map, env, result: dict = {}, map_number:int=0):
+        super().__init__(start, goal, space, map, env, result, map_number)
     
     def find_lowest_cost_node(self, sample_point: np.ndarray):
         close_nodes = sorted(self.graph.nodes, key=lambda n: np.linalg.norm(n.pos - sample_point))[:max(len(self.graph.nodes), 20)]
@@ -127,34 +286,23 @@ class RRT_Star(SamplingPlanner):
         self.nr_nodes+=1
         self.check_shortcut_for_nodes(new_node)
         if (np.linalg.norm(self.graph.nodes[-1].pos -self.goal.pos)<DIST_TH) and (self.graph.nodes[-1].dist_from_start < self.fastest_route_to_end):
-            self.fastest_route_to_end = self.graph.nodes[-1].dist_from_start
+            if self.final_node is not None:
+                self.env.plot_plan(self.final_node.connections, Nodes=True, color=Color.GREEN)
             self.final_node = self.graph.nodes[-1]
+            self.fastest_route_to_end = self.graph.nodes[-1].dist_from_start
             self.reached_goal = True
         
         # self.garbage_collection()
-
-    def run(self) -> list:
-        for i in range(MAX_ITER):
-            self.plan()
-            i+=1
-        print("Number nodes: ", self.nr_nodes)
-        if self.reached_goal:
-            print("GOAL REACHED")
-            print("Final distance =",self.final_node.dist_from_start)
-            return self.final_node.connections, self.graph.nodes
-        else:
-            print("GOAL NOT REACHED")
-            return self.graph.nodes[-1].connections, self.graph.nodes
 
     def garbage_collection(self):
         if np.linalg.norm(self.graph.nodes[-1].pos -self.goal.pos)<DIST_TH:
             for node in self.graph.nodes:
                 if node.dist_from_start + np.linalg.norm(self.goal.pos - node.pos) > self.fastest_route_to_end:
                     self.graph.remove_node(node)
+                    self.nr_nodes_gc += 1
         elif self.graph.nodes[-1].dist_from_start + np.linalg.norm(self.goal.pos - self.graph.nodes[-1].pos) > self.fastest_route_to_end:
             self.graph.remove_node(self.graph.nodes[-1])
-
-        
+            self.nr_nodes_gc += 1
 
     def reroute(self, node_s, new_node):
         collision_connection = self.check_collision_connection(node_s.pos, new_node.pos)
@@ -163,10 +311,9 @@ class RRT_Star(SamplingPlanner):
         rerouted_node = Node(pos=node_s.pos, parent=new_node, id=self.nr_nodes)
         self.graph.add_node(rerouted_node)
 
-        self.nr_nodes+=1
+        self.nr_nodes += 1
         self.graph.remove_node(node_s)
-        
-
+ 
     def check_shortcut_for_nodes(self, new_node):
         close_nodes = sorted(self.graph.nodes, key=lambda n: np.linalg.norm(n.pos - new_node.pos))[1:max(len(self.graph.nodes), 10)]
         for node in close_nodes:
@@ -174,135 +321,44 @@ class RRT_Star(SamplingPlanner):
             if shortcut_bool:
                 self.reroute(node, new_node)
 
-# class RRT(SamplingPlanner):
-#     def __init__(self, start:Node, goal:Node, space:Space, map) -> None:
-#         super().__init__(start, goal, space, map)
-#         self.goal = goal
-#         self.best_cost = np.Inf
-#         #self.max_depth = 10
-#         self.reached_goal = False
-#         self.path_improvements = 0
-#         self.done = False
-#         self.num_nodes = len(self.graph.nodes)
+class Informed_RRT_Star(RRT_Star):
+    def __init__(self,start: Node, goal: Node, space: Space, map, env, result: dict = {}, map_number:int=0):
+        super().__init__(start, goal, space, map, env, result, map_number)
+        printRed(f"Starting WS: UL: {self.space.hl}, LL: {self.space.ll}")
+        self.far_nodes_discarded = 0
 
-#     def check_reached_goal(self) -> None:
-#         if self.graph.nodes[-1].pos == self.goal.pos:
-#             if self.reached_goal:
-#                 if self.graph.nodes[-1].cost_to_come < self.best_cost:
-#                     self.best_cost = self.graph.nodes[-1].cost_to_come
-#                     self.path_improvements+=1
-#                     print("Current best path =",self.best_cost)
-#                     if self.path_improvements > MAX_IMPR:
-#                         self.done = True
-#             else:
-#                 self.best_cost = self.graph.nodes[-1].cost_to_come
-#                 self.reached_goal = True
-#                 print("First path found with distance:",self.best_cost)
+    def plan(self):
+        new_node_pos = self.sample_node_position()
+        node_further = self.check_if_further(new_node_pos)
+        if node_further:    
+            return
+        collision_node = self.check_collision_node(new_node_pos)
+        if collision_node:
+            return
 
-#     def garbage_collection(self):
-#         if self.graph.euclidean_metric(self.graph.nodes[-1].pos,self.goal.pos) < DIST_TH:
-#             for node in self.graph.nodes:
-#                 if node.cost_to_come + self.graph.euclidean_metric(node.pos,self.goal.pos) > self.best_cost:
-#                     self.graph.remove_node(node)
-#         elif self.graph.nodes[-1].cost_to_come + self.graph.euclidean_metric(self.graph.nodes[-1].pos,self.goal.pos) > self.best_cost:
-#             self.graph.remove_node(self.graph.nodes[-1])
-
-#     def rewire(self, new_node:Node):
-#         new_parent = None
-#         best_rewire = np.Inf
-#         for node in self.graph.nodes:
-#             dist = self.graph.euclidean_metric(node.pos,new_node.pos)
-#             if node.cost_to_come + dist < best_rewire:
-#                 new_parent = node
+        closest_node = self.find_lowest_cost_node(new_node_pos)
+        if closest_node is None:
+            return
         
-#         if not new_parent is None:
-#             new_node.rewire_node(new_parent,dist)
+        new_node = Node(pos=new_node_pos, parent=closest_node, id=self.nr_nodes)
 
-#     def result(self):
-#         print(self.num_nodes,"nodes remaining.")
-#         print("Final path distance after",self.path_improvements-1,"improvements is ",round(self.graph.nodes[-1].cost_to_come,3))
+        self.graph.add_node(new_node)
+        self.nr_nodes+=1
+        self.check_shortcut_for_nodes(new_node)
+        if (np.linalg.norm(self.graph.nodes[-1].pos -self.goal.pos)<DIST_TH) and (self.graph.nodes[-1].dist_from_start < self.fastest_route_to_end):
+            if self.final_node is not None:
+                self.env.plot_plan(self.final_node.connections, Nodes=True, color=Color.GREEN)
+            self.final_node = self.graph.nodes[-1]
+            self.fastest_route_to_end = self.graph.nodes[-1].dist_from_start
+            self.reached_goal = True
+            self.constrict_WS()
         
-    
-#     def plot_final_path(self):
-#         fig = plt.figure()
-#         ax = plt.axes(projection='3d')
-#         plt.title("final graph")
-#         nodes = self.graph.nodes
+        self.garbage_collection()
 
-#         for j in range(len(nodes)):
-#             path_x = np.array([nodes[j].connections[i].pos[0] for i in range(len(nodes[j].connections))])
-#             path_y = np.array([nodes[j].connections[i].pos[1] for i in range(len(nodes[j].connections))])
-#             path_z = np.array([nodes[j].connections[i].pos[2] for i in range(len(nodes[j].connections))])
-#             ax.plot3D(path_x, path_y, path_z,"r--")
-#         ax.plot3D(path_x, path_y, path_z, "g")  
-#         ax.plot3D(self.start.pos[0], self.start.pos[1],self.start.pos[2], "bo", markersize=10, label="start")
-#         ax.plot3D(self.goal.pos[0], self.goal.pos[1],self.start.pos[2], "go", markersize=10, label="goal")
-#         plt.legend()
-#         plt.grid()
-#         plt.show()
-
-#     if MODE == 'regular':
-#         def step(self):
-#             """one step of the planner"""
-#             new_node_pos = self.space.sample(self.goal.pos,PERC_2_END_GOAL)
-#             if self.check_collision_point(new_node_pos):
-#                 return
-
-#             closest_node = self.graph.closest_node(new_node_pos) # of type Node
-#             if self.check_collision_connection(closest_node.pos, new_node_pos):
-#                 return
-            
-
-#             new_node = Node(pos=new_node_pos, parent=closest_node, id=self.num_nodes)
-#             self.num_nodes+=1
-#             self.graph.add_node(new_node)
-#             self.check_reached_goal()
-#     elif MODE == 'star':
-#         def step(self):
-#             # Sample new node and check for collision
-#             new_node_pos = self.space.sample(self.goal.pos,PERC_2_END_GOAL)
-#             if self.check_collision_point(new_node_pos):
-#                 return
-
-#             # Build new connection based on cost-to-come and check for collision
-#             cost_to_come_list = self.graph.cost_to_come_nodes(new_node_pos)
-#             for node in cost_to_come_list:
-#                 coll = self.check_collision_connection(node.pos,new_node_pos)
-#                 if not coll:
-#                     parent_node = node
-#                     break
-            
-#             if coll:    # if no connection is collision free: new sample
-#                 return
-
-#             # Add new node to graph
-#             dist = self.graph.euclidean_metric(new_node_pos,parent_node.pos)
-#             new_node = Node(pos=new_node_pos, parent=parent_node, id=self.num_nodes, dist=dist)
-#             self.num_nodes+=1
-#             self.graph.add_node(new_node)
-
-#             # Check if goal is reached, deleted obsolete nodes and rewire nodes to improve path
-#             self.check_reached_goal()
-#             self.garbage_collection()
-#             self.rewire(new_node)
-#     else:
-#         raise NotImplementedError()
-
-
-#     def backtrack(self, point): # still unused
-#         """Returns a continuous connected path from point to start node"""
-#         pass
-
-#     def run(self):
-#         # Sample points until MAX_ITER iterations or until MAX_IMPR number of improvements made to the path
-#         for i in range(MAX_ITER):
-#             self.step()
-#             i+=1
-#             if self.done:
-#                 break
-#         if self.reached_goal:
-#             self.result()
-#         else:
-#             print("No path found within iteration limit.")
-
-#         return self.graph.nodes[-1].connections
+    def check_if_further(self, new_node_pos):
+        if np.linalg.norm(new_node_pos-self.start.pos) + np.linalg.norm(new_node_pos-self.goal.pos) > self.fastest_route_to_end:
+            # self.far_nodes_discarded += 1
+            # print(f"Discared {self.far_nodes_discarded} nodes so far")
+            return True
+        else:
+            return False

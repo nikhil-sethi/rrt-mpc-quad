@@ -1,7 +1,7 @@
 import pybullet as p
 import os
-from vector import Pose
-from utils import Color
+from maps.vector import Pose
+from utils.color import Color
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
@@ -12,11 +12,15 @@ class Obstacle3D:
         self.name = name
         self.pose = Pose(origin, orientation)
         self.bbox = bbox
+        self.bbox_arr = np.array(bbox).reshape(3,1)
         assert bbox[0] > 0, "Sides of the bounding box should be positive"
         assert bbox[1] > 0, "Sides of the bounding box should be positive"
         assert bbox[2] > 0, "Sides of the bounding box should be positive"
         self.mesh = mesh
         self.color:tuple = color # RGBA
+        self.T = np.array([])
+        self.T_inv = np.array([])
+        self.transformed_point = np.ones((4,1))
 
         self.extent = self.get_extent()
         self.create_urdf()
@@ -54,12 +58,12 @@ class Obstacle3D:
         </link>
         </robot>
         """
-        with open(f"./maps/{self.name}.urdf", 'w') as f:
+        with open(f"./maps/obstacles/{self.name}.urdf", 'w') as f:
             f.write(archetype)
         
 
     def load_urdf(self, client):
-        p.loadURDF(os.getcwd() + f"/maps/{self.name}.urdf",
+        p.loadURDF(os.getcwd() + f"/maps/obstacles/{self.name}.urdf",
             self.pose.origin,
             p.getQuaternionFromEuler(self.pose.orient),
             physicsClientId=client
@@ -71,6 +75,7 @@ class Obstacle3D:
         T_A_B[0:3,0:3] = r
         T_A_B[0:3,3] = np.array(self.pose.origin)
         self.T = T_A_B
+        self.T_inv = np.linalg.inv(self.T)
 
         pos_half_bbox = np.array([self.bbox[0]/2, self.bbox[1]/2, self.bbox[2]/2, 1])
         neg_half_bbox = np.array([-self.bbox[0]/2, -self.bbox[1]/2, -self.bbox[2]/2, 1])
@@ -91,16 +96,18 @@ class Obstacle3D:
             # Increase the upper-limits by dilation value (drone radius + margi>
             self.extent[1][i] = self.extent[1][i] + dilation
             self.bbox[i] = self.bbox[i] + 2*dilation
+            self.bbox_arr = np.array(self.bbox).reshape(3, 1)
 
 class Cuboid(Obstacle3D):
     def __init__(self, name, origin, orientation, sides:tuple, color = Color.GRAY) -> None:
         super().__init__(name, origin, orientation, sides, color=color)
     
     def is_colliding(self, point:np.ndarray):
-        transformed_point = np.ones((4,1))
-        transformed_point[0:3] = np.array(point).reshape((3,1))
-        transformed_point = np.linalg.inv(self.T)@transformed_point
-        return all([-self.bbox[i]/2 < transformed_point[i] < self.bbox[i]/2 for i in range(point.shape[0])])
+        self.transformed_point[0:3] = point[:,None]
+        self.transformed_point[3] = 1
+        transformed_point = self.T_inv@self.transformed_point
+        ret =  all([(-self.bbox[i]/2 < transformed_point[i] < self.bbox[i]/2) for i in range(point.shape[0])])
+        return ret
         
 class Cube(Cuboid):
     def __init__(self, name, origin, orientation, sides:tuple, color = Color.GRAY) -> None:
