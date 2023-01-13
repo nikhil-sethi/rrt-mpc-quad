@@ -1,7 +1,5 @@
 # rrt-mpc-quad
-Repository for PDM project 
-
-This is going to be one KILLER project.
+Repository for PDM project - Group 11
 
 ## Setup
 ```
@@ -12,12 +10,56 @@ chmod +x ./tooling/install.sh
 ```
 
 ## Run
+General run command (while in repository folder):
 ```
-python main.py --map 1
+python3 main.py [<options>]
 ```
-If everything worked correctly, you should see the drone follow a circular trajectory like the following image
+This runs the planner and the simulation. Five maps have been implemented (numbered 0 to 4) and 5 different planner variants can be chosen:
+| Planner | Argument |
+| ------- | -------- |
+| RRT | `rrt` |
+| Informed RRT | `inf_rrt` |
+| RRT with recycling | `rec_rrt` |
+| RRT* | `rrt_star` |
+| Informerd RRT* | `inf_rrt_star` |
 
-<img src="media/trajectory.png" alt="circle trajectory" width="450"> 
+For example, running informed RRT* on map 2: 
+```
+python3 main.py --planner='inf_rrt_star' --map_number=2
+```
+
+Reference the following table for all run options (ordered by relevancy):
+| Option argument | Argument Type | Default |
+| --------------- | ------------- | ------- |
+| `--planner` | see table above | `rrt_star` |
+| `--map_number` | 0-5 | 1 |
+| `--min_snap` | True/False | True |
+| `--plot` | True/False | False |
+| `--plot_all` | True/False | False |
+| `--seed` | int | None
+| `--duration_sec` | int | 60 |
+| `--output_folder` | str | `results/logs/` |
+| `--record_video` | True/False | False |
+| `--gui` | True/False | True |
+| `--num_drones` | int | 1 |
+| `--simulation_freq_hz` | int | 240 |
+| `--control_freq_hz` | int | 48 |
+
+## MAPS
+### Map 0
+<img src="media/Map0.png" alt="Map 0" width="450"> 
+
+### Map 1
+<img src="media/Map1.png" alt="Map 1" width="450"> 
+
+### Map 2
+<img src="media/Map2.png" alt="Map 2" width="450"> 
+
+### Map 3
+<img src="media/Map3.png" alt="Map 3" width="450"> 
+
+### Map 4
+<img src="media/Map4.png" alt="Map 4" width="450"> 
 
 ## API
 ### Obstacles
