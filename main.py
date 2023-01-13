@@ -61,7 +61,7 @@ def run(
 		"global_planner":{
 			"name":planner,
 			"metrics":{
-
+				"dist" : 0
 			}
 		},
 		"traj_opt":{
