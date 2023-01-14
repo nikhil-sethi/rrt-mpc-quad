@@ -6,9 +6,10 @@ import numpy as np
 from utils import printRed
 
 DIST_TH = 0.01
-MAX_ITER = [10000, 200, 300, 2200, 26000, 450, 500, 1300]
+MIN_ITER = [200, 200, 200, 1300, 200, 200, 200, 500]
+MAX_ITER = [3000, 3000, 3000, 5000, 3000, 3000, 3000, 3000]
 MAX_IMPR = 10 # number of improvements the rrt* algorithm makes before it stops
-PERC_2_GOAL = 0.01 # This is the percentage of evaluations at the goal position
+PERC_2_GOAL = 0.05 # This is the percentage of evaluations at the goal position
 
 class SamplingPlanner:
     def __init__(self, start:Node, goal:Node, space:Space, map, env, result:dict = {}, map_number:int=0) -> None:
@@ -28,10 +29,63 @@ class SamplingPlanner:
         self.result = result
         self.env = env
         self.transformed_point = np.ones((4,1))
+        self.min_iter = MIN_ITER[map_number]
         self.max_iter = MAX_ITER[map_number]
         self.num_impr = 0
         self.plot_all = env.plot_all
         self.name = None
+
+    def run(self) -> list:
+        iter_num = 0
+        for i in range(self.min_iter):
+            self.plan()
+            iter_num += 1
+            # if self.reached_goal and (self.name == 'rrt' or self.name == 'rec_rrt' or self.name == 'inf_rrt'):
+            #     print("test")
+            #     break
+        while iter_num < self.max_iter and not self.reached_goal:
+            self.plan()
+            iter_num += 1
+
+        print(f"Completed iterations: {iter_num} of maximum alloted {self.max_iter}")
+
+        assert (self.reached_goal == True), "\033[91m [Planner] Goal not reached \033[00m"
+
+        printRed(f"[Planner] Goal Reached! Total distance: {self.final_node.dist_from_start}")
+        self.result['text_output'] += f"[Planner] Goal Reached! Total distance: {self.final_node.dist_from_start}\n"
+
+        # compile results/metrics
+        # self.result["global_planner"]["metrics"]["path_length"] = self.fastest_route_to_end
+        self.result["global_planner"]["metrics"]["nodes_wo_gc"] = self.graph.lines_plotted
+        self.result["global_planner"]["metrics"]["nodes_w_gc"] = self.nr_nodes_gc
+
+        self.fastest_route_to_end = self.final_node.dist_from_start
+
+        if self.plot_all:
+            num_lines_formed = self.env.plot_plan(self.final_node.connections, Nodes=True, color=Color.RED)
+            self.graph.lines_plotted += num_lines_formed
+
+        if self.plot_all: self.plot_text()
+        # Clear away debug text, points, and lines
+        for node_id in range(self.graph.lines_plotted + self.nr_nodes_gc + 1):
+            self.env.remove_line(node_id)
+        if self.plot_all: self.plot_text()
+        
+        return self.final_node.connections
+    
+    def plot_text(self):
+        textPosition = [-0.5,0.5,1.7]
+        textSize = 2
+        if self.name == 'rrt':
+            self.env.add_text(text="RRT PLANNER", textPosition=textPosition, textColorRGB=[1,1,1], textSize=textSize)
+        elif self.name == 'inf_rrt':
+            self.env.add_text(text="INFORMED RRT PLANNER", textPosition=textPosition, textColorRGB=[1,1,1], textSize=textSize)
+        elif self.name == 'rec_rrt':
+            self.env.add_text(text="RECYCLE RRT PLANNER", textPosition=textPosition, textColorRGB=[1,1,1], textSize=textSize)
+        elif self.name == 'rrt_star':
+            self.env.add_text(text="RRT STAR PLANNER", textPosition=textPosition, textColorRGB=[1,1,1], textSize=textSize)
+        elif self.name == 'inf_rrt_star':
+            self.env.add_text(text="INFORMED RRT STAR PLANNER", textPosition=textPosition, textColorRGB=[1,1,1], textSize=textSize)
     
     def check_collision_connection(self, node_a_pos:np.ndarray, node_b_pos:np.ndarray):
         N = int(np.linalg.norm(node_a_pos - node_b_pos)/0.05) + 1
@@ -232,35 +286,6 @@ class SamplingPlanner:
 
         return False
 
-    def run(self) -> list:
-        for i in range(self.max_iter):
-            self.plan()
-            if self.reached_goal and (self.name == 'rrt' or self.name == 'rec_rrt' or self.name == 'inf_rrt'):
-                print("test")
-                break 
-        print(f"Completed iterations: {i+1} of maximum alloted {self.max_iter}")
-
-        assert (self.reached_goal == True), "\033[91m [Planner] Goal not reached \033[00m"
-
-        printRed(f"[Planner] Goal Reached! Total distance: {self.final_node.dist_from_start}")
-        self.result['text_output'] += f"[Planner] Goal Reached! Total distance: {self.final_node.dist_from_start}\n"
-
-        # compile results/metrics
-        # self.result["global_planner"]["metrics"]["path_length"] = self.fastest_route_to_end
-        self.result["global_planner"]["metrics"]["nodes_wo_gc"] = self.graph.lines_plotted
-        self.result["global_planner"]["metrics"]["nodes_w_gc"] = self.nr_nodes_gc
-
-        self.fastest_route_to_end = self.final_node.dist_from_start
-
-        if self.plot_all:
-            num_lines_formed = self.env.plot_plan(self.final_node.connections, Nodes=True, color=Color.RED)
-            self.graph.lines_plotted += num_lines_formed
-
-        # Clear away debug lines
-        for node_id in range(self.graph.lines_plotted):
-            self.env.remove_line(node_id)
-        return self.final_node.connections
-
 class RRT(SamplingPlanner):
     def __init__(self,start:Node, goal:Node, space:Space, map, env, result:dict = {}, map_number:int=0):
         super().__init__(start, goal, space, map, env, result, map_number)
@@ -414,11 +439,11 @@ class RRT_Star(SamplingPlanner):
         new_node = self.graph.add_node(new_node_pos=new_node_pos, parent=closest_node, env=self.env)
 
         self.check_shortcut_for_nodes(new_node)
-        if (np.linalg.norm(self.graph.nodes[-1].pos -self.goal.pos)<DIST_TH) and (self.graph.nodes[-1].dist_from_start < self.fastest_route_to_end):
+        if (np.linalg.norm(new_node.pos -self.goal.pos)<DIST_TH) and (new_node.dist_from_start < self.fastest_route_to_end):
             if self.final_node is not None:
                 self.env.plot_plan(self.final_node.connections, Nodes=True, color=Color.GREEN)
-            self.final_node = self.graph.nodes[-1]
-            self.fastest_route_to_end = self.graph.nodes[-1].dist_from_start
+            self.final_node = new_node
+            self.fastest_route_to_end = new_node.dist_from_start
             self.reached_goal = True
         
         self.garbage_collection()

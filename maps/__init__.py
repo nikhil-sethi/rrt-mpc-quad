@@ -11,7 +11,7 @@ class Map:
         self.starting_pos = starting_pos
         self.goal_pos = goal_pos
         self.num_maps = len(self.map_indices)
-        self.dil=0.5 # default
+        self.dil = 0.0 # Change to allow the workspace to include space around and over the obstacles
         if map_number not in self.map_indices:
             printRed(f"Chosen map number not defined. Map options are {self.map_indices}. Resorting to default map, Map 1.")
             self.map_number = 1
@@ -45,7 +45,6 @@ class Map:
         elif self.map_number == 3:
             # COMPLEX BUILDING MAP
             self.obstacles = self.landing_pads
-            self.dil = 0
             self.obstacles += [
                 Cuboid(name = "wall_b", origin = [-0.3, 0.3, 0.6], orientation = [0, 0, 0], sides=[2, 0.1, 1.2], color = Color.BLUEGLASS),
                 Cuboid(name = "wall_c", origin = [0, -0.3, 0.6], orientation = [0, 0, 0], sides=[1.4, 0.1, 1.2], color = Color.BLUEGLASS),
@@ -96,33 +95,38 @@ class Map:
             ]
         elif self.map_number == 5:
             # EXTRA: TUNNEL
-            self.starting_pos = [0.6,-1,0.5]
-            self.goal_pos = [0.6,1,1.6]
+            self.dil = 0.5
+            self.starting_pos = [0.6,-1,0.25]
+            self.goal_pos = [0.6,1,1.35]
             self.obstacles = [
+                Cube(name = "tun_landing", origin=[0.6,-1, 0.05], orientation = [0,0,0], sides=[0.3, 0.3, 0.1], color = Color.GREEN),
+                Cube(name = "tun_take_off", origin=[0.6,1, 1.15], orientation = [0,0,0], sides=[0.3, 0.3, 0.1], color = Color.RED)
+            ]
+            self.obstacles += [
                 Cuboid(name = "wall_m", origin = [0, -1, 0.5], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.LIGHT_GLASS),
-                Cuboid(name = "wall_n", origin = [1, -1, 0.5], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.GLASS),
-                Cuboid(name = "wall_o", origin = [0.5, -1, 1.05], orientation = [3.14/2, 0, 0], sides=[1.1, 0.1, 1], color = Color.GLASS),
+                Cuboid(name = "wall_n", origin = [1, -1, 0.5], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.BLACK_GLASS),
+                Cuboid(name = "wall_o", origin = [0.5, -1, 1.05], orientation = [3.14/2, 0, 0], sides=[1.1, 0.1, 1], color = Color.BLACK_GLASS),
                 Cuboid(name = "wall_p", origin = [0, 0, 0.5], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.LIGHT_GLASS),
-                Cuboid(name = "wall_e", origin = [1, 0, 0.5], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.GLASS),
-                Cuboid(name = "wall_f", origin = [0.5, 0, 1.05], orientation = [3.14/2, 0, 0], sides=[1.1, 0.1, 1], color = Color.GLASS),
+                Cuboid(name = "wall_e", origin = [1, 0, 0.5], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.BLACK_GLASS),
+                Cuboid(name = "wall_f", origin = [0.5, 0, 1.05], orientation = [3.14/2, 0, 0], sides=[1.1, 0.1, 1], color = Color.BLACK_GLASS),
                 Cuboid(name = "wall_g", origin = [0, 1, 0.5], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.LIGHT_GLASS),
-                Cuboid(name = "wall_h", origin = [1, 1, 0.5], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.GLASS),
-                Cuboid(name = "wall_i", origin = [0.5, 1, 1.05], orientation = [3.14/2, 0, 0], sides=[1.1, 0.1, 1], color = Color.GLASS),
+                Cuboid(name = "wall_h", origin = [1, 1, 0.5], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.BLACK_GLASS),
+                Cuboid(name = "wall_i", origin = [0.5, 1, 1.05], orientation = [3.14/2, 0, 0], sides=[1.1, 0.1, 1], color = Color.BLACK_GLASS),
                 Cuboid(name = "wall_j", origin = [0, 2, 0.5], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.LIGHT_GLASS),
-                Cuboid(name = "wall_k", origin = [1, 2, 0.5], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.GLASS),
-                Cuboid(name = "wall_l", origin = [0.5, 2, 1.05], orientation = [3.14/2, 0, 0], sides=[1.1, 0.1, 1], color = Color.GLASS),
+                Cuboid(name = "wall_k", origin = [1, 2, 0.5], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.BLACK_GLASS),
+                Cuboid(name = "wall_l", origin = [0.5, 2, 1.05], orientation = [3.14/2, 0, 0], sides=[1.1, 0.1, 1], color = Color.BLACK_GLASS),
                 Cuboid(name = "wall_mm", origin = [0, -1, 1.6], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.LIGHT_GLASS),
-                Cuboid(name = "wall_nm", origin = [1, -1, 1.6], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.GLASS),
-                Cuboid(name = "wall_om", origin = [0.5, -1, 2.15], orientation = [3.14/2, 0, 0], sides=[1.1, 0.1, 1], color = Color.GLASS),
+                Cuboid(name = "wall_nm", origin = [1, -1, 1.6], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.BLACK_GLASS),
+                Cuboid(name = "wall_om", origin = [0.5, -1, 2.15], orientation = [3.14/2, 0, 0], sides=[1.1, 0.1, 1], color = Color.BLACK_GLASS),
                 Cuboid(name = "wall_pm", origin = [0, 0, 1.6], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.LIGHT_GLASS),
-                Cuboid(name = "wall_em", origin = [1, 0, 1.6], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.GLASS),
-                Cuboid(name = "wall_fm", origin = [0.5, 0, 2.15], orientation = [3.14/2, 0, 0], sides=[1.1, 0.1, 1], color = Color.GLASS),
+                Cuboid(name = "wall_em", origin = [1, 0, 1.6], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.BLACK_GLASS),
+                Cuboid(name = "wall_fm", origin = [0.5, 0, 2.15], orientation = [3.14/2, 0, 0], sides=[1.1, 0.1, 1], color = Color.BLACK_GLASS),
                 Cuboid(name = "wall_gm", origin = [0, 1, 1.6], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.LIGHT_GLASS),
-                Cuboid(name = "wall_hm", origin = [1, 1, 1.6], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.GLASS),
-                Cuboid(name = "wall_im", origin = [0.5, 1, 2.15], orientation = [3.14/2, 0, 0], sides=[1.1, 0.1, 1], color = Color.GLASS),
+                Cuboid(name = "wall_hm", origin = [1, 1, 1.6], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.BLACK_GLASS),
+                Cuboid(name = "wall_im", origin = [0.5, 1, 2.15], orientation = [3.14/2, 0, 0], sides=[1.1, 0.1, 1], color = Color.BLACK_GLASS),
                 Cuboid(name = "wall_jm", origin = [0, 2, 1.6], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.LIGHT_GLASS),
-                Cuboid(name = "wall_km", origin = [1, 2, 1.6], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.GLASS),
-                Cuboid(name = "wall_lm", origin = [0.5, 2, 2.15], orientation = [3.14/2, 0, 0], sides=[1.1, 0.1, 1], color = Color.GLASS)
+                Cuboid(name = "wall_km", origin = [1, 2, 1.6], orientation = [0, 0, 3.14/2], sides=[1, 0.1, 1], color = Color.BLACK_GLASS),
+                Cuboid(name = "wall_lm", origin = [0.5, 2, 2.15], orientation = [3.14/2, 0, 0], sides=[1.1, 0.1, 1], color = Color.BLACK_GLASS)
                 ]
         elif self.map_number == 6:
             # EXTRA: BOXED
@@ -134,8 +138,6 @@ class Map:
                 ]
         elif self.map_number == 7:
             # RANDOM SCATTERED
-            self.dil=0
-            np.random.seed = 7
             size = 2
             self.starting_pos = [size,-size,0.5]
             self.goal_pos = [-size,size,0.5]

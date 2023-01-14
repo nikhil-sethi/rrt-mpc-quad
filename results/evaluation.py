@@ -1,6 +1,7 @@
 import sys
 import os
 import numpy as np
+import pybullet as p
 
 #to include subdirs as modules
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -8,30 +9,65 @@ sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 from main import run
 
-def run_stat(n_evals = 3):
-    planner = 'inf_rrt_star'
+def run_stat(n_evals = 1):
+    planner_list = ['rrt', 'inf_rrt', 'rec_rrt', 'rrt_star', 'inf_rrt_star']
     map_number = 3
-    ## metrics to evalutate. add whatever you want here
-    planner_ct = []
-    planner_nodes = []
-    planner_nodes_gc = []
-    path_distances = []
-    for seed in range(n_evals):
-        print(f"Beginning Evaluation {seed}/{n_evals}")
-        res = run(seed = seed, gui=False, map_number=map_number, planner=planner)
-        planner_ct.append(res["global_planner"]["metrics"]["time"])
-        planner_nodes.append(res["global_planner"]["metrics"]["nodes_wo_gc"])
-        planner_nodes_gc.append(res["global_planner"]["metrics"]["nodes_w_gc"])
-        path_distances.append(res["global_planner"]["metrics"]["dist"])
+    planner_results = {
+        'rrt': {
+            'avg_time_m_std' : np.inf,
+            'avg_dist_m_std' : np.inf
+        },
+        'inf_rrt': {
+            'avg_time_m_std' : np.inf,
+            'avg_dist_m_std' : np.inf
+        },
+        'rec_rrt': {
+            'avg_time_m_std' : np.inf,
+            'avg_dist_m_std' : np.inf
+        },
+        'rrt_star': {
+            'avg_time_m_std' : np.inf,
+            'avg_dist_m_std' : np.inf
+        },
+        'inf_rrt_star': {
+            'avg_time_m_std' : np.inf,
+            'avg_dist_m_std' : np.inf
+        }
+    }
+    for planner in planner_list:
+        ## metrics to evalutate. add whatever you want here
+        planner_ct = []
+        planner_nodes = []
+        planner_nodes_gc = []
+        path_distances = []
+        for i in range(n_evals):
+            seed = 10*i + 777
+            print(f"Beginning Evaluation {i+1}/{n_evals} for the {planner} planner!")
+            res = run(seed = seed, gui=True, map_number=map_number, planner=planner, plot_all=True)
+            planner_ct.append(res["global_planner"]["metrics"]["time"])
+            planner_nodes.append(res["global_planner"]["metrics"]["nodes_wo_gc"])
+            planner_nodes_gc.append(res["global_planner"]["metrics"]["nodes_w_gc"])
+            path_distances.append(res["global_planner"]["metrics"]["dist"])
+        
+        planner_results[planner]['avg_time_m_std'] = [np.around(np.average(planner_ct), decimals=2), np.around(np.std(planner_ct), decimals=2)]
+        planner_results[planner]['avg_dist_m_std'] = [np.around(np.average(path_distances), decimals=2), np.around(np.std(path_distances), decimals=2)]
 
-
+        print( f"========== {n_evals} Evaluations ==========")
+        print( f"========== Map Number: {map_number} ==========")
+        print( f"========== Planner: {planner} ==========")
+        print(f"[Planner] Mean and STD of Computation Time: {planner_results[planner]['avg_time_m_std']}")
+        print(f"[Planner] Mean and STD of Final Path Distance: {planner_results[planner]['avg_dist_m_std']}")
+        print(f"[Planner] Mean and STD of Number of Nodes: {np.around(np.average(planner_nodes), decimals=2)}, {np.around(np.std(planner_nodes), decimals=2)}")
+        print(f"[Planner] Mean and STD of Number of Garbage Collected Nodes: {np.around(np.average(planner_nodes_gc), decimals=2)}, {np.around(np.std(planner_nodes_gc), decimals=2)}")
+        print("=============================================\n\n")
+    
+    print( f"========== Final Results for All Planners ==========")
     print( f"========== {n_evals} Evaluations ==========")
-    print( f"========== Planner: {planner} ==========")
     print( f"========== Map Number: {map_number} ==========")
-    print(f"[Planner] Mean and STD of Final Path Distance: {np.around(np.average(path_distances), decimals=2)}, {np.around(np.std(path_distances), decimals=2)}")
-    print(f"[Planner] Mean and STD of Computation Time: {np.around(np.average(planner_ct), decimals=2)}, {np.around(np.std(planner_ct), decimals=2)}")
-    print(f"[Planner] Mean and STD of Number of Nodes: {np.around(np.average(planner_nodes), decimals=2)}, {np.around(np.std(planner_nodes), decimals=2)}")
-    print(f"[Planner] Mean and STD of Number of Garbage Collected Nodes: {np.around(np.average(planner_nodes_gc), decimals=2)}, {np.around(np.std(planner_nodes_gc), decimals=2)}")
+    for planner in planner_list:
+        print( f"========== Planner: {planner} ==========")
+        print(f"[Planner] Mean and STD of Computation Time: {planner_results[planner]['avg_time_m_std']}")
+        print(f"[Planner] Mean and STD of Final Path Distance: {planner_results[planner]['avg_dist_m_std']}\n")
     print("=============================================")
 
 def plot_graphs():
