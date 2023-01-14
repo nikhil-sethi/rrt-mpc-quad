@@ -11,3 +11,4 @@ class Color(enum.Enum):
     GLASS = (0,0,0,0.2)
     LIGHT_GLASS = (1,1,1,0.2)
     WHITE = (1,1,1,1)
+    BLACK = (0,0,0,1)

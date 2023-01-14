@@ -48,7 +48,8 @@ def run(
 		planner = "inf_rrt_star",
 		min_snap = True,
 		seed = None,
-		plot_all = False
+		plot_all = False,
+		corridor=False
 		):
 
 	random.seed(seed)
@@ -98,7 +99,7 @@ def run(
 	import cProfile
 	import pstats
 	# with cProfile.Profile() as pr:
-	plan = env.plan(method=planner, min_snap=min_snap)
+	plan = env.plan(method=planner, min_snap=min_snap, corridor=corridor)
 	# stats = pstats.Stats(pr)
 	# stats.sort_stats(pstats.SortKey.TIME)
 	# stats.print_stats()
@@ -149,7 +150,7 @@ def run(
 			# Changed "else 0" to "else wp_counters[j]" to keep drone at endpoint
 			if wp_counter<(NUM_WP-1):
 				wp_counter += 1
-				count = i + 70*CTRL_EVERY_N_STEPS	# num steps to wait after reaching the goal
+				count = i + 150*CTRL_EVERY_N_STEPS	# num steps to wait after reaching the goal
 
 				# record error in trajectory. Only record upto
 				pos_err.append(np.linalg.norm(pos - plan[wp_counter, 0:3]))	
@@ -200,7 +201,8 @@ if __name__ == "__main__":
 	parser.add_argument('--map_number',         default=3, 			type=int,           help='Map number (default: "Map 0")', metavar='')
 	parser.add_argument('--planner',            default="inf_rrt", type=str,           help='Planner (default: "rrt_star")', metavar='')
 	parser.add_argument('--min_snap',           default=True, 		type=str2bool,      help='Min Snap (default: False)', metavar=''),
-	parser.add_argument('--seed',              	default=31, 		type=int,           help='Seed (default: None)', metavar=''),
+	parser.add_argument('--corridor',           default=False, 		type=str2bool,      help='Corridor constraints (default: False)', metavar=''),
+	parser.add_argument('--seed',              	default=None, 		type=int,           help='Seed (default: None)', metavar=''),
 	parser.add_argument('--plot_all',           default=True, 		type=str2bool,      help='Will plot all nodes and connections (default: False)', metavar='')
 	ARGS = parser.parse_args()
 
