@@ -7,7 +7,7 @@ import numpy as np
 from utils import printRed
 
 DIST_TH = 0.01
-MAX_ITER = [10000, 200, 300, 600, 26000, 450, 500, 1300]
+MAX_ITER = [10000, 200, 300, 1100, 26000, 450, 500, 1300]
 MAX_IMPR = 10 # number of improvements the rrt* algorithm makes before it stops
 PERC_2_GOAL = 0.01 # This is the percentage of evaluations at the goal position
 
@@ -62,6 +62,7 @@ class SamplingPlanner:
         self.transformed_point = np.ones((4,1))
         self.max_iter = MAX_ITER[map_number]
         self.top_list = TopNodeList(planner=self)
+        self.num_impr = 0
     
     def check_collision_connection(self, node_a_pos:np.ndarray, node_b_pos:np.ndarray):
         N = int(np.linalg.norm(node_a_pos - node_b_pos)/0.05) + 1
@@ -424,6 +425,7 @@ class Informed_RRT_Star(RRT_Star):
         self.far_nodes_discarded = 0
 
     def plan(self):
+        if self.num_impr >= MAX_IMPR: return
         new_node_pos = self.sample_node_position()
         node_further = self.check_if_further(new_node_pos)
         if node_further:    
@@ -442,7 +444,7 @@ class Informed_RRT_Star(RRT_Star):
         # self.env.plot_line(new_node.pos,new_node.parent.pos)
         # self.check_shortcut_for_nodes(new_node)
         self.top_list.check_if_add_to_top(candidate=new_node)
-        self.execute_path_hunt(new_node)
+        # self.execute_path_hunt(new_node)
         if ((np.linalg.norm(new_node.pos -self.goal.pos)<DIST_TH) and (new_node.dist_from_start < self.fastest_route_to_end)):
             if self.final_node == None:
                 self.final_node = new_node
@@ -454,8 +456,15 @@ class Informed_RRT_Star(RRT_Star):
                 self.constrict_WS()
                 self.garbage_collection()
                 i = 0
-                for node in self.graph.nodes:
-                    self.execute_path_hunt(node)
+                prev_fastest_length = self.final_node.dist_from_start
+                for _ in range(MAX_IMPR-4):
+                    for node in self.final_node.connections:
+                        self.execute_path_hunt(node)
+                        self.num_impr += 1
+                    if not self.final_node.dist_from_start < prev_fastest_length: break
+                    else: prev_fastest_length = self.final_node.dist_from_start
+                # for node in self.graph.nodes:
+                #     self.execute_path_hunt(node)
                 # for node in self.final_node.connections:
                 #     close_nodes = sorted(self.graph.nodes, key=lambda n: np.linalg.norm(n.pos - node.pos))[3]
                 #     for node_c in close_nodes:
@@ -472,6 +481,7 @@ class Informed_RRT_Star(RRT_Star):
                     self.graph.num_nodes_created += num_lines_formed
                 for node in self.final_node.connections:
                     self.execute_path_hunt(node)
+                    self.num_impr += 1
         self.garbage_collection()
         
         # self.check_between_nodes()
@@ -487,13 +497,18 @@ class Informed_RRT_Star(RRT_Star):
             return False
 
     def execute_path_hunt(self, hunter_node: Node):
+        impr_th = 0.1
         if self.final_node == None:
             return False
         candidate_shortcut_positions = np.empty((0,3))
+        best_candidate_pos = None
+        shortest_path_thusfar = np.inf
+        # candidate_collision_free_positions = np.empty((0,3))
         rewire = False
-        connection_child = None
-        # created_dots = []
-        num_discrete = 10
+        connection_parent_node_num = None
+        connection_child_node_num = None
+        created_dots = []
+        num_discrete = 15
         # final_node_connections_length = len(self.final_node.connections)
         # dot_id = self.env.plot_point(hunter_node.pos, color=Color.BLUE, pointSize=25)
         # created_dots.append(dot_id)
@@ -518,33 +533,69 @@ class Informed_RRT_Star(RRT_Star):
             # candidate_shortcut_positions = sorted(candidate_shortcut_positions, key=lambda n: np.linalg.norm(n - hunter_node.pos))[:max(len(self.graph.nodes), 6)]
         # for node in self.final_node.connections:
         # if rewire: break
-        for idx, candidate_pos in enumerate(candidate_shortcut_positions):
-            node_num = -(idx // num_discrete) - 1
-            # print(idx, node_num)
-            # if rewire: continue
-            # dot_id = self.env.plot_point(candidate_pos, color=Color.GREEN, pointSize=25)
-            # created_dots.append(dot_id)
-            # self.graph.num_nodes_created += 1
-            if self.check_collision_connection(hunter_node.pos, candidate_pos) == False:
-                dist_to_check = hunter_node.dist_from_start + np.linalg.norm(hunter_node.pos - candidate_pos) + np.linalg.norm(candidate_pos - self.final_node.connections[node_num].pos)
-                if dist_to_check < self.final_node.connections[node_num].dist_from_start:
-                    connection_child = self.final_node.connections[node_num]
-                    rewire = True
-                    break
+        if hunter_node.id == self.final_node.id:
+            for idx, candidate_pos in enumerate(candidate_shortcut_positions):
+                node_num = -(idx // num_discrete) - 2
+                # dot_id = self.env.plot_point(candidate_pos, color=Color.GREEN, pointSize=25)
+                # created_dots.append(dot_id)
+                # self.graph.num_nodes_created += 1
+                if self.check_collision_connection(hunter_node.pos, candidate_pos) == False:
+                    resulting_path_length = np.linalg.norm(hunter_node.pos - candidate_pos) + \
+                        np.linalg.norm(candidate_pos - self.final_node.connections[node_num].pos) + \
+                            self.final_node.connections[node_num].dist_from_start
+                    if self.final_node.dist_from_start - resulting_path_length > impr_th  and resulting_path_length < shortest_path_thusfar:
+                        shortest_path_thusfar = resulting_path_length
+                        connection_parent_node_num = node_num
+                        best_candidate_pos = candidate_pos
+                        rewire = True
+        else:
+            for idx, candidate_pos in enumerate(candidate_shortcut_positions):
+                node_num = -(idx // num_discrete) - 1
+                # print(idx, node_num)
+                # if rewire: continue
+                # dot_id = self.env.plot_point(candidate_pos, color=Color.GREEN, pointSize=25)
+                # created_dots.append(dot_id)
+                # self.graph.num_nodes_created += 1
+                # connection_child = None
+                if self.check_collision_connection(hunter_node.pos, candidate_pos) == False:
+                    resulting_path_length = hunter_node.dist_from_start + \
+                        np.linalg.norm(hunter_node.pos - candidate_pos) + \
+                            np.linalg.norm(candidate_pos - self.final_node.connections[node_num].pos) + \
+                                (self.final_node.dist_from_start - self.final_node.connections[node_num].dist_from_start)
+                    if self.final_node.dist_from_start - resulting_path_length > impr_th  and resulting_path_length < shortest_path_thusfar:
+                        shortest_path_thusfar = resulting_path_length
+                        connection_child_node_num = node_num
+                        best_candidate_pos = candidate_pos
+                        rewire = True
+                    # break
                 # else:
                     # print("nope")
         # for dot in created_dots:
         #     self.env.remove_line(dot)
     
         if rewire:
-            # Disconnect original pair from parent
-            connection_child.parent.children.remove(connection_child)
-            # Create new intermediary node
-            new_node = self.graph.add_node(candidate_pos, hunter_node, self.env)
-            # Connect new node to original child
-            new_node.children.append(connection_child)
-            # Set original child's parent to the new node
-            connection_child.parent = new_node
+            if hunter_node.id == self.final_node.id:
+                connection_parent = self.final_node.connections[connection_parent_node_num]
+                # Create new intermediary node
+                new_node = self.graph.add_node(best_candidate_pos, connection_parent, self.env)
+                # Connect new node to original child
+                new_node.children.append(hunter_node)
+                # Connect parent to new node
+                connection_parent.children.append(new_node)
+                # Disconnect original pair from parent
+                connection_parent.children.remove(self.final_node.connections[connection_parent_node_num+1])
+                # Set original child's parent to the new node
+                hunter_node.parent = new_node
+            else:
+                connection_child = self.final_node.connections[connection_child_node_num]
+                # Disconnect original pair from parent
+                connection_child.parent.children.remove(connection_child)
+                # Create new intermediary node
+                new_node = self.graph.add_node(best_candidate_pos, hunter_node, self.env)
+                # Connect new node to original child
+                new_node.children.append(connection_child)
+                # Set original child's parent to the new node
+                connection_child.parent = new_node
             # Need to now recalculate connections and distance to start for each node in new final_node path
             node_under_evaluation = self.final_node
             new_final_connections = []
@@ -569,88 +620,3 @@ class Informed_RRT_Star(RRT_Star):
         # else:
             # print("Path Hunt returns False")
         return False
-
-    # def execute_path_hunt_inner(self, candidate_shortcut_positions, num_discrete):
-    #     # if self.final_node == None:
-    #     #     return False
-    #     # candidate_shortcut_positions = np.empty((0,3))
-    #     rewire = False
-    #     # connection_child = None
-    #     # created_dots = []
-    #     # final_node_connections_length = len(self.final_node.connections)
-    #     # for node in reversed(self.final_node.connections):
-    #         # if node.dist_from_start == 0: 
-    #             # print("hello")
-    #             # continue
-    #         # if node.id == self.final_node.connections[1].id:
-    #             # print("hi")
-    #         # continue
-    #         # sc_start = node.pos
-    #         # sc_end = node.parent.pos
-    #         # Add discretization of connections to list
-    #         # candidate_shortcut_positions = np.vstack((candidate_shortcut_positions, np.linspace(sc_start, sc_end, 5)))            
-    #         # for candidate_pos in candidate_shortcut_positions:
-    #         #     dot_id = self.env.plot_point(candidate_pos, pointSize=9)
-    #         #     created_dots.append(dot_id)
-    #         #     self.graph.num_nodes_created += 1
-    #         # Can sort if need be?
-    #         # candidate_shortcut_positions = sorted(candidate_shortcut_positions, key=lambda n: np.linalg.norm(n - hunter_node.pos))[:max(len(self.graph.nodes), 6)]
-    #     # for node in self.final_node.connections:
-    #     for idx, candidate_pos in enumerate(candidate_shortcut_positions):
-    #         if rewire: break
-    #         for idx_i, candidate_pos_i in enumerate(reversed(candidate_shortcut_positions[:-num_discrete])):
-    #         # if rewire: continue
-    #         # dot_id = self.env.plot_point(candidate_pos, pointSize=9)
-    #         # created_dots.append(dot_id)
-    #         # self.graph.num_nodes_created += 1
-    #             if self.check_collision_connection(candidate_pos_i, candidate_pos) == False:
-    #                 # dist_to_check = hunter_node.dist_from_start + np.linalg.norm(hunter_node.pos - candidate_pos) + np.linalg.norm(candidate_pos - node.pos)
-    #                 # if dist_to_check < node.dist_from_start:
-    #                 # connection_child = node
-    #                 rewire = True
-    #                 break
-    #     # for dot in created_dots:
-    #     #     self.env.remove_line(dot)
-        
-    #         if rewire:
-    #             # Disconnect original pair from parent
-    #             connection_child.parent.children.remove(connection_child)
-    #             # Create new intermediary node
-    #             new_node = self.graph.add_node(candidate_pos, hunter_node, self.env)
-    #             # Connect new node to original child
-    #             new_node.children.append(connection_child)
-    #             # Set original child's parent to the new node
-    #             connection_child.parent = new_node
-    #             # node_parent = node.parent
-    #             # node_child = self.final_node.connections[idx+1]
-    #             # node_child.parent = node_parent
-    #             # self.graph.remove_node(node, self.env, self.final_node)
-    #             # rewired = True
-    #         # if rewired == True:
-    #             # Need to now recalculate connections and distance to start for each node in new final_node path
-    #             node_under_evaluation = self.final_node
-    #             new_final_connections = []
-    #             new_final_connections.append(node_under_evaluation)
-    #             while node_under_evaluation.dist_from_start > 0:
-    #                 node_under_evaluation = node_under_evaluation.parent
-    #                 new_final_connections.append(node_under_evaluation)
-    #             new_final_connections.reverse()
-    #             self.final_node.connections = new_final_connections.copy()
-    #             for idx, node in enumerate(self.final_node.connections):
-    #                 if idx == 0:
-    #                     node.dist_from_start = 0
-    #                     node.connections = [node]
-    #                 else:
-    #                     node.dist_from_start = node.parent.dist_from_start + np.linalg.norm(node.pos - node.parent.pos)
-    #                     node.connections = node.parent.connections + [node]
-    #             self.fastest_route_to_end = self.final_node.dist_from_start
-    #             num_lines_formed = self.env.plot_plan(self.final_node.connections, Nodes=True, color=Color.RED)
-    #             self.graph.num_nodes_created += num_lines_formed
-    #             print(f"Path Hunt returns True. New fastest distance: {self.fastest_route_to_end}")
-    #             return True
-    #     # else:
-    #         # print("Path Hunt returns False")
-    #     return False
-
-
-    
