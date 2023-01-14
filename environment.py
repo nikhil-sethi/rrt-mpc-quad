@@ -9,7 +9,7 @@ from planner.sample_based import RRT, Informed_RRT, Recycle_RRT
 from planner.sample_based import RRT_Star, Informed_RRT_Star
 from planner.spaces import Space
 from planner.graph import Node
-from planner.trajectory import MinVelAccJerkSnapCrackPop
+from planner.trajectory import MinVelAccJerkSnapCrackPop,MinVelAccJerkSnapCrackPopCorridor
 
 from maps import Map
 from utils.color import Color
@@ -122,7 +122,7 @@ class Env(CtrlAviary):
 		# 		self.plot_point(obs.extent[i])
 		# 	self.plot_line(obs.extent[0], obs.extent[1])
 
-	def plan(self, method="rrt_star", min_snap=False, d=100):	
+	def plan(self, method="rrt_star", min_snap=False, corridor=False,d=100):	
 		start = Node(pos = self.map.starting_pos)
 		goal = Node(pos = self.map.goal_pos)
 		ws = Space(low = self.map.ws_ll, high = self.map.ws_ul)
@@ -193,7 +193,12 @@ class Env(CtrlAviary):
 		if min_snap:
 			try:
 				start_time = time.perf_counter()
-				traj_opt = MinVelAccJerkSnapCrackPop(order=2, waypoints = wps.T, time=8)	# don't worry about time argument too much. it's all relative
+
+				if self.map.map_number in (4,7) or corridor:
+					traj_opt = MinVelAccJerkSnapCrackPopCorridor(order=2, waypoints = wps.T, time=8)	
+				else:
+					traj_opt = MinVelAccJerkSnapCrackPop(order=2, waypoints = wps.T, time=8)	# don't worry about time argument tooplanner much. it's all relative
+
 				plan = traj_opt.optimize(num_pts=num_pts)
 				elapsed_time_opt = time.perf_counter() - start_time
 				self.result["traj_opt"]["metrics"]["time"] = elapsed_time_opt 
@@ -206,21 +211,9 @@ class Env(CtrlAviary):
 				# in that case, just go ahead with original waypoints and discretisation
 				printRed("Minimum Snap failed. Resorting to linear discretization.")
 				self.result["text_output"] += " Minimum Snap failed. Resorting to linear discretization.\n"
-				start_time = time.perf_counter()
 				plan = planner.discretize_path(wps, num_steps=int(num_pts/len(wps)))
-				elapsed_time_opt = time.perf_counter() - start_time
-				self.result["traj_opt"]["metrics"]["time"] = elapsed_time_opt 		
-				
-				printRed(f"Optimization complete. Elapsed time: {elapsed_time_opt} seconds")
-				self.result["text_output"] += f" Optimization complete. Elapsed time: {elapsed_time_opt} seconds\n"
 		else: # discretise the plan 
-			start_time = time.perf_counter()
 			plan = planner.discretize_path(wps, num_steps=int(num_pts/len(wps)))
-			elapsed_time_opt = time.perf_counter() - start_time
-			self.result["traj_opt"]["metrics"]["time"] = elapsed_time_opt 		
-			
-			printRed(f"Optimization complete. Elapsed time: {elapsed_time_opt} seconds")
-			self.result["text_output"] += f" Optimization complete. Elapsed time: {elapsed_time_opt} seconds\n"
 		
 		return plan
 					   
@@ -231,7 +224,7 @@ class Env(CtrlAviary):
 			prev_pos = plan[0]
 			for pos in plan:
 				self.plot_point(pos, color = color, pointSize=4)
-				self.plot_line(prev_pos, pos, color = color, lineWidth=8)
+				self.plot_line(prev_pos, pos, color = color, lineWidth=4)
 				num_lines_formed += 1
 				prev_pos = pos
 		elif Nodes:

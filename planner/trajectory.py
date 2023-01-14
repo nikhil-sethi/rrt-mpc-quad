@@ -31,6 +31,10 @@ class TrajectoryManager():
         if type(time) is int or type(time) is float:
             self.t = np.cumsum(self.get_path_wts()*time) # cumulative times for waypoints 
             self.t = np.insert(self.t, 0,0)
+            
+            # time mutation
+            # self.t[1]-=0.1
+            # self.t[-2]-=0.2
         elif type(time) is list:
             assert len(time) == self.m+1, "Number of timestamps must be equal to the number of waypoints."
             self.t = time
@@ -41,21 +45,24 @@ class TrajectoryManager():
         diffs = np.linalg.norm(wps[:,1:] - wps[:,:-1], axis=0)
         return diffs/sum(diffs)
 
-    def generate(self, coeffs_raw, d=100):
+    def generate(self, coeffs_raw, order = 0, d=100):
         """Takes in optimizer solution and generates a discretized trajectory"""
         C = np.expand_dims((np.array(coeffs_raw).reshape(self.m,2*self.n)),-1) # coefficients
 
         # d = 40 # discretisation
         pts_per_poly = d//self.m
         tvec = np.linspace(self.t[:-1],self.t[1:], pts_per_poly).T.reshape(self.m, pts_per_poly,1)
-        pvec = np.tile(tvec, 2*self.n) ** np.arange(2*self.n) # (d/l x order)
+        diff = [fact(j,order) for j in range(2*self.n)]
+        
+        time_powers = np.concatenate([[0]*order, np.arange(2*self.n -order)])
+        # print(diff, time_powers)
+        pvec = diff*(np.tile(tvec, 2*self.n) ** time_powers) # (d/l x order)
 
         traj = (pvec@C).flatten()
         return traj
         
     def plot(self, points)	:
         _, dims = points.shape
-        fig = plt.figure()
         if dims == 3: # 3D
             ax = plt.axes(projection='3d')
             # ax.set_xlim(-1.5,1.5)
@@ -64,12 +71,18 @@ class TrajectoryManager():
             ax.plot(self.wps[0],self.wps[1],self.wps[2],'b-')
             ax.plot(points[:,0],points[:,1],points[:,2], 'r-')
         elif dims == 2:
-            plt.plot(self.wps[0],self.wps[1],'b--')
-            plt.plot(points[:,0],points[:,1], 'r-')
+            plt.plot(self.wps[0],self.wps[1],'k--', linewidth=2)
+            plt.plot(points[:,0],points[:,1], 'b-', linewidth=3)
+            plt.plot(self.wps[0],self.wps[1],'ko')
         elif dims == 1:
             """plot against time"""
             pass
         plt.show()
+
+    def plot_vec(self, pos, vec, color='k'):
+        for i in range(len(pos)): 
+            if i%2==0:
+                plt.arrow(pos[i,0], pos[i,1], vec[i,0], vec[i,1], color=color)
 
 class MinVelAccJerkSnapCrackPop(TrajectoryManager): # cute name
     def __init__(self, order, waypoints, time = 1) -> None:
@@ -156,7 +169,7 @@ class MinVelAccJerkSnapCrackPop(TrajectoryManager): # cute name
         return H_seg
 
 
-    def optimize(self, num_pts=150):
+    def optimize(self, plan_order = 0, num_pts=150):
         """
         Return an optimized plan for all dimensions
         """
@@ -168,10 +181,21 @@ class MinVelAccJerkSnapCrackPop(TrajectoryManager): # cute name
                 b_con += [self.wps[l][i]]*2 + [0]*self.n 
             b = b_ep + b_con	# continuity RHS
             # print(np.array(self.A))
-            sol = solvers.qp(P = matrix(self.H), q=matrix(self.f), A=matrix(np.array(self.A), tc='d'), b=matrix(b, tc='d'))
+            self.sol = solvers.qp(P = matrix(self.H), q=matrix(self.f), A=matrix(np.array(self.A), tc='d'), b=matrix(b, tc='d'))
 
-            plan.append(self.generate(sol["x"], d=num_pts))
+            plan.append(self.generate(self.sol["x"], order = plan_order, d=num_pts))
         return np.array(plan).T
+
+class MinVelAccJerkSnapCrackPopCorridor(MinVelAccJerkSnapCrackPop):
+    def __init__(self, order, waypoints, time=1) -> None:
+        # discretize waypoints
+        num = 2
+        temp = np.linspace(waypoints[:,:-1], waypoints[:,1:], num=num, axis=-1, endpoint=False).reshape(waypoints.shape[0], (waypoints.shape[1]-1)*num)
+        waypoints = np.append(temp, waypoints[:,-1][:,None], axis=1)
+        
+        super().__init__(order, waypoints, time)
+
+
 
 if __name__=="__main__":
     wps = np.array([
@@ -179,6 +203,7 @@ if __name__=="__main__":
         [0.,4.,2.,7.],
         [0.,5.,5.,7.],
     ]).T
+
     # wps = np.array([[ 0.6       , -0.6,         0.5       ],
     #                 [ 0.636843  , -0.33789508,  0.62039724],
     #                 [-0.17777323,  0.55622033,  0.75059858],
@@ -188,8 +213,20 @@ if __name__=="__main__":
         wps = wps_sorted[idx[:-1],:]
     else:
         wps = wps_sorted[idx,:]
-    print(wps, idx)
-    mvajscp = MinVelAccJerkSnapCrackPop(order=2, waypoints=wps.T, time=1)
-    plan = mvajscp.optimize(num_pts=200)
-    # print(plan)
-    mvajscp.plot(plan)
+    # mvajscp = MinVelAccJerkSnapCrackPop(order=2, waypoints=wps.T, time=5)
+    mvajscp = MinVelAccJerkSnapCrackPopCorridor(order=2, waypoints=wps.T, time=5)
+    pos = mvajscp.optimize(plan_order = 0, num_pts=200)
+    # Uncomment the following lines to plot further derivatives
+    # vel = mvajscp.optimize(plan_order = 1, num_pts=200)
+    # acc = mvajscp.optimize(plan_order = 2, num_pts=200)
+    # jerk = mvajscp.optimize(plan_order = 3, num_pts=200)
+    # snap = mvajscp.optimize(plan_order = 4, num_pts=200)
+    
+    plt.figure()
+    # mvajscp.plot_vec(pos, vel, color='gray')
+    mvajscp.plot(pos)
+    
+    # plt.figure()
+    # mvajscp.plot_vec(pos, acc, color='gray')
+    # mvajscp.plot(pos)
+    
