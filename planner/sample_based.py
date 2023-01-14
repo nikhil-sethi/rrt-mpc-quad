@@ -437,14 +437,10 @@ class Informed_RRT_Star(RRT_Star):
         closest_node = self.find_lowest_cost_node(new_node_pos)
         if closest_node is None:
             return
-        
-        # new_node = Node(pos=new_node_pos, parent=closest_node, id=self.nr_nodes)
-        # self.nr_nodes+=1
+
         new_node = self.graph.add_node(new_node_pos=new_node_pos, parent=closest_node, env=self.env)
-        # self.env.plot_line(new_node.pos,new_node.parent.pos)
-        # self.check_shortcut_for_nodes(new_node)
-        self.top_list.check_if_add_to_top(candidate=new_node)
-        # self.execute_path_hunt(new_node)
+
+        # Each time a new quicker route to the goal is found via a new node in proximity to the goal, execute the below
         if ((np.linalg.norm(new_node.pos -self.goal.pos)<DIST_TH) and (new_node.dist_from_start < self.fastest_route_to_end)):
             if self.final_node == None:
                 self.final_node = new_node
@@ -455,7 +451,6 @@ class Informed_RRT_Star(RRT_Star):
                     self.graph.num_nodes_created += num_lines_formed
                 self.constrict_WS()
                 self.garbage_collection()
-                i = 0
                 prev_fastest_length = self.final_node.dist_from_start
                 for _ in range(MAX_IMPR-4):
                     for node in self.final_node.connections:
@@ -463,14 +458,6 @@ class Informed_RRT_Star(RRT_Star):
                         self.num_impr += 1
                     if not self.final_node.dist_from_start < prev_fastest_length: break
                     else: prev_fastest_length = self.final_node.dist_from_start
-                # for node in self.graph.nodes:
-                #     self.execute_path_hunt(node)
-                # for node in self.final_node.connections:
-                #     close_nodes = sorted(self.graph.nodes, key=lambda n: np.linalg.norm(n.pos - node.pos))[3]
-                #     for node_c in close_nodes:
-                #         self.execute_path_hunt(node_c)
-                    #     i += 1
-                print(f"So many {i} nodes NOT CONNECTING")
             else:
                 self.final_node = new_node
                 self.fastest_route_to_end = new_node.dist_from_start
@@ -483,59 +470,51 @@ class Informed_RRT_Star(RRT_Star):
                     self.execute_path_hunt(node)
                     self.num_impr += 1
         self.garbage_collection()
-        
-        # self.check_between_nodes()
 
     def check_if_further(self, new_node_pos):
+        # Check if a new node position lies within the "shortest path" zone
         if np.linalg.norm(new_node_pos-self.start.pos) + np.linalg.norm(new_node_pos-self.goal.pos) > self.fastest_route_to_end:
-            # self.far_nodes_discarded += 1
-            # print(f"Discared {self.far_nodes_discarded} nodes so far")
             return True
         else:
-            self.env.plot_point(new_node_pos, color=Color.BLUE, pointSize=4)
-            self.graph.num_nodes_created += 1
+            # Debug plotting:
+            # self.env.plot_point(new_node_pos, color=Color.BLUE, pointSize=4)
+            # self.graph.num_nodes_created += 1
             return False
 
     def execute_path_hunt(self, hunter_node: Node):
-        impr_th = 0.1
-        if self.final_node == None:
+        # Setup routine variables
+        impr_th = 0.1 # How much need the path be improved to bother rewiring
+        if self.final_node == None: # Only rewire if a final path exists
             return False
         candidate_shortcut_positions = np.empty((0,3))
         best_candidate_pos = None
         shortest_path_thusfar = np.inf
-        # candidate_collision_free_positions = np.empty((0,3))
         rewire = False
         connection_parent_node_num = None
         connection_child_node_num = None
-        created_dots = []
-        num_discrete = 15
-        # final_node_connections_length = len(self.final_node.connections)
-        # dot_id = self.env.plot_point(hunter_node.pos, color=Color.BLUE, pointSize=25)
+        num_discrete = 10
+        
+        # Debug plotting:
+        # created_dots = []
+        # dot_id = self.env.plot_point(hunter_node.pos, color=Color.BLUE, pointSize=40)
         # created_dots.append(dot_id)
         # self.graph.num_nodes_created += 1
-        f_n_connections = self.final_node.connections.copy()
-        for node in reversed(f_n_connections):
-            if node.dist_from_start == 0: 
-                # print("hello")
+        
+        # Add discretization of final path connections to list
+        for node in reversed(self.final_node.connections):
+            # Skip start node
+            if node.dist_from_start == 0:
                 continue
-            # if node.id == self.final_node.connections[1].id:
-                # print("hi")
-            # continue
             sc_start = node.pos
             sc_end = node.parent.pos
-            # Add discretization of connections to list
             candidate_shortcut_positions = np.vstack((candidate_shortcut_positions, np.linspace(sc_start, sc_end, num_discrete)))            
-            # for candidate_pos in candidate_shortcut_positions:
-            #     dot_id = self.env.plot_point(candidate_pos, pointSize=9)
-            #     created_dots.append(dot_id)
-            #     self.graph.num_nodes_created += 1
-            # Can sort if need be?
-            # candidate_shortcut_positions = sorted(candidate_shortcut_positions, key=lambda n: np.linalg.norm(n - hunter_node.pos))[:max(len(self.graph.nodes), 6)]
-        # for node in self.final_node.connections:
-        # if rewire: break
+
+        # Now for each node in the path, check for shortcuts at discrete points along the path
+        # Need a separate routine for the final node which calculates the resulting path length differently
         if hunter_node.id == self.final_node.id:
             for idx, candidate_pos in enumerate(candidate_shortcut_positions):
                 node_num = -(idx // num_discrete) - 2
+                # Debug plotting:
                 # dot_id = self.env.plot_point(candidate_pos, color=Color.GREEN, pointSize=25)
                 # created_dots.append(dot_id)
                 # self.graph.num_nodes_created += 1
@@ -551,12 +530,10 @@ class Informed_RRT_Star(RRT_Star):
         else:
             for idx, candidate_pos in enumerate(candidate_shortcut_positions):
                 node_num = -(idx // num_discrete) - 1
-                # print(idx, node_num)
-                # if rewire: continue
+                # Debug plotting:
                 # dot_id = self.env.plot_point(candidate_pos, color=Color.GREEN, pointSize=25)
                 # created_dots.append(dot_id)
                 # self.graph.num_nodes_created += 1
-                # connection_child = None
                 if self.check_collision_connection(hunter_node.pos, candidate_pos) == False:
                     resulting_path_length = hunter_node.dist_from_start + \
                         np.linalg.norm(hunter_node.pos - candidate_pos) + \
@@ -567,12 +544,12 @@ class Informed_RRT_Star(RRT_Star):
                         connection_child_node_num = node_num
                         best_candidate_pos = candidate_pos
                         rewire = True
-                    # break
-                # else:
-                    # print("nope")
+
+        # Debug plotting:
         # for dot in created_dots:
         #     self.env.remove_line(dot)
-    
+
+        # If we have found a shortcut within the known best path, we will rewire
         if rewire:
             if hunter_node.id == self.final_node.id:
                 connection_parent = self.final_node.connections[connection_parent_node_num]
@@ -596,6 +573,7 @@ class Informed_RRT_Star(RRT_Star):
                 new_node.children.append(connection_child)
                 # Set original child's parent to the new node
                 connection_child.parent = new_node
+            
             # Need to now recalculate connections and distance to start for each node in new final_node path
             node_under_evaluation = self.final_node
             new_final_connections = []
@@ -616,7 +594,7 @@ class Informed_RRT_Star(RRT_Star):
             num_lines_formed = self.env.plot_plan(self.final_node.connections, Nodes=True, color=Color.RED)
             self.graph.num_nodes_created += num_lines_formed
             print(f"Path Hunt returns True. New fastest distance: {self.fastest_route_to_end}")
+            
             return True
-        # else:
-            # print("Path Hunt returns False")
+
         return False

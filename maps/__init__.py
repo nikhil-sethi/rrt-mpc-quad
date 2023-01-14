@@ -47,21 +47,21 @@ class Map:
             self.obstacles = self.landing_pads
             self.dil = 0
             self.obstacles += [
-                Cuboid(name = "wall_b", origin = [-0.3, 0.3, 0.6], orientation = [0, 0, 0], sides=[2, 0.1, 1.2], color = Color.GLASS),
-                Cuboid(name = "wall_c", origin = [0, -0.3, 0.6], orientation = [0, 0, 0], sides=[1.4, 0.1, 1.2], color = Color.GLASS),
-                Cuboid(name = "wall_d", origin = [0.2, 0.925, 0.6], orientation = [0, 0, 0], sides=[0.1, 1.15, 1.2], color = Color.GLASS),
-                Cuboid(name = "wall_e", origin = [-0.2, -0.925, 0.6], orientation = [0, 0, 0], sides=[0.1, 1.15, 1.2], color = Color.GLASS),
+                Cuboid(name = "wall_b", origin = [-0.3, 0.3, 0.6], orientation = [0, 0, 0], sides=[2, 0.1, 1.2], color = Color.BLUEGLASS),
+                Cuboid(name = "wall_c", origin = [0, -0.3, 0.6], orientation = [0, 0, 0], sides=[1.4, 0.1, 1.2], color = Color.BLUEGLASS),
+                Cuboid(name = "wall_d", origin = [0.2, 0.925, 0.6], orientation = [0, 0, 0], sides=[0.1, 1.15, 1.2], color = Color.BLUEGLASS),
+                Cuboid(name = "wall_e", origin = [-0.2, -0.925, 0.6], orientation = [0, 0, 0], sides=[0.1, 1.15, 1.2], color = Color.BLUEGLASS),
                 Cuboid(name = "wall_f", origin = [0, 0, 0.3], orientation = [0, 0, 0], sides=[0.1, 0.5, 0.6], color = Color.REDGLASS),
                 Cuboid(name = "wall_g", origin = [-1.25, -0.125, 0.3], orientation = [0, 0, 0], sides=[0.1, 0.75, 0.6], color = Color.REDGLASS),
                 Cuboid(name = "wall_h", origin = [-1.25, -1.39, 0.3], orientation = [0, 0, 0], sides=[0.1, 0.225, 0.6], color = Color.REDGLASS),
                 Cuboid(name = "wall_i", origin = [-1.25, -0.625, 0.9], orientation = [0, 0, 0], sides=[0.1, 1.75, 0.6], color = Color.REDGLASS),
                 Cuboid(name = "wall_j", origin = [-1.65, 0.3, 0.4], orientation = [0, 0, 0], sides=[0.7, 0.1, 0.8], color = Color.REDGLASS),
                 # Outer walls & ceiling:
-                Cuboid(name = "wall_top", origin = [-0.25, 0, 1.25], orientation = [0, 0, 0], sides=[3.7, 3.2, 0.1], color = Color.GLASS),
-                Cuboid(name = "wall_north", origin = [-0.25, 1.55, 0.6], orientation = [0, 0, 0], sides=[3.7, 0.1, 1.2], color = Color.GLASS),
-                Cuboid(name = "wall_west", origin = [-2.05, 0, 0.6], orientation = [0, 0, 0], sides=[0.1, 3, 1.2], color = Color.GLASS),
-                Cuboid(name = "wall_south", origin = [-0.25, -1.55, 0.6], orientation = [0, 0, 0], sides=[3.7, 0.1, 1.2], color = Color.GLASS),
-                Cuboid(name = "wall_east", origin = [1.55, 0, 0.6], orientation = [0, 0, 0], sides=[0.1, 3, 1.2], color = Color.GLASS)
+                Cuboid(name = "wall_top", origin = [-0.25, 0, 1.25], orientation = [0, 0, 0], sides=[3.7, 3.2, 0.1], color = Color.LIGHT_GLASS),
+                Cuboid(name = "wall_north", origin = [-0.25, 1.55, 0.6], orientation = [0, 0, 0], sides=[3.7, 0.1, 1.2], color = Color.LIGHT_GLASS),
+                Cuboid(name = "wall_west", origin = [-2.05, 0, 0.6], orientation = [0, 0, 0], sides=[0.1, 3, 1.2], color = Color.LIGHT_GLASS),
+                Cuboid(name = "wall_south", origin = [-0.25, -1.55, 0.6], orientation = [0, 0, 0], sides=[3.7, 0.1, 1.2], color = Color.LIGHT_GLASS),
+                Cuboid(name = "wall_east", origin = [1.55, 0, 0.6], orientation = [0, 0, 0], sides=[0.1, 3, 1.2], color = Color.LIGHT_GLASS)
                 ]
         elif self.map_number == 4:
             # SCATTERED OBJECTS
