@@ -189,19 +189,19 @@ def run(
 if __name__ == "__main__":
 	## Define and parse (optional) arguments for the script ##
 	parser = argparse.ArgumentParser(description='Helix flight script using CtrlAviary or VisionAviary and DSLPIDControl')
-	parser.add_argument('--num_drones',         default=1,          type=int,           help='Number of drones (default: 3)', metavar='')
-	parser.add_argument('--gui',                default=True,       type=str2bool,      help='Whether to use PyBullet GUI (default: True)', metavar='')
-	parser.add_argument('--record_video',       default=False,      type=str2bool,      help='Whether to record a video (default: False)', metavar='')
-	parser.add_argument('--plot',               default=False,      type=str2bool,      help='Whether to plot the simulation results (default: True)', metavar='')
-	parser.add_argument('--simulation_freq_hz', default=240,        type=int,           help='Simulation frequency in Hz (default: 240)', metavar='')
-	parser.add_argument('--control_freq_hz',    default=48,         type=int,           help='Control frequency in Hz (default: 48)', metavar='')
-	parser.add_argument('--duration_sec',       default=60,         type=int,           help='Duration of the simulation in seconds (default: 5)', metavar='')
+	parser.add_argument('--num_drones',         default=1,          		type=int,           help='Number of drones (default: 3)', metavar='')
+	parser.add_argument('--gui',                default=True,       		type=str2bool,      help='Whether to use PyBullet GUI (default: True)', metavar='')
+	parser.add_argument('--record_video',       default=False,     			type=str2bool,      help='Whether to record a video (default: False)', metavar='')
+	parser.add_argument('--plot',               default=False,      		type=str2bool,      help='Whether to plot the simulation results (default: True)', metavar='')
+	parser.add_argument('--simulation_freq_hz', default=240,        		type=int,           help='Simulation frequency in Hz (default: 240)', metavar='')
+	parser.add_argument('--control_freq_hz',    default=48,         		type=int,           help='Control frequency in Hz (default: 48)', metavar='')
+	parser.add_argument('--duration_sec',       default=60,         		type=int,           help='Duration of the simulation in seconds (default: 5)', metavar='')
 	parser.add_argument('--output_folder',     	default='results/logs/', 	type=str,           help='Folder where to save logs (default: "results")', metavar='')
-	parser.add_argument('--map_number',         default=3, 			type=int,           help='Map number (default: "Map 0")', metavar='')
-	parser.add_argument('--planner',            default="inf_rrt", type=str,           help='Planner (default: "rrt_star")', metavar='')
-	parser.add_argument('--min_snap',           default=True, 		type=str2bool,      help='Min Snap (default: False)', metavar=''),
-	parser.add_argument('--seed',              	default=31, 		type=int,           help='Seed (default: None)', metavar=''),
-	parser.add_argument('--plot_all',           default=True, 		type=str2bool,      help='Will plot all nodes and connections (default: False)', metavar='')
+	parser.add_argument('--map_number',         default=3, 					type=int,           help='Map number (default: "Map 0")', metavar='')
+	parser.add_argument('--planner',            default="inf_rrt_star", 	type=str,           help='Planner (default: "rrt_star")', metavar='')
+	parser.add_argument('--min_snap',           default=True, 				type=str2bool,      help='Min Snap (default: False)', metavar=''),
+	parser.add_argument('--seed',              	default=None, 			t	ype=int,           help='Seed (default: None)', metavar=''),
+	parser.add_argument('--plot_all',           default=True, 				type=str2bool,      help='Will plot all nodes and connections (default: False)', metavar='')
 	ARGS = parser.parse_args()
 
 	result = run(**vars(ARGS))

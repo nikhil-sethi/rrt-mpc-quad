@@ -106,6 +106,10 @@ class Env(CtrlAviary):
 	def remove_line(lineID):
 		p.removeUserDebugItem(lineID)
 
+	@staticmethod
+	def add_text(text, textPosition, textColorRGB, textSize):
+		p.addUserDebugText(text=text, textPosition=textPosition, textColorRGB=textColorRGB, textSize=textSize)
+
 	def _addObstacles(self):
 		"""Add obstacles to the environment.
 		"""
@@ -122,16 +126,29 @@ class Env(CtrlAviary):
 		start = Node(pos = self.map.starting_pos)
 		goal = Node(pos = self.map.goal_pos)
 		ws = Space(low = self.map.ws_ll, high = self.map.ws_ul)
+		p.resetDebugVisualizerCamera(cameraDistance=4,
+                                         cameraYaw=-30,
+                                         cameraPitch=-30,
+                                         cameraTargetPosition=[0,0,0],
+                                         physicsClientId=self.CLIENT
+                                         )
+		textPosition = [-0.5,0.5,1.7]
+		textSize = 2
 		if method == 'rrt':
 			planner = RRT(space=ws, start=start, goal=goal, map=self.map.obstacles, env=self, result = self.result, map_number=self.map.map_number)
+			self.add_text(text="RRT PLANNER", textPosition=textPosition, textColorRGB=[1,1,1], textSize=textSize)
 		elif method == 'inf_rrt':
 			planner = Informed_RRT(space=ws, start=start, goal=goal, map=self.map.obstacles, env=self, result = self.result, map_number=self.map.map_number)
+			self.add_text(text="INFORMED RRT PLANNER", textPosition=textPosition, textColorRGB=[1,1,1], textSize=textSize)
 		elif method == 'rec_rrt':
 			planner = Recycle_RRT(space=ws, start=start, goal=goal, map=self.map.obstacles, env=self, result = self.result, map_number=self.map.map_number)
+			self.add_text(text="RECYCLE RRT PLANNER", textPosition=textPosition, textColorRGB=[1,1,1], textSize=textSize)
 		elif method == 'rrt_star':
 			planner = RRT_Star(space=ws, start=start, goal=goal, map=self.map.obstacles, env=self, result = self.result, map_number=self.map.map_number)
+			self.add_text(text="RRT STAR PLANNER", textPosition=textPosition, textColorRGB=[1,1,1], textSize=textSize)
 		elif method == 'inf_rrt_star':
 			planner = Informed_RRT_Star(space=ws, start=start, goal=goal, map=self.map.obstacles, env=self, result = self.result, map_number=self.map.map_number)
+			self.add_text(text="INFORMED RRT STAR PLANNER", textPosition=textPosition, textColorRGB=[1,1,1], textSize=textSize)
 		else:
 			raise NotImplementedError()
 		printRed(f"Begin waypoint planning with {method}...")
@@ -166,7 +183,7 @@ class Env(CtrlAviary):
 		# print(wps_sorted, idx)
 		if len(idx)!=len(wps_sorted):
 			
-			wps = wps_sorted[idx[:-1],:] # np unique returns sorted values for some reason. undo that shit
+			wps = wps_sorted[idx[:-1],:] # np unique returns sorted values for some reason. undo that
 		else: # if everything was already unique. Need this stuff coz np unique gives wrong vals sometimes
 			wps = wps_sorted[idx,:]
 
@@ -176,7 +193,7 @@ class Env(CtrlAviary):
 		if min_snap:
 			try:
 				start_time = time.perf_counter()
-				traj_opt = MinVelAccJerkSnapCrackPop(order=2, waypoints = wps.T, time=8)	# don't worry about time argument tooplanner much. it's all relative
+				traj_opt = MinVelAccJerkSnapCrackPop(order=2, waypoints = wps.T, time=8)	# don't worry about time argument too much. it's all relative
 				plan = traj_opt.optimize(num_pts=num_pts)
 				elapsed_time_opt = time.perf_counter() - start_time
 				self.result["traj_opt"]["metrics"]["time"] = elapsed_time_opt 
