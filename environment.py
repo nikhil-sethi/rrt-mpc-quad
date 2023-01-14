@@ -86,22 +86,31 @@ class Env(CtrlAviary):
 						 user_debug_gui=user_debug_gui,
 						 output_folder=output_folder,
 						 )
+		
+		# Pause to set camera
+		# time.sleep(15)	
 	
 	@staticmethod
 	def plot_point(position, color:Color = Color.WHITE, pointSize=2):
 		"""Used to plot trajectories"""
-		p.addUserDebugPoints(pointPositions = [position], pointColorsRGB = [color.value[:-1]], pointSize=pointSize)
+		id = p.addUserDebugPoints(pointPositions = [position], pointColorsRGB = [color.value[:-1]], pointSize=pointSize)
+		return id
 
 	@staticmethod
 	def plot_line(from_pos, to_pos, color:Color = Color.WHITE, lineWidth=1.4):
 		"""Used to plot trajectories"""
-		p.addUserDebugLine(lineFromXYZ = from_pos, lineToXYZ = to_pos, lineColorRGB=list(color.value[:-1]), lineWidth=lineWidth)
+		node_id = p.addUserDebugLine(lineFromXYZ = from_pos, lineToXYZ = to_pos, lineColorRGB=list(color.value[:-1]), lineWidth=lineWidth)
+		return node_id
+
+	@staticmethod
+	def remove_line(lineID):
+		p.removeUserDebugItem(lineID)
 
 	def _addObstacles(self):
 		"""Add obstacles to the environment.
 		"""
 		# Dilate obstacles to drone radius plus margin also equal to drone radius 
-		self.map.load_map(self.CLIENT, dilate=True, dilation=2*self.L)
+		self.map.load_map(self.CLIENT, dilate=True, dilation=2.1*self.L)
 		
 		# # uncomment below snippet to plot extents for obstacles
 		# for obs in self.map.obstacles:
@@ -136,10 +145,6 @@ class Env(CtrlAviary):
 		printRed("---")
 		self.result["text_output"] += f" Planning complete. Elapsed time: {elapsed_time_planner} seconds\n ---\n"
 
-		# Uncomment below to plot all nodes and connections for RRT and RRT_Star
-		if self.plot_all:
-			planner.plot_all_nodes()
-
 		if min_snap:
 			printRed(f"Begin trajectory optimization with Minimum Snap")
 			self.result["text_output"] += f" Begin trajectory optimization with Minimum Snap\n"
@@ -171,7 +176,7 @@ class Env(CtrlAviary):
 		if min_snap:
 			try:
 				start_time = time.perf_counter()
-				traj_opt = MinVelAccJerkSnapCrackPop(order=2, waypoints = wps.T, time=8)	# don't worry about time argument too much. it's all relative
+				traj_opt = MinVelAccJerkSnapCrackPop(order=2, waypoints = wps.T, time=8)	# don't worry about time argument tooplanner much. it's all relative
 				plan = traj_opt.optimize(num_pts=num_pts)
 				elapsed_time_opt = time.perf_counter() - start_time
 				self.result["traj_opt"]["metrics"]["time"] = elapsed_time_opt 
@@ -203,18 +208,23 @@ class Env(CtrlAviary):
 		return plan
 					   
 	def plot_plan(self, plan, WPS=False, Nodes=False, color:Color = Color.WHITE):
+		# return
+		num_lines_formed = 0
 		if WPS:
 			prev_pos = plan[0]
 			for pos in plan:
 				self.plot_point(pos, color = color, pointSize=4)
 				self.plot_line(prev_pos, pos, color = color, lineWidth=8)
+				num_lines_formed += 1
 				prev_pos = pos
 		elif Nodes:
 			prev_pos = plan[0].pos
 			for node in plan:
-				self.plot_point(node.pos, color = color, pointSize=2)
-				self.plot_line(prev_pos, node.pos, color = color, lineWidth=3)
+				# self.plot_point(node.pos, color = color, pointSize=2)
+				self.plot_line(prev_pos, node.pos, color = color, lineWidth=8)
+				num_lines_formed += 1
 				prev_pos = node.pos
 		else:
 			for pos in plan:
 				self.plot_point(pos, color = Color.RED, pointSize=5)
+		return num_lines_formed

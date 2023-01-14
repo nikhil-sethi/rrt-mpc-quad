@@ -1,0 +1,31 @@
+from .graph import Node
+
+class TopNodeList:
+    def __init__(self, planner):
+        self.top_list = []
+        self.lowest_val = np.inf
+        self.planner = planner
+        self.max_num_nodes = 5
+
+    def check_if_add_to_top(self, candidate: Node):
+        candidate_val = candidate.dist_from_start + np.linalg.norm(candidate.pos - self.planner.goal.pos)
+        if candidate_val < self.lowest_val:
+            self.add_node(candidate, candidate_val)
+            return True
+        else: return False
+    
+    def add_node(self, new_node: Node, candidate_val):
+        new_entry = (new_node, candidate_val)
+        if not self.top_list:
+            self.top_list.append(new_entry)
+            self.lowest_val = candidate_val
+        else:
+            idx = 0
+            while idx < len(self.top_list) and candidate_val > self.top_list[idx][1]:
+                idx += 1
+            self.top_list.insert(idx, new_entry)
+            if len(self.top_list) > self.max_num_nodes:
+                self.top_list.pop(0)
+            self.lowest_val = self.top_list[0][1]
+            # for entry in self.top_list:
+                # print(f"Node {entry[0].id} with value {entry[1]}")  
