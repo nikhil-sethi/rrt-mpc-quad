@@ -20,11 +20,16 @@ class Graph:
     def __init__(self, start_node: Node):
         self.nodes = [start_node]
         self.num_nodes_created = 1
+        self.lines_plotted = 0
 
     def add_node(self, new_node_pos, parent: Node, env) -> Node:
-        new_node_id = env.plot_line(new_node_pos, parent.pos, lineWidth=2.5)
-        new_node = Node(pos=new_node_pos, parent=parent, id=new_node_id)
         self.num_nodes_created += 1
+        if env.plot_all:
+            self.lines_plotted += 1
+            new_node_id = env.plot_line(new_node_pos, parent.pos, lineWidth=2.5)
+        else:
+            new_node_id = self.num_nodes_created
+        new_node = Node(pos=new_node_pos, parent=parent, id=new_node_id)
         parent.children.append(new_node)
         self.nodes.append(new_node)
         # print(f"Adding node id {new_node.id}")
@@ -57,5 +62,4 @@ class Graph:
         self.nodes = list(nodes_arr)
         # print(f"After removal, graph length = {len(self.nodes)}")
         # self.nodes.pop(node.id)
-
-    
+  

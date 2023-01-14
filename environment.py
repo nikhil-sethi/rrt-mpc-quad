@@ -145,9 +145,9 @@ class Env(CtrlAviary):
 		printRed("---")
 		self.result["text_output"] += f" Planning complete. Elapsed time: {elapsed_time_planner} seconds\n ---\n"
 
-		# Uncomment below to plot all nodes and connections for RRT and RRT_Star
-		if self.plot_all:
-			planner.plot_all_nodes()
+		# # Uncomment below to plot all nodes and connections for RRT and RRT_Star
+		# if self.plot_all:
+		# 	planner.plot_all_nodes()
 
 		if min_snap:
 			printRed(f"Begin trajectory optimization with Minimum Snap")

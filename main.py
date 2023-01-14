@@ -45,7 +45,7 @@ def run(
 		duration_sec=60,
 		output_folder="results/logs/",
 		map_number = 1,
-		planner = "rrt_star",
+		planner = "inf_rrt_star",
 		min_snap = True,
 		seed = None,
 		plot_all = False
@@ -198,10 +198,10 @@ if __name__ == "__main__":
 	parser.add_argument('--duration_sec',       default=60,         type=int,           help='Duration of the simulation in seconds (default: 5)', metavar='')
 	parser.add_argument('--output_folder',     	default='results/logs/', 	type=str,           help='Folder where to save logs (default: "results")', metavar='')
 	parser.add_argument('--map_number',         default=3, 			type=int,           help='Map number (default: "Map 0")', metavar='')
-	parser.add_argument('--planner',            default="inf_rrt_star", type=str,           help='Planner (default: "rrt_star")', metavar='')
+	parser.add_argument('--planner',            default="inf_rrt", type=str,           help='Planner (default: "rrt_star")', metavar='')
 	parser.add_argument('--min_snap',           default=True, 		type=str2bool,      help='Min Snap (default: False)', metavar=''),
-	parser.add_argument('--seed',              	default=72, 		type=int,           help='Seed (default: None)', metavar=''),
-	parser.add_argument('--plot_all',           default=False, 		type=str2bool,      help='Will plot all nodes and connections (default: False)', metavar='')
+	parser.add_argument('--seed',              	default=31, 		type=int,           help='Seed (default: None)', metavar=''),
+	parser.add_argument('--plot_all',           default=True, 		type=str2bool,      help='Will plot all nodes and connections (default: False)', metavar='')
 	ARGS = parser.parse_args()
 
 	result = run(**vars(ARGS))
