@@ -191,7 +191,6 @@ class MinVelAccJerkSnapCrackPopCorridor(MinVelAccJerkSnapCrackPop):
         # discretize waypoints
         num = 2
         temp = np.linspace(waypoints[:,:-1], waypoints[:,1:], num=num, axis=-1, endpoint=False).reshape(waypoints.shape[0], (waypoints.shape[1]-1)*num)
-        print(waypoints[:,-1], temp)
         waypoints = np.append(temp, waypoints[:,-1][:,None], axis=1)
         
         super().__init__(order, waypoints, time)
@@ -217,7 +216,6 @@ if __name__=="__main__":
     # mvajscp = MinVelAccJerkSnapCrackPop(order=2, waypoints=wps.T, time=5)
     mvajscp = MinVelAccJerkSnapCrackPopCorridor(order=2, waypoints=wps.T, time=5)
     pos = mvajscp.optimize(plan_order = 0, num_pts=200)
-    print(pos)
     # Uncomment the following lines to plot further derivatives
     # vel = mvajscp.optimize(plan_order = 1, num_pts=200)
     # acc = mvajscp.optimize(plan_order = 2, num_pts=200)
