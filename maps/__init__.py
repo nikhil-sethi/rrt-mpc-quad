@@ -129,14 +129,6 @@ class Map:
                 Cuboid(name = "wall_lm", origin = [0.5, 2, 2.15], orientation = [3.14/2, 0, 0], sides=[1.1, 0.1, 1], color = Color.BLACK_GLASS)
                 ]
         elif self.map_number == 6:
-            # EXTRA: BOXED
-            self.obstacles = [
-                Cuboid(name = "test_wall1", origin = [0, 0.55, 0.5], orientation = [0, 0, 0*6.28/4], sides=[1, 0.2, 1], color = Color.GLASS),
-                Cuboid(name = "test_wall2", origin = [-0.55, 0, 0.5], orientation = [0, 0, 1*6.28/4], sides=[1, 0.2, 1], color = Color.GLASS),
-                Cuboid(name = "test_wall3", origin = [0, -0.55, 0.5], orientation = [0, 0, 2*6.28/4], sides=[1, 0.2, 1], color = Color.GLASS),
-                Cuboid(name = "test_wall4", origin = [0.55, 0, 0.5], orientation = [0, 0, 3*6.28/4], sides=[1, 0.2, 1], color = Color.GLASS)
-                ]
-        elif self.map_number == 7:
             # RANDOM SCATTERED
             size = 2
             self.starting_pos = [size,-size,0.5]
