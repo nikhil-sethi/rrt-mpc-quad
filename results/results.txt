@@ -1,31 +1,157 @@
 ========== Final Results for All Planners ==========
-========== 1 Evaluations ==========
+========== 15 Evaluations ==========
 ========== Planner: rrt ==========
 ========== Map Number: 0 ==========
-[Planner] Mean and STD of Computation Time: [0.07, 0.0]
-[Planner] Mean and STD of Final Path Distance: [2.29, 0.0]
+[Planner] Mean and STD of Computation Time: [0.05, 0.0]
+[Planner] Mean and STD of Final Path Distance: [2.49, 0.6]
 [Planner] Mean and STD of Number of Iterations: [200.0, 0.0]
 ========== Map Number: 1 ==========
-[Planner] Mean and STD of Computation Time: [0.09, 0.0]
-[Planner] Mean and STD of Final Path Distance: [3.99, 0.0]
+[Planner] Mean and STD of Computation Time: [0.06, 0.0]
+[Planner] Mean and STD of Final Path Distance: [3.77, 0.81]
 [Planner] Mean and STD of Number of Iterations: [200.0, 0.0]
+========== Map Number: 2 ==========
+[Planner] Mean and STD of Computation Time: [0.05, 0.01]
+[Planner] Mean and STD of Final Path Distance: [4.19, 0.86]
+[Planner] Mean and STD of Number of Iterations: [211.33, 42.41]
+========== Map Number: 3 ==========
+[Planner] Mean and STD of Computation Time: [0.36, 0.1]
+[Planner] Mean and STD of Final Path Distance: [11.4, 1.93]
+[Planner] Mean and STD of Number of Iterations: [2165.33, 552.94]
+========== Map Number: 4 ==========
+[Planner] Mean and STD of Computation Time: [0.08, 0.0]
+[Planner] Mean and STD of Final Path Distance: [9.14, 1.84]
+[Planner] Mean and STD of Number of Iterations: [200.0, 0.0]
+========== Map Number: 5 ==========
+[Planner] Mean and STD of Computation Time: [0.28, 0.15]
+[Planner] Mean and STD of Final Path Distance: [9.57, 2.65]
+[Planner] Mean and STD of Number of Iterations: [888.53, 455.32]
+========== Map Number: 6 ==========
+[Planner] Mean and STD of Computation Time: [0.09, 0.01]
+[Planner] Mean and STD of Final Path Distance: [8.56, 1.3]
+[Planner] Mean and STD of Number of Iterations: [219.6, 50.2]
 =============================================
 
 ========== Planner: inf_rrt ==========
 ========== Map Number: 0 ==========
-[Planner] Mean and STD of Computation Time: [0.21, 0.0]
+[Planner] Mean and STD of Computation Time: [0.21, 0.1]
 [Planner] Mean and STD of Final Path Distance: [1.7, 0.0]
 [Planner] Mean and STD of Number of Iterations: [200.0, 0.0]
 ========== Map Number: 1 ==========
-[Planner] Mean and STD of Computation Time: [0.34, 0.0]
-[Planner] Mean and STD of Final Path Distance: [1.9, 0.0]
+[Planner] Mean and STD of Computation Time: [0.34, 0.18]
+[Planner] Mean and STD of Final Path Distance: [2.08, 0.37]
+[Planner] Mean and STD of Number of Iterations: [200.0, 0.0]
+========== Map Number: 2 ==========
+[Planner] Mean and STD of Computation Time: [0.44, 0.18]
+[Planner] Mean and STD of Final Path Distance: [2.26, 0.17]
+[Planner] Mean and STD of Number of Iterations: [211.33, 42.41]
+========== Map Number: 3 ==========
+[Planner] Mean and STD of Computation Time: [2.08, 0.48]
+[Planner] Mean and STD of Final Path Distance: [6.66, 0.3]
+[Planner] Mean and STD of Number of Iterations: [2165.33, 552.94]
+========== Map Number: 4 ==========
+[Planner] Mean and STD of Computation Time: [0.74, 0.36]
+[Planner] Mean and STD of Final Path Distance: [6.13, 0.53]
+[Planner] Mean and STD of Number of Iterations: [200.0, 0.0]
+========== Map Number: 5 ==========
+[Planner] Mean and STD of Computation Time: [1.0, 0.45]
+[Planner] Mean and STD of Final Path Distance: [5.38, 1.35]
+[Planner] Mean and STD of Number of Iterations: [888.53, 455.32]
+========== Map Number: 6 ==========
+[Planner] Mean and STD of Computation Time: [0.81, 0.29]
+[Planner] Mean and STD of Final Path Distance: [6.35, 0.48]
+[Planner] Mean and STD of Number of Iterations: [219.6, 50.2]
+=============================================
+
+========== Planner: rrt_star ==========
+========== Map Number: 0 ==========
+[Planner] Mean and STD of Computation Time: [0.37, 0.22]
+[Planner] Mean and STD of Final Path Distance: [1.7, 0.0]
+[Planner] Mean and STD of Number of Iterations: [200.0, 0.0]
+========== Map Number: 1 ==========
+[Planner] Mean and STD of Computation Time: [0.37, 0.3]
+[Planner] Mean and STD of Final Path Distance: [2.12, 0.29]
+[Planner] Mean and STD of Number of Iterations: [200.0, 0.0]
+========== Map Number: 2 ==========
+[Planner] Mean and STD of Computation Time: [0.58, 0.27]
+[Planner] Mean and STD of Final Path Distance: [2.5, 0.39]
+[Planner] Mean and STD of Number of Iterations: [200.0, 0.0]
+========== Map Number: 3 ==========
+[Planner] Mean and STD of Computation Time: [24.07, 5.25]
+[Planner] Mean and STD of Final Path Distance: [6.78, 0.3]
+[Planner] Mean and STD of Number of Iterations: [1303.87, 14.47]
+========== Map Number: 4 ==========
+[Planner] Mean and STD of Computation Time: [0.75, 0.44]
+[Planner] Mean and STD of Final Path Distance: [6.31, 0.39]
+[Planner] Mean and STD of Number of Iterations: [200.0, 0.0]
+========== Map Number: 5 ==========
+[Planner] Mean and STD of Computation Time: [0.86, 0.5]
+[Planner] Mean and STD of Final Path Distance: [5.02, 0.7]
+[Planner] Mean and STD of Number of Iterations: [200.0, 0.0]
+========== Map Number: 6 ==========
+[Planner] Mean and STD of Computation Time: [0.9, 0.57]
+[Planner] Mean and STD of Final Path Distance: [6.38, 0.46]
+[Planner] Mean and STD of Number of Iterations: [200.0, 0.0]
+=============================================
+
+========== Planner: inf_rrt_star ==========
+========== Map Number: 0 ==========
+[Planner] Mean and STD of Computation Time: [0.16, 0.2]
+[Planner] Mean and STD of Final Path Distance: [1.7, 0.0]
+[Planner] Mean and STD of Number of Iterations: [200.0, 0.0]
+========== Map Number: 1 ==========
+[Planner] Mean and STD of Computation Time: [0.28, 0.29]
+[Planner] Mean and STD of Final Path Distance: [1.91, 0.21]
+[Planner] Mean and STD of Number of Iterations: [200.0, 0.0]
+========== Map Number: 2 ==========
+[Planner] Mean and STD of Computation Time: [0.3, 0.22]
+[Planner] Mean and STD of Final Path Distance: [2.06, 0.15]
+[Planner] Mean and STD of Number of Iterations: [200.0, 0.0]
+========== Map Number: 3 ==========
+[Planner] Mean and STD of Computation Time: [3.56, 1.31]
+[Planner] Mean and STD of Final Path Distance: [6.53, 0.3]
+[Planner] Mean and STD of Number of Iterations: [1300.0, 0.0]
+========== Map Number: 4 ==========
+[Planner] Mean and STD of Computation Time: [0.51, 0.31]
+[Planner] Mean and STD of Final Path Distance: [5.83, 0.12]
+[Planner] Mean and STD of Number of Iterations: [200.0, 0.0]
+========== Map Number: 5 ==========
+[Planner] Mean and STD of Computation Time: [0.99, 0.62]
+[Planner] Mean and STD of Final Path Distance: [4.7, 1.28]
+[Planner] Mean and STD of Number of Iterations: [200.0, 0.0]
+========== Map Number: 6 ==========
+[Planner] Mean and STD of Computation Time: [0.8, 0.49]
+[Planner] Mean and STD of Final Path Distance: [6.27, 0.51]
 [Planner] Mean and STD of Number of Iterations: [200.0, 0.0]
 =============================================
 
 ========== RAW DATA ==========
-========== 1 Evaluations ==========
+========== 15 Evaluations ==========
 Planner	Map Number	Average Time	STD Time	Average Dist	STD Dist	Average Iter	STD Iter
-rrt	0	0.07	0.0	2.29	0.0	200.0	0.0	
-rrt	1	0.09	0.0	3.99	0.0	200.0	0.0	
-inf_rrt	0	0.21	0.0	1.7	0.0	200.0	0.0	
-inf_rrt	1	0.34	0.0	1.9	0.0	200.0	0.0	
+rrt	0	0.05	0.0	2.49	0.6	200.0	0.0	
+rrt	1	0.06	0.0	3.77	0.81	200.0	0.0	
+rrt	2	0.05	0.01	4.19	0.86	211.33	42.41	
+rrt	3	0.36	0.1	11.4	1.93	2165.33	552.94	
+rrt	4	0.08	0.0	9.14	1.84	200.0	0.0	
+rrt	5	0.28	0.15	9.57	2.65	888.53	455.32	
+rrt	6	0.09	0.01	8.56	1.3	219.6	50.2	
+inf_rrt	0	0.21	0.1	1.7	0.0	200.0	0.0	
+inf_rrt	1	0.34	0.18	2.08	0.37	200.0	0.0	
+inf_rrt	2	0.44	0.18	2.26	0.17	211.33	42.41	
+inf_rrt	3	2.08	0.48	6.66	0.3	2165.33	552.94	
+inf_rrt	4	0.74	0.36	6.13	0.53	200.0	0.0	
+inf_rrt	5	1.0	0.45	5.38	1.35	888.53	455.32	
+inf_rrt	6	0.81	0.29	6.35	0.48	219.6	50.2	
+rrt_star	0	0.37	0.22	1.7	0.0	200.0	0.0	
+rrt_star	1	0.37	0.3	2.12	0.29	200.0	0.0	
+rrt_star	2	0.58	0.27	2.5	0.39	200.0	0.0	
+rrt_star	3	24.07	5.25	6.78	0.3	1303.87	14.47	
+rrt_star	4	0.75	0.44	6.31	0.39	200.0	0.0	
+rrt_star	5	0.86	0.5	5.02	0.7	200.0	0.0	
+rrt_star	6	0.9	0.57	6.38	0.46	200.0	0.0	
+inf_rrt_star	0	0.16	0.2	1.7	0.0	200.0	0.0	
+inf_rrt_star	1	0.28	0.29	1.91	0.21	200.0	0.0	
+inf_rrt_star	2	0.3	0.22	2.06	0.15	200.0	0.0	
+inf_rrt_star	3	3.56	1.31	6.53	0.3	1300.0	0.0	
+inf_rrt_star	4	0.51	0.31	5.83	0.12	200.0	0.0	
+inf_rrt_star	5	0.99	0.62	4.7	1.28	200.0	0.0	
+inf_rrt_star	6	0.8	0.49	6.27	0.51	200.0	0.0	
