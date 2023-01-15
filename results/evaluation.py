@@ -12,8 +12,8 @@ from utils.color import PrintColor
 from main import run
 
 def run_stat(n_evals = 1):
-    planner_list = ['rrt','inf_rrt']#, 'inf_rrt', 'rrt_star', 'inf_rrt_star']
-    map_number_list = [0,1]#,1,2,3,4,5,6]
+    planner_list = ['rrt', 'inf_rrt', 'rrt_star', 'inf_rrt_star']
+    map_number_list = [0,1,2,3,4,5,6]
     planner_results = {
         'rrt': {
             'avg_time_m_std' : {},
