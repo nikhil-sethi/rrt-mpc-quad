@@ -49,6 +49,7 @@ class SamplingPlanner:
             iter_num += 1
 
         print(f"[Informed RRT] Completed iterations: {iter_num} of maximum alloted {self.max_iter}")
+        self.result["global_planner"]["metrics"]["iter_num"] = iter_num
 
         assert (self.reached_goal == True), "\033[91m [Planner] Goal not reached \033[00m"
 
@@ -382,7 +383,7 @@ class Recycle_RRT(RRT):
         for i in reversed(range(len(self.graph.nodes))):
             if i not in used_idxs:
                 self.graph.nodes.pop(i)
-        printC(f"Reduced Number of Nodes {len(self.graph.nodes)}", color=PrintColor.WARNING)
+        printC(f"Reduced Number of Nodes {len(self.graph.nodes)}", color=PrintColor.YELLOW)
 
     def plan(self):
         new_node_pos = self.sample_node_position()

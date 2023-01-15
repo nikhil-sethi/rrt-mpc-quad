@@ -7,7 +7,7 @@ from utils import printC
 class Map:
 
     def __init__(self, map_number = 1, starting_pos = [0.6,-0.6,0.5], goal_pos = [-0.6,0.6,0.5]):
-        self.map_indices = [0,1,2,3,4,5,6,7]
+        self.map_indices = [0,1,2,3,4,5,6]
         self.starting_pos = starting_pos
         self.goal_pos = goal_pos
         self.num_maps = len(self.map_indices)
@@ -30,16 +30,17 @@ class Map:
             self.obstacles = self.landing_pads
         elif self.map_number == 1:
             # SINGLE WALL MAP
+            self.dil=0.5
             self.obstacles = self.landing_pads
             self.obstacles += [
-                Cuboid(name = "wall_a", origin = [0, 0, 0.3], orientation = [0,0, 3.14/4], sides=[1.5, 0.1, 0.6], color = Color.GLASS)
+                Cuboid(name = "wall_a", origin = [0, 0, 0.3], orientation = [0,0, 3.14/4], sides=[1.5, 0.1, 0.6], color = Color.BLUEGLASS)
                 ]
         elif self.map_number == 2:
             # ZIGZAG MAP
             self.obstacles = self.landing_pads
             self.obstacles += [
-                Cuboid(name = "wall_b", origin = [-0.7, -0.2, 0.6], orientation = [0,0, 3.14/4], sides=[1.3, 0.1, 1.2], color = Color.GLASS),
-                Cuboid(name = "wall_c", origin = [0.7, 0.2, 0.6], orientation = [0,0, 3.14/4], sides=[1.3, 0.1, 1.2], color = Color.GLASS),
+                Cuboid(name = "wall_b", origin = [-0.7, -0.2, 0.6], orientation = [0,0, 3.14/4], sides=[1.3, 0.1, 1.2], color = Color.BLUEGLASS),
+                Cuboid(name = "wall_c", origin = [0.7, 0.2, 0.6], orientation = [0,0, 3.14/4], sides=[1.3, 0.1, 1.2], color = Color.BLUEGLASS),
                 # Cuboid(name = "wall_d", origin = [0, 0, 1.25], orientation = [0, 0, 0], sides=[3, 3, 0.1], color = Color.GLASS)
                 ]
         elif self.map_number == 3:
@@ -129,14 +130,6 @@ class Map:
                 Cuboid(name = "wall_lm", origin = [0.5, 2, 2.15], orientation = [3.14/2, 0, 0], sides=[1.1, 0.1, 1], color = Color.BLACK_GLASS)
                 ]
         elif self.map_number == 6:
-            # EXTRA: BOXED
-            self.obstacles = [
-                Cuboid(name = "test_wall1", origin = [0, 0.55, 0.5], orientation = [0, 0, 0*6.28/4], sides=[1, 0.2, 1], color = Color.GLASS),
-                Cuboid(name = "test_wall2", origin = [-0.55, 0, 0.5], orientation = [0, 0, 1*6.28/4], sides=[1, 0.2, 1], color = Color.GLASS),
-                Cuboid(name = "test_wall3", origin = [0, -0.55, 0.5], orientation = [0, 0, 2*6.28/4], sides=[1, 0.2, 1], color = Color.GLASS),
-                Cuboid(name = "test_wall4", origin = [0.55, 0, 0.5], orientation = [0, 0, 3*6.28/4], sides=[1, 0.2, 1], color = Color.GLASS)
-                ]
-        elif self.map_number == 7:
             # RANDOM SCATTERED
             size = 2
             self.starting_pos = [size,-size,0.5]

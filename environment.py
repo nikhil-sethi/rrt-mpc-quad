@@ -217,7 +217,7 @@ class Env(CtrlAviary):
 			try:
 				start_time = time.perf_counter()
 
-				if self.map.map_number in (4,7) or corridor: # we use corridor constraints when the map is too cluttered.
+				if self.map.map_number in (4,6) or corridor: # we use corridor constraints when the map is too cluttered.
 					traj_opt = MinVelAccJerkSnapCrackPopCorridor(order=2, waypoints = wps.T, time=8)	
 				else:
 					traj_opt = MinVelAccJerkSnapCrackPop(order=2, waypoints = wps.T, time=8)	# don't worry about time argument time much. it's all relative
