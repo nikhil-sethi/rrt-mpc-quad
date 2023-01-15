@@ -11,64 +11,76 @@ from main import run
 
 def run_stat(n_evals = 1):
     planner_list = ['rrt', 'inf_rrt', 'rec_rrt', 'rrt_star', 'inf_rrt_star']
-    map_number = 3
+    map_number_list = [0,1,2,3,4,5,6]
     planner_results = {
         'rrt': {
-            'avg_time_m_std' : np.inf,
-            'avg_dist_m_std' : np.inf
+            'avg_time_m_std' : {},
+            'avg_dist_m_std' : {},
+            'avg_iter_num_m_std' : {}
         },
         'inf_rrt': {
-            'avg_time_m_std' : np.inf,
-            'avg_dist_m_std' : np.inf
+            'avg_time_m_std' : {},
+            'avg_dist_m_std' : {},
+            'avg_iter_num_m_std' : {}
         },
         'rec_rrt': {
-            'avg_time_m_std' : np.inf,
-            'avg_dist_m_std' : np.inf
+            'avg_time_m_std' : {},
+            'avg_dist_m_std' : {},
+            'avg_iter_num_m_std' : {}
         },
         'rrt_star': {
-            'avg_time_m_std' : np.inf,
-            'avg_dist_m_std' : np.inf
+            'avg_time_m_std' : {},
+            'avg_dist_m_std' : {},
+            'avg_iter_num_m_std' : {}
         },
         'inf_rrt_star': {
-            'avg_time_m_std' : np.inf,
-            'avg_dist_m_std' : np.inf
+            'avg_time_m_std' : {},
+            'avg_dist_m_std' : {},
+            'avg_iter_num_m_std' : {}
         }
     }
     for planner in planner_list:
-        ## metrics to evalutate. add whatever you want here
-        planner_ct = []
-        planner_nodes = []
-        planner_nodes_gc = []
-        path_distances = []
-        for i in range(n_evals):
-            seed = 10*i + 777
-            print(f"Beginning Evaluation {i+1}/{n_evals} for the {planner} planner!")
-            res = run(seed = seed, gui=True, map_number=map_number, planner=planner, plot_all=True)
-            planner_ct.append(res["global_planner"]["metrics"]["time"])
-            planner_nodes.append(res["global_planner"]["metrics"]["nodes_wo_gc"])
-            planner_nodes_gc.append(res["global_planner"]["metrics"]["nodes_w_gc"])
-            path_distances.append(res["global_planner"]["metrics"]["dist"])
-        
-        planner_results[planner]['avg_time_m_std'] = [np.around(np.average(planner_ct), decimals=2), np.around(np.std(planner_ct), decimals=2)]
-        planner_results[planner]['avg_dist_m_std'] = [np.around(np.average(path_distances), decimals=2), np.around(np.std(path_distances), decimals=2)]
+        for map_number in map_number_list:
+            ## metrics to evalutate. add whatever you want here
+            planner_ct = []
+            path_distances = []
+            planner_iterations = []
+            for i in range(n_evals):
+                seed = 10*i + 777
+                print(f"Beginning Evaluation {i+1}/{n_evals} for the {planner} planner!")
+                res = run(seed = seed, gui=False, map_number=map_number, planner=planner, plot_all=True)
+                planner_ct.append(res["global_planner"]["metrics"]["time"])
+                path_distances.append(res["global_planner"]["metrics"]["dist"])
+                planner_iterations.append(res["global_planner"]["metrics"]["iter_num"])
+            
+            planner_results[planner]['avg_time_m_std'][f"map_{map_number}"] = [np.around(np.average(planner_ct), decimals=2), np.around(np.std(planner_ct), decimals=2)]
+            planner_results[planner]['avg_dist_m_std'][f"map_{map_number}"] = [np.around(np.average(path_distances), decimals=2), np.around(np.std(path_distances), decimals=2)]
+            planner_results[planner]['avg_iter_num_m_std'][f"map_{map_number}"] = [np.around(np.average(planner_iterations), decimals=2), np.around(np.std(planner_iterations), decimals=2)]
 
-        print( f"========== {n_evals} Evaluations ==========")
-        print( f"========== Map Number: {map_number} ==========")
-        print( f"========== Planner: {planner} ==========")
-        print(f"[Planner] Mean and STD of Computation Time: {planner_results[planner]['avg_time_m_std']}")
-        print(f"[Planner] Mean and STD of Final Path Distance: {planner_results[planner]['avg_dist_m_std']}")
-        print(f"[Planner] Mean and STD of Number of Nodes: {np.around(np.average(planner_nodes), decimals=2)}, {np.around(np.std(planner_nodes), decimals=2)}")
-        print(f"[Planner] Mean and STD of Number of Garbage Collected Nodes: {np.around(np.average(planner_nodes_gc), decimals=2)}, {np.around(np.std(planner_nodes_gc), decimals=2)}")
-        print("=============================================\n\n")
+            print( f"========== {n_evals} Evaluations ==========")
+            print( f"========== Map Number: {map_number} ==========")
+            print( f"========== Planner: {planner} ==========")
+            p_m_time = planner_results[planner]['avg_time_m_std'][f"map_{map_number}"]
+            p_m_dist = planner_results[planner]['avg_dist_m_std'][f"map_{map_number}"]
+            p_m_iter = planner_results[planner]['avg_iter_num_m_std'][f"map_{map_number}"]
+            print(f"[Planner] Mean and STD of Computation Time: {p_m_time}")
+            print(f"[Planner] Mean and STD of Final Path Distance: {p_m_dist}")
+            print(f"[Planner] Mean and STD of Number of Iterations: {p_m_iter}")
+            print("=============================================\n\n")
     
     print( f"========== Final Results for All Planners ==========")
     print( f"========== {n_evals} Evaluations ==========")
-    print( f"========== Map Number: {map_number} ==========")
     for planner in planner_list:
         print( f"========== Planner: {planner} ==========")
-        print(f"[Planner] Mean and STD of Computation Time: {planner_results[planner]['avg_time_m_std']}")
-        print(f"[Planner] Mean and STD of Final Path Distance: {planner_results[planner]['avg_dist_m_std']}\n")
-    print("=============================================")
+        for map_number in map_number_list:
+            print( f"========== Map Number: {map_number} ==========")
+            p_m_time = planner_results[planner]['avg_time_m_std'][f"map_{map_number}"]
+            p_m_dist = planner_results[planner]['avg_dist_m_std'][f"map_{map_number}"]
+            p_m_iter = planner_results[planner]['avg_iter_num_m_std'][f"map_{map_number}"]
+            print(f"[Planner] Mean and STD of Computation Time: {p_m_time}")
+            print(f"[Planner] Mean and STD of Final Path Distance: {p_m_dist}")
+            print(f"[Planner] Mean and STD of Number of Iterations: {p_m_iter}")
+        print("=============================================\n")
 
 def plot_graphs():
     pass

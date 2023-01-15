@@ -52,6 +52,11 @@ def run(
 		corridor=False
 		):
 
+	
+	## PLEASE NOTE: If gui False, plot_all must also be false! The options gui=True/plot_all=False and gui=True/plot_all=True both work also.
+	if not gui:
+		plot_all = False
+	
 	random.seed(seed)
 	np.random.seed(seed)
 
@@ -62,7 +67,11 @@ def run(
 		"global_planner":{
 			"name":planner,
 			"metrics":{
-				"dist" : 0
+				"dist" : np.inf,
+				"iter_num" : np.inf,
+				"time" : np.inf,
+				"nodes_wo_gc" : np.inf,
+				"nodes_w_gc" : np.inf
 			}
 		},
 		"traj_opt":{
@@ -204,7 +213,7 @@ if __name__ == "__main__":
 	parser.add_argument('--planner',            default="inf_rrt_star", 	type=str,           help='Planner (default: "rrt_star")', metavar='')
 	parser.add_argument('--min_snap',           default=True, 				    type=str2bool,      help='Min Snap (default: False)', metavar=''),
 	parser.add_argument('--corridor',           default=False, 		        type=str2bool,      help='Corridor constraints (default: False)', metavar=''),
-	parser.add_argument('--seed',              	default=1, 		        type=int,           help='Seed (default: None)', metavar=''),
+	parser.add_argument('--seed',              	default=2, 		        type=int,           help='Seed (default: None)', metavar=''),
 	parser.add_argument('--plot_all',           default=True, 		        type=str2bool,      help='Will plot all nodes and connections (default: False)', metavar='')
   
 	ARGS = parser.parse_args()

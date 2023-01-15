@@ -48,7 +48,8 @@ class SamplingPlanner:
             self.plan()
             iter_num += 1
 
-        printC(f"[Informed RRT] Completed iterations: {iter_num} of maximum alloted {self.max_iter}")
+        print(f"[Informed RRT] Completed iterations: {iter_num} of maximum alloted {self.max_iter}")
+        self.result["global_planner"]["metrics"]["iter_num"] = iter_num
 
         assert (self.reached_goal == True), "\033[91m [Planner] Goal not reached \033[00m"
 

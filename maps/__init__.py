@@ -7,7 +7,7 @@ from utils import printC
 class Map:
 
     def __init__(self, map_number = 1, starting_pos = [0.6,-0.6,0.5], goal_pos = [-0.6,0.6,0.5]):
-        self.map_indices = [0,1,2,3,4,5,6,7]
+        self.map_indices = [0,1,2,3,4,5,6]
         self.starting_pos = starting_pos
         self.goal_pos = goal_pos
         self.num_maps = len(self.map_indices)
@@ -30,16 +30,17 @@ class Map:
             self.obstacles = self.landing_pads
         elif self.map_number == 1:
             # SINGLE WALL MAP
+            self.dil=0.5
             self.obstacles = self.landing_pads
             self.obstacles += [
-                Cuboid(name = "wall_a", origin = [0, 0, 0.3], orientation = [0,0, 3.14/4], sides=[1.5, 0.1, 0.6], color = Color.GLASS)
+                Cuboid(name = "wall_a", origin = [0, 0, 0.3], orientation = [0,0, 3.14/4], sides=[1.5, 0.1, 0.6], color = Color.BLUEGLASS)
                 ]
         elif self.map_number == 2:
             # ZIGZAG MAP
             self.obstacles = self.landing_pads
             self.obstacles += [
-                Cuboid(name = "wall_b", origin = [-0.7, -0.2, 0.6], orientation = [0,0, 3.14/4], sides=[1.3, 0.1, 1.2], color = Color.GLASS),
-                Cuboid(name = "wall_c", origin = [0.7, 0.2, 0.6], orientation = [0,0, 3.14/4], sides=[1.3, 0.1, 1.2], color = Color.GLASS),
+                Cuboid(name = "wall_b", origin = [-0.7, -0.2, 0.6], orientation = [0,0, 3.14/4], sides=[1.3, 0.1, 1.2], color = Color.BLUEGLASS),
+                Cuboid(name = "wall_c", origin = [0.7, 0.2, 0.6], orientation = [0,0, 3.14/4], sides=[1.3, 0.1, 1.2], color = Color.BLUEGLASS),
                 # Cuboid(name = "wall_d", origin = [0, 0, 1.25], orientation = [0, 0, 0], sides=[3, 3, 0.1], color = Color.GLASS)
                 ]
         elif self.map_number == 3:
