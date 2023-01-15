@@ -130,7 +130,7 @@ class Env(CtrlAviary):
 			yaw = 52
 			pitch = 30
 			dist = 4.4
-		elif self.map.map_number == 7:
+		elif self.map.map_number == 6:
 			yaw = 30
 			pitch = 70
 			dist = 5.8

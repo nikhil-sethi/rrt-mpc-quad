@@ -233,7 +233,7 @@ class SamplingPlanner:
                         rewire = True
 
         # Debug plotting - Uncomment to show "Path Hunter" animation:
-        if self.plot_all:
+        if self.plot_all and self.env.gui:
             for dot in created_dots:
                 self.env.remove_line(dot)
 
@@ -279,7 +279,7 @@ class SamplingPlanner:
                     node.dist_from_start = node.parent.dist_from_start + np.linalg.norm(node.pos - node.parent.pos)
                     node.connections = node.parent.connections + [node]
             self.fastest_route_to_end = self.final_node.dist_from_start
-            if self.plot_all:
+            if self.plot_all and self.env.gui:
                 num_lines_formed = self.env.plot_plan(self.final_node.connections, Nodes=True, color=Color.RED)
                 self.graph.lines_plotted += num_lines_formed
             # print(f"Path Hunt returns True. New fastest distance: {self.fastest_route_to_end}")
@@ -315,7 +315,7 @@ class RRT(SamplingPlanner):
             elif self.graph.nodes[-1].dist_from_start < self.final_node.dist_from_start:
                 self.final_node = self.graph.nodes[-1]                
             if self.final_node is not None:
-                if self.plot_all:
+                if self.plot_all and self.env.gui:
                     num_lines_formed = self.env.plot_plan(self.final_node.connections, Nodes=True, color=Color.GREEN)
                     self.graph.lines_plotted += num_lines_formed
 
@@ -365,7 +365,7 @@ class Informed_RRT(RRT):
         if self.final_node is not None:
             if np.linalg.norm(new_node_pos-self.start.pos) + np.linalg.norm(new_node_pos-self.goal.pos) > self.final_node.dist_from_start:
                 self.far_nodes_discarded += 1
-                print(f"Discared {self.far_nodes_discarded} nodes so far")
+                # print(f"Discared {self.far_nodes_discarded} nodes so far")
                 return True
             else:
                 return False
@@ -403,7 +403,7 @@ class Recycle_RRT(RRT):
             elif new_node.dist_from_start < self.final_node.dist_from_start:
                 self.final_node = new_node
             if self.final_node is not None:
-                if self.plot_all:
+                if self.plot_all and self.env.gui:
                     num_lines_formed = self.env.plot_plan(self.final_node.connections, Nodes=True, color=Color.GREEN)
                     self.graph.lines_plotted += num_lines_formed
             self.clear_unused_nodes()
@@ -442,7 +442,7 @@ class RRT_Star(SamplingPlanner):
 
         self.check_shortcut_for_nodes(new_node)
         if (np.linalg.norm(new_node.pos -self.goal.pos)<DIST_TH) and (new_node.dist_from_start < self.fastest_route_to_end):
-            if self.final_node is not None:
+            if self.final_node is not None and self.env.gui:
                 self.env.plot_plan(self.final_node.connections, Nodes=True, color=Color.GREEN)
             self.final_node = new_node
             self.fastest_route_to_end = new_node.dist_from_start
@@ -506,7 +506,7 @@ class Informed_RRT_Star(RRT_Star):
                 self.reached_goal = True
                 self.fastest_route_to_end = new_node.dist_from_start
                 if self.final_node is not None:
-                    if self.plot_all:
+                    if self.plot_all and self.env.gui:
                         num_lines_formed = self.env.plot_plan(self.final_node.connections, Nodes=True, color=Color.GREEN)
                         self.graph.lines_plotted += num_lines_formed
                 self.constrict_WS()
@@ -524,7 +524,7 @@ class Informed_RRT_Star(RRT_Star):
                 self.reached_goal = True
                 self.constrict_WS()
                 if self.final_node is not None:
-                    if self.plot_all:
+                    if self.plot_all and self.env.gui:
                         num_lines_formed = self.env.plot_plan(self.final_node.connections, Nodes=True, color=Color.GREEN)
                         self.graph.lines_plotted += num_lines_formed
                 for node in self.final_node.connections:
