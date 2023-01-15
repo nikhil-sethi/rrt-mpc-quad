@@ -1,3 +1,4 @@
+sudo apt-get install python3-pip
 pip3 install --upgrade pip
 git submodule update --init --recursive
 cd gym-pybullet-drones
