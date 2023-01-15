@@ -12,8 +12,8 @@ from planner.graph import Node
 from planner.trajectory import MinVelAccJerkSnapCrackPop,MinVelAccJerkSnapCrackPopCorridor
 
 from maps import Map
-from utils.color import Color
-from utils import printRed
+from utils.color import Color, PrintColor
+from utils import printC
 
 class Env(CtrlAviary):
 	"""Multi-drone environment class for control applications."""
@@ -126,9 +126,32 @@ class Env(CtrlAviary):
 		start = Node(pos = self.map.starting_pos)
 		goal = Node(pos = self.map.goal_pos)
 		ws = Space(low = self.map.ws_ll, high = self.map.ws_ul)
-		p.resetDebugVisualizerCamera(cameraDistance=4,
-                                         cameraYaw=-30,
-                                         cameraPitch=-30,
+		if self.map.map_number == 5:
+			yaw = 52
+			pitch = 30
+			dist = 4.4
+		elif self.map.map_number == 7:
+			yaw = 30
+			pitch = 70
+			dist = 5.8
+		elif self.map.map_number == 2:
+			yaw = 16
+			pitch = 60
+			dist = 3.8
+
+		elif self.map.map_number in (0,1):
+			yaw = 8
+			pitch = 60
+			dist = 2.8
+		else:
+			yaw = 30
+			pitch = 70
+			# if self.map.map_number == 0:
+			dist = 5
+
+		p.resetDebugVisualizerCamera(cameraDistance=dist,
+                                         cameraYaw=-yaw,
+                                         cameraPitch=-pitch,
                                          cameraTargetPosition=[0,0,0],
                                          physicsClientId=self.CLIENT
                                          )
@@ -151,22 +174,23 @@ class Env(CtrlAviary):
 			self.add_text(text="INFORMED RRT STAR PLANNER", textPosition=textPosition, textColorRGB=[1,1,1], textSize=textSize)
 		else:
 			raise NotImplementedError()
-		printRed(f"Begin waypoint planning with {method}...")
+		printC("============== Planner ==============", color=PrintColor.BOLD+PrintColor.YELLOW)
+		printC(f"[Env] Begin waypoint planning with {method}...")
 		self.result["text_output"] += f" Begin waypoint planning with {method}...\n"
 		start_time = time.perf_counter()
 		wps = planner.run()
 		elapsed_time_planner = time.perf_counter() - start_time
 		self.result["global_planner"]["metrics"]["time"] = elapsed_time_planner
 
-		printRed(f"Planning complete. Elapsed time: {elapsed_time_planner} seconds")
-		printRed("---")
+		printC(f"[Env] Planning complete. Elapsed time: {elapsed_time_planner} seconds")
+		printC("---")
 		self.result["text_output"] += f" Planning complete. Elapsed time: {elapsed_time_planner} seconds\n ---\n"
 
 		if min_snap:
-			printRed(f"Begin trajectory optimization with Minimum Snap")
-			self.result["text_output"] += f" Begin trajectory optimization with Minimum Snap\n"
+			printC(f"[Env] Begin trajectory optimization...")
+			self.result["text_output"] += f" Begin trajectory optimization...\n"
 		else:
-			printRed(f"Begin trajectory optimization with Linear Discretization")
+			printC(f"[Env] Begin trajectory optimization with Linear Discretization")
 			self.result["text_output"] += f" Begin trajectory optimization with Linear Discretization\n"
 		
 		plan_dist = planner.fastest_route_to_end # total distance covered by waypoints
@@ -180,7 +204,6 @@ class Env(CtrlAviary):
 		
 		# making sure waypoints are unique. RRT can glitch sometimes
 		wps_sorted, _, idx = np.unique(wps, axis=0, return_index=True, return_inverse=True)
-		# print(wps_sorted, idx)
 		if len(idx)!=len(wps_sorted):
 			
 			wps = wps_sorted[idx[:-1],:] # np unique returns sorted values for some reason. undo that
@@ -194,32 +217,33 @@ class Env(CtrlAviary):
 			try:
 				start_time = time.perf_counter()
 
-				if self.map.map_number in (4,7) or corridor:
+				if self.map.map_number in (4,7) or corridor: # we use corridor constraints when the map is too cluttered.
 					traj_opt = MinVelAccJerkSnapCrackPopCorridor(order=2, waypoints = wps.T, time=8)	
 				else:
-					traj_opt = MinVelAccJerkSnapCrackPop(order=2, waypoints = wps.T, time=8)	# don't worry about time argument tooplanner much. it's all relative
+					traj_opt = MinVelAccJerkSnapCrackPop(order=2, waypoints = wps.T, time=8)	# don't worry about time argument time much. it's all relative
 
 				plan = traj_opt.optimize(num_pts=num_pts)
 				elapsed_time_opt = time.perf_counter() - start_time
 				self.result["traj_opt"]["metrics"]["time"] = elapsed_time_opt 
 				
-				printRed(f"Optimization complete. Elapsed time: {elapsed_time_opt} seconds")
-				self.result["text_output"] += f" Optimization complete. Elapsed time: {elapsed_time_opt} seconds\n"
+				printC(f"[Env] Optimization complete. Elapsed time: {elapsed_time_opt} seconds")
+				self.result["text_output"] += f"[Env] Optimization complete. Elapsed time: {elapsed_time_opt} seconds\n"
 
 				# traj_opt.plot(plan) # uncomment to plot plan in matplotlib. but note that --gui must be False
 			except: # because min snap fails sometimes because of rank errors. still to debug
 				# in that case, just go ahead with original waypoints and discretisation
-				printRed("Minimum Snap failed. Resorting to linear discretization.")
+				printC("Minimum Snap failed. Resorting to linear discretization.")
 				self.result["text_output"] += " Minimum Snap failed. Resorting to linear discretization.\n"
 				plan = planner.discretize_path(wps, num_steps=int(num_pts/len(wps)))
 		else: # discretise the plan 
 			plan = planner.discretize_path(wps, num_steps=int(num_pts/len(wps)))
-		
+		printC("=====================================", color=PrintColor.BOLD+PrintColor.YELLOW)
 		return plan
 					   
 	def plot_plan(self, plan, WPS=False, Nodes=False, color:Color = Color.WHITE):
-		# return
 		num_lines_formed = 0
+
+		# the global planner waypoints
 		if WPS:
 			prev_pos = plan[0]
 			for pos in plan:
@@ -227,6 +251,8 @@ class Env(CtrlAviary):
 				self.plot_line(prev_pos, pos, color = color, lineWidth=4)
 				num_lines_formed += 1
 				prev_pos = pos
+
+		# the sampled nodes throughout the planning
 		elif Nodes:
 			prev_pos = plan[0].pos
 			for node in plan:
@@ -234,6 +260,8 @@ class Env(CtrlAviary):
 				self.plot_line(prev_pos, node.pos, color = color, lineWidth=8)
 				num_lines_formed += 1
 				prev_pos = node.pos
+
+		# Final path after optimization
 		else:
 			for pos in plan:
 				self.plot_point(pos, color = Color.RED, pointSize=5)

@@ -2,7 +2,7 @@ from maps.obstacles import Cuboid, Cube
 from utils.color import Color
 import numpy as np
 import pybullet as p
-from utils import printRed
+from utils import printC
 
 class Map:
 
@@ -13,7 +13,7 @@ class Map:
         self.num_maps = len(self.map_indices)
         self.dil = 0.0 # Change to allow the workspace to include space around and over the obstacles
         if map_number not in self.map_indices:
-            printRed(f"Chosen map number not defined. Map options are {self.map_indices}. Resorting to default map, Map 1.")
+            printC(f"Chosen map number not defined. Map options are {self.map_indices}. Resorting to default map, Map 1.")
             self.map_number = 1
         else:
             self.map_number = map_number

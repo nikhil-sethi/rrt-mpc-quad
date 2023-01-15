@@ -26,8 +26,8 @@ from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.utils.utils import sync, str2bool
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 
-from utils.color import Color
-from utils import printRed
+from utils.color import Color, PrintColor
+from utils import printC
 from environment import Env
 
 
@@ -125,6 +125,7 @@ def run(
 	
 	START = time.time()
 	pos_err = []
+	printC("[Main] Following generated path...")
 	for i in range(0, int(duration_sec*env.SIM_FREQ), AGGR_PHY_STEPS):
 
 		## Step the simulation 
@@ -171,6 +172,7 @@ def run(
 			sync(i, START, env.TIMESTEP)
 
 	# compile metrics
+	printC("[Main] Done. Compiling results")
 	result['pos_error_mean'] = np.mean(pos_err)
 	result['pos_error_std'] = np.std(pos_err)
 
@@ -202,7 +204,7 @@ if __name__ == "__main__":
 	parser.add_argument('--planner',            default="inf_rrt_star", 	type=str,           help='Planner (default: "rrt_star")', metavar='')
 	parser.add_argument('--min_snap',           default=True, 				    type=str2bool,      help='Min Snap (default: False)', metavar=''),
 	parser.add_argument('--corridor',           default=False, 		        type=str2bool,      help='Corridor constraints (default: False)', metavar=''),
-	parser.add_argument('--seed',              	default=None, 		        type=int,           help='Seed (default: None)', metavar=''),
+	parser.add_argument('--seed',              	default=1, 		        type=int,           help='Seed (default: None)', metavar=''),
 	parser.add_argument('--plot_all',           default=True, 		        type=str2bool,      help='Will plot all nodes and connections (default: False)', metavar='')
   
 	ARGS = parser.parse_args()
@@ -210,7 +212,9 @@ if __name__ == "__main__":
 	result = run(**vars(ARGS))
 
 	result["text_output"] += " -----"
-	printRed("============== Results ==============")
+	printC("============== Results ==============", color=PrintColor.BOLD+PrintColor.YELLOW)
 	for key in result:
-		printRed(f"{key} -> {result[key]}")
-	printRed("=====================================")
+		if key == "text_output":
+			continue
+		printC(f"{key} -> {result[key]}")
+	printC("=====================================", color=PrintColor.BOLD+PrintColor.YELLOW)

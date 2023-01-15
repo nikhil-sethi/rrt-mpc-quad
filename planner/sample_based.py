@@ -3,7 +3,8 @@ from .graph import Graph, Node
 from utils.color import Color
 import matplotlib.pyplot as plt
 import numpy as np
-from utils import printRed
+from utils import printC
+from utils.color import PrintColor
 
 DIST_TH = 0.01
 MIN_ITER = [200, 200, 200, 1300, 200, 200, 200, 500]
@@ -47,11 +48,11 @@ class SamplingPlanner:
             self.plan()
             iter_num += 1
 
-        print(f"Completed iterations: {iter_num} of maximum alloted {self.max_iter}")
+        print(f"[Informed RRT] Completed iterations: {iter_num} of maximum alloted {self.max_iter}")
 
         assert (self.reached_goal == True), "\033[91m [Planner] Goal not reached \033[00m"
 
-        printRed(f"[Planner] Goal Reached! Total distance: {self.final_node.dist_from_start}")
+        printC(f"[Planner] Goal Reached! Total distance: {self.final_node.dist_from_start}")
         self.result['text_output'] += f"[Planner] Goal Reached! Total distance: {self.final_node.dist_from_start}\n"
 
         # compile results/metrics
@@ -161,7 +162,7 @@ class SamplingPlanner:
         new_ll = np.min(all_limits, axis = 0) - ws_dilation
         if new_ll[2] <= 0: new_ll[2] = 0
         self.space = Space(low = new_ll, high = new_ul)
-        printRed(f"Constricting. New UL: {self.space.hl}, New LL: {self.space.ll}")
+        # printC(f"[Informed RRT] Constricting. New UL: {self.space.hl}, New LL: {self.space.ll}")
     
     def execute_path_hunt(self, hunter_node: Node):
         # Setup routine variables
@@ -280,7 +281,7 @@ class SamplingPlanner:
             if self.plot_all:
                 num_lines_formed = self.env.plot_plan(self.final_node.connections, Nodes=True, color=Color.RED)
                 self.graph.lines_plotted += num_lines_formed
-            print(f"Path Hunt returns True. New fastest distance: {self.fastest_route_to_end}")
+            # print(f"Path Hunt returns True. New fastest distance: {self.fastest_route_to_end}")
             
             return True
 
@@ -320,7 +321,7 @@ class RRT(SamplingPlanner):
 class Informed_RRT(RRT):
     def __init__(self, start:Node, goal:Node, space:Space, map, env, result:dict = {}, map_number:int=0):
         super().__init__(start, goal, space, map, env, result, map_number)
-        printRed(f"Starting WS: UL: {self.space.hl}, LL: {self.space.ll}")
+        # printC(f"Starting WS: UL: {self.space.hl}, LL: {self.space.ll}")
         self.far_nodes_discarded = 0
         self.name = 'inf_rrt'
 
@@ -375,13 +376,13 @@ class Recycle_RRT(RRT):
 
     def clear_unused_nodes(self):
         used_idxs = []
-        printRed(f"Initial Number of Nodes {len(self.graph.nodes)}")
+        printC(f"Initial Number of Nodes {len(self.graph.nodes)}")
         for node in self.final_node.connections:
             used_idxs.append(self.graph.nodes.index(node))
         for i in reversed(range(len(self.graph.nodes))):
             if i not in used_idxs:
                 self.graph.nodes.pop(i)
-        printRed(f"Reduced Number of Nodes {len(self.graph.nodes)}")
+        printC(f"Reduced Number of Nodes {len(self.graph.nodes)}", color=PrintColor.WARNING)
 
     def plan(self):
         new_node_pos = self.sample_node_position()
@@ -477,7 +478,7 @@ class RRT_Star(SamplingPlanner):
 class Informed_RRT_Star(RRT_Star):
     def __init__(self,start: Node, goal: Node, space: Space, map, env, result: dict = {}, map_number:int=0):
         super().__init__(start, goal, space, map, env, result, map_number)
-        printRed(f"Starting WS: UL: {self.space.hl}, LL: {self.space.ll}")
+        # printC(f"Starting WS: UL: {self.space.hl}, LL: {self.space.ll}")
         self.far_nodes_discarded = 0
         self.name = 'inf_rrt_star'
 

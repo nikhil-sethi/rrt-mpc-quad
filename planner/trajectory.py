@@ -3,17 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from cvxopt import solvers, matrix
 from itertools import product
-
-def fact(j, i):
-    """factorial of j upto i. Used for derivatives"""
-    if i==0:
-        return 1
-    return j*fact(j-1, i-1)
-
-def pow(n, k):
-    if k<0:
-        return 1
-    return n**k
+from utils import printC
+from utils.derivatives import fact, pow
 
 class TrajectoryManager():
     def __init__(self, order, waypoints, time=1) -> None:
@@ -89,9 +80,11 @@ class MinVelAccJerkSnapCrackPop(TrajectoryManager): # cute name
         super().__init__(order, waypoints, time)
 
         # setup constraints
+        printC("[Optimizer] Setting up constraints")
         self.setup_constraints()
 
         # setup objectives
+        printC("[Optimizer] Setting up optimization objective")
         self.setup_objectives()
 
     def setup_constraints(self):
@@ -173,6 +166,7 @@ class MinVelAccJerkSnapCrackPop(TrajectoryManager): # cute name
         """
         Return an optimized plan for all dimensions
         """
+        printC("[Optimizer] Starting optimization...")
         plan = []
         for l in range(self.l):
             b_ep = [self.wps[l][0]] + [0]*(self.n-1) + [self.wps[l][-1]] + [0]*(self.n-1)
@@ -184,6 +178,7 @@ class MinVelAccJerkSnapCrackPop(TrajectoryManager): # cute name
             self.sol = solvers.qp(P = matrix(self.H), q=matrix(self.f), A=matrix(np.array(self.A), tc='d'), b=matrix(b, tc='d'))
 
             plan.append(self.generate(self.sol["x"], order = plan_order, d=num_pts))
+        printC("[Optimizer] Done.")
         return np.array(plan).T
 
 class MinVelAccJerkSnapCrackPopCorridor(MinVelAccJerkSnapCrackPop):
