@@ -9,7 +9,7 @@ sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 from main import run
 
-def run_stat(n_evals = 1):
+def run_stat(n_evals = 15):
     planner_list = ['rrt', 'inf_rrt', 'rec_rrt', 'rrt_star', 'inf_rrt_star']
     map_number_list = [0,1,2,3,4,5,6]
     planner_results = {
@@ -48,7 +48,7 @@ def run_stat(n_evals = 1):
             for i in range(n_evals):
                 seed = 10*i + 777
                 print(f"Beginning Evaluation {i+1}/{n_evals} for the {planner} planner!")
-                res = run(seed = seed, gui=False, map_number=map_number, planner=planner, plot_all=True)
+                res = run(seed = seed, gui=False, map_number=map_number, planner=planner, plot_all=False)
                 planner_ct.append(res["global_planner"]["metrics"]["time"])
                 path_distances.append(res["global_planner"]["metrics"]["dist"])
                 planner_iterations.append(res["global_planner"]["metrics"]["iter_num"])
