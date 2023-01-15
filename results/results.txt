@@ -1,0 +1,31 @@
+========== Final Results for All Planners ==========
+========== 1 Evaluations ==========
+========== Planner: rrt ==========
+========== Map Number: 0 ==========
+[Planner] Mean and STD of Computation Time: [0.07, 0.0]
+[Planner] Mean and STD of Final Path Distance: [2.29, 0.0]
+[Planner] Mean and STD of Number of Iterations: [200.0, 0.0]
+========== Map Number: 1 ==========
+[Planner] Mean and STD of Computation Time: [0.09, 0.0]
+[Planner] Mean and STD of Final Path Distance: [3.99, 0.0]
+[Planner] Mean and STD of Number of Iterations: [200.0, 0.0]
+=============================================
+
+========== Planner: inf_rrt ==========
+========== Map Number: 0 ==========
+[Planner] Mean and STD of Computation Time: [0.21, 0.0]
+[Planner] Mean and STD of Final Path Distance: [1.7, 0.0]
+[Planner] Mean and STD of Number of Iterations: [200.0, 0.0]
+========== Map Number: 1 ==========
+[Planner] Mean and STD of Computation Time: [0.34, 0.0]
+[Planner] Mean and STD of Final Path Distance: [1.9, 0.0]
+[Planner] Mean and STD of Number of Iterations: [200.0, 0.0]
+=============================================
+
+========== RAW DATA ==========
+========== 1 Evaluations ==========
+Planner	Map Number	Average Time	STD Time	Average Dist	STD Dist	Average Iter	STD Iter
+rrt	0	0.07	0.0	2.29	0.0	200.0	0.0	
+rrt	1	0.09	0.0	3.99	0.0	200.0	0.0	
+inf_rrt	0	0.21	0.0	1.7	0.0	200.0	0.0	
+inf_rrt	1	0.34	0.0	1.9	0.0	200.0	0.0	
