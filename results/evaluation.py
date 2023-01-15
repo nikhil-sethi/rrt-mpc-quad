@@ -7,11 +7,13 @@ import pybullet as p
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
+from utils import printC
+from utils.color import PrintColor
 from main import run
 
-def run_stat(n_evals = 15):
-    planner_list = ['rrt', 'inf_rrt', 'rec_rrt', 'rrt_star', 'inf_rrt_star']
-    map_number_list = [0,1,2,3,4,5,6]
+def run_stat(n_evals = 1):
+    planner_list = ['rrt','inf_rrt']#, 'inf_rrt', 'rrt_star', 'inf_rrt_star']
+    map_number_list = [0,1]#,1,2,3,4,5,6]
     planner_results = {
         'rrt': {
             'avg_time_m_std' : {},
@@ -47,7 +49,7 @@ def run_stat(n_evals = 15):
             planner_iterations = []
             for i in range(n_evals):
                 seed = 10*i + 777
-                print(f"Beginning Evaluation {i+1}/{n_evals} for the {planner} planner!")
+                printC(f"Beginning Evaluation {i+1}/{n_evals} for the {planner} planner on map number {map_number}!", color=PrintColor.BOLD+PrintColor.OKGREEN)
                 res = run(seed = seed, gui=False, map_number=map_number, planner=planner, plot_all=False)
                 planner_ct.append(res["global_planner"]["metrics"]["time"])
                 path_distances.append(res["global_planner"]["metrics"]["dist"])
@@ -81,6 +83,37 @@ def run_stat(n_evals = 15):
             print(f"[Planner] Mean and STD of Final Path Distance: {p_m_dist}")
             print(f"[Planner] Mean and STD of Number of Iterations: {p_m_iter}")
         print("=============================================\n")
+
+    f = open(f'{SCRIPT_DIR}/results.txt', 'w')
+    f.write( f"========== Final Results for All Planners ==========\n")
+    f.write( f"========== {n_evals} Evaluations ==========\n")
+    for planner in planner_list:
+        f.write( f"========== Planner: {planner} ==========\n")
+        for map_number in map_number_list:
+            f.write( f"========== Map Number: {map_number} ==========\n")
+            p_m_time = planner_results[planner]['avg_time_m_std'][f"map_{map_number}"]
+            p_m_dist = planner_results[planner]['avg_dist_m_std'][f"map_{map_number}"]
+            p_m_iter = planner_results[planner]['avg_iter_num_m_std'][f"map_{map_number}"]
+            f.write(f"[Planner] Mean and STD of Computation Time: {p_m_time}\n")
+            f.write(f"[Planner] Mean and STD of Final Path Distance: {p_m_dist}\n")
+            f.write(f"[Planner] Mean and STD of Number of Iterations: {p_m_iter}\n")
+        f.write("=============================================\n\n")
+    f.write( f"========== RAW DATA ==========\n")    
+    f.write( f"========== {n_evals} Evaluations ==========\n")
+    f.write(f"{'Planner'}\t{'Map Number'}\t{'Average Time'}\t{'STD Time'}\t{'Average Dist'}\t{'STD Dist'}\t{'Average Iter'}\t{'STD Iter'}\n")
+    for planner in planner_list:
+        for map_number in map_number_list:
+            f.write( f"{planner}\t")
+            f.write( f"{map_number}\t")
+            p_m_time = planner_results[planner]['avg_time_m_std'][f"map_{map_number}"]
+            p_m_dist = planner_results[planner]['avg_dist_m_std'][f"map_{map_number}"]
+            p_m_iter = planner_results[planner]['avg_iter_num_m_std'][f"map_{map_number}"]
+            f.write(f"{p_m_time[0]}\t{p_m_time[1]}\t")
+            f.write(f"{p_m_dist[0]}\t{p_m_dist[1]}\t")
+            f.write(f"{p_m_iter[0]}\t{p_m_iter[1]}\t\n")
+        # f.write("\n")
+    f.close()
+
 
 def plot_graphs():
     pass
