@@ -92,13 +92,13 @@ There is also a development branch called `feat/mpc`. This branch consists of an
 
 ## Video Demonstrations
 ### Map 3 Demo
-<video src="media/MAP3_FINAL.mov" alt="Map 3 Video Demo" width="600"/>
+<video src="media/MAP3_FINAL.mov"></video>
 
 ### Map 5 Demo
-<video src="media/MAP5_FINAL.mov" alt="Map 5 Video Demo" width="600"/>
+<video src="media/MAP5_FINAL.mov"></video>
 
 ### Map 6 Demo
-<video src="media/MAP6_FINAL.mov" alt="Map 6 Video Demo" width="600"/>
+<video src="media/MAP6_FINAL.mov"></video>
 
 ### Path Hunter Demo
-<video src="media/PATH_HUNTER_DEMO.mov" alt="Path Hunter Video Demo" width="600"/>
+<video src="media/PATH_HUNTER_DEMO.mov"></video>
