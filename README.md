@@ -21,6 +21,7 @@ Visual Demo - This will show all planners in a sequence each once on our hardest
 ```
 python3 visual_demo.py
 ```
+
 Evaluation - This will run a sequence of GUI-off (by default) performance evaluations, on all maps, for all planners, for a specified number of trials on each map. Then results are outputted to the terminal and to a results/results.txt file.
 ```
 python3 results/evaluation.py 
@@ -84,4 +85,8 @@ Reference the following table for all run options (ordered by relevancy):
 
 ### Map 6
 <img src="media/Map6.png" alt="Map 6" width="450"> 
+
+## MPC (under development)
+
+There is also a development branch called `feat/mpc`. This branch consists of an initial setup to working with mpc as a local planner in combination with one of the sampling based global planners.
 
