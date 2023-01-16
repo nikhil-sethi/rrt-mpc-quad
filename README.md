@@ -90,3 +90,15 @@ Reference the following table for all run options (ordered by relevancy):
 
 There is also a development branch called `feat/mpc`. This branch consists of an initial setup to working with mpc as a local planner in combination with one of the sampling based global planners. To see how everything is structured and a bit about the process, you can check out `MPC.md` in that branch.
 
+## Video Demonstrations
+### Map 3 Demo
+<img src="media/MAP3_FINAL.mov" alt="Map 3 Video Demo" width="600">
+
+### Map 5 Demo
+<img src="media/MAP5_FINAL.mov" alt="Map 5 Video Demo" width="600">
+
+### Map 6 Demo
+<img src="media/MAP6_FINAL.mov" alt="Map 6 Video Demo" width="600">
+
+### Path Hunter Demo
+<img src="media/PATH_HUNTER_DEMO.mov" alt="Path Hunter Video Demo" width="600">
