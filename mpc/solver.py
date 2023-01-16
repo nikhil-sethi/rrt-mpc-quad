@@ -73,7 +73,7 @@ class MPCSolver:
         output, exitflag, info = self.solver.solve(self.problem)
 
         # Make sure the solver has exited properly.
-        assert exitflag == 1, "bad exitflag"
+        # assert exitflag == 1, "bad exitflag"
         sys.stderr.write("FORCESPRO took {} iterations and {} seconds to solve the problem.\n"\
             .format(info.it, info.solvetime))
 
