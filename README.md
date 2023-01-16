@@ -88,5 +88,5 @@ Reference the following table for all run options (ordered by relevancy):
 
 ## MPC (under development)
 
-There is also a development branch called `feat/mpc`. This branch consists of an initial setup to working with mpc as a local planner in combination with one of the sampling based global planners.
+There is also a development branch called `feat/mpc`. This branch consists of an initial setup to working with mpc as a local planner in combination with one of the sampling based global planners. To see how everything is structured and a bit about the process, you can check out `MPC.md` in that branch.
 
