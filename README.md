@@ -9,19 +9,29 @@ chmod +x ./tooling/install.sh
 ./tooling/install.sh
 ```
 
-## Run
-General run command (while in repository folder):
+## Run Commands (all to be run while in repository folder)
+Basic Run - This will be the most basic run option, showing a single planner in a single map with the GUI on.
 ```
-python3 main.py [<options>]
+python3 main.py [<options>] 
 ```
-This runs the planner and the simulation. Six maps have been implemented (numbered 0 to 5) and 5 different planner variants can be chosen:
+Visual Demo - This will show all planners in a sequence each once on our hardest map, Map 3.
+```
+python3 visual_demo.py
+```
+Evaluation - This will run a sequence of GUI-off (by default) performance evaluations, on all maps, for all planners, for a specified number of trials on each map. Then results are outputted to the terminal and to a results/results.txt file.
+```
+python3 results/evaluation.py 
+```
+In total, 5 different planner variants can be chosen:
 | Planner | Argument |
 | ------- | -------- |
 | RRT | `rrt` |
 | Informed RRT | `inf_rrt` |
 | RRT with recycling | `rec_rrt` |
 | RRT* | `rrt_star` |
-| Informerd RRT* | `inf_rrt_star` |
+| Informed RRT* | `inf_rrt_star` |
+
+Also, seven maps have been implemented (numbered 0 to 6) with images at the end of the README.
 
 For example, running informed RRT* on map 2: 
 ```
@@ -47,7 +57,7 @@ Reference the following table for all run options (ordered by relevancy):
 | `--simulation_freq_hz` | int | 240 | Simulation frequency in Hz 
 | `--control_freq_hz` | int | 48 | Control frequency in Hz 
 
-## Class Diagram
+## Class Diagram (Note that Path Hunter is also included in the Informed Methods)
 <img src="media/class_diagram.png" alt="Class Diagram"> 
 
 ## Maps
