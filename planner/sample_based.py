@@ -500,7 +500,7 @@ class Informed_RRT_Star(RRT_Star):
         self.name = 'inf_rrt_star'
 
     def plan(self):
-        # if self.num_impr >= MAX_IMPR: return
+        if self.num_impr >= MAX_IMPR: return
         new_node_pos = self.sample_node_position()
         node_further = self.check_if_further(new_node_pos)
         if node_further:    
