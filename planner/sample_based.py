@@ -157,6 +157,11 @@ class SamplingPlanner:
         self.space = Space(low = new_ll, high = new_ul)
     
     def execute_path_hunt(self, hunter_node: Node) -> bool:
+        """
+        The purpose of this algorithm is to find shortcuts along a known path from start to goal. 
+        With infinitiely fine resolution and enough iterations, the algorithm with transform the path into an optimal path *through the specific obstacles that the path routes between.*
+        Sometimes, the path can be directed through different obstacles.
+        """
         # Setup routine variables
         created_dots = []
         impr_th = IMPR_TH  # How much need the path be improved to bother rewiring
@@ -352,7 +357,7 @@ class Informed_RRT(RRT):
 
     def check_if_further(self, new_node_pos: np.ndarray) -> bool:
         """
-        This function discards nodes if it can not reach the endgoal faster than the current fastest path
+        This function discards sampled nodes if they can not reach the endgoal faster than the current fastest path
         """
         if self.final_node is not None:
             if np.linalg.norm(new_node_pos-self.start.pos) + np.linalg.norm(new_node_pos-self.goal.pos) > self.final_node.dist_from_start:
@@ -495,7 +500,7 @@ class Informed_RRT_Star(RRT_Star):
         self.name = 'inf_rrt_star'
 
     def plan(self):
-        if self.num_impr >= MAX_IMPR: return
+        # if self.num_impr >= MAX_IMPR: return
         new_node_pos = self.sample_node_position()
         node_further = self.check_if_further(new_node_pos)
         if node_further:    

@@ -7,7 +7,7 @@ from utils import printC
 class Map:
 
     def __init__(self, map_number = 1, starting_pos = [0.6,-0.6,0.5], goal_pos = [-0.6,0.6,0.5]):
-        self.map_indices = [0,1,2,3,4,5,6]
+        self.map_indices = [0,1,2,3,4,5,6,7]
         self.starting_pos = starting_pos
         self.goal_pos = goal_pos
         self.num_maps = len(self.map_indices)
@@ -168,6 +168,23 @@ class Map:
                     origins.append([x_pos, y_pos, 0.75])
                     sizes.append(sides.copy())
                     self.obstacles += [Cuboid(name = f"random_pillar_{i}", origin = [x_pos, y_pos, 0.75], orientation = [0, 0, 0], sides=sides.copy(), color = Color.REDGLASS)]
+        elif self.map_number == 7:
+            # WINDOW
+            self.dil=0.5
+            self.starting_pos = [0,0,0.5]
+            self.goal_pos = [0,3,0.5]
+            origins = []
+            sizes = []
+            self.obstacles = [
+                Cube(name = "landing2", origin=[0, 3, 0.15], orientation = [0,0,0], sides=[0.3, 0.3, 0.3], color = Color.GREEN),
+                Cube(name = "take_off2", origin=[0, 0, 0.15], orientation = [0,0,0], sides=[0.3, 0.3, 0.3], color = Color.RED),
+                Cuboid(name = "w0", origin=[0, 1, 0.15], orientation = [0,0,0], sides=[5, 0.3, 0.3], color = Color.BLUEGLASS),
+                Cuboid(name = "w1", origin=[-1.35, 1, 0.4], orientation = [0,0,0], sides=[2.3, 0.3, 0.2], color = Color.BLUEGLASS),
+                Cuboid(name = "w2", origin=[1.35, 1, 0.4], orientation = [0,0,0], sides=[2.3, 0.3, 0.2], color = Color.BLUEGLASS),
+                Cuboid(name = "w3", origin=[0, 1, 2], orientation = [0,0,0], sides=[5, 0.3, 3], color = Color.BLUEGLASS),
+                Cuboid(name = "w4", origin=[0, 2, 0.45], orientation = [0,0,0], sides=[2, 0.3, 0.9], color = Color.BLUEGLASS)
+                ]
+
 
     def define_ws_size(self):
         ws_dilation = np.array([self.dil, self.dil, self.dil])
