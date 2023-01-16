@@ -509,7 +509,10 @@ class Informed_RRT_Star(RRT_Star):
             return
 
         new_node = self.graph.add_node(new_node_pos=new_node_pos, parent=closest_node, env=self.env)
-
+        
+        # Uncomment the below in include re-routing (not fully tested)
+        # self.check_shortcut_for_nodes(new_node)
+        
         # Each time a new quicker route to the goal is found via a new node in proximity to the goal, execute the below
         if ((np.linalg.norm(new_node.pos -self.goal.pos)<DIST_TH) and (new_node.dist_from_start < self.fastest_route_to_end)):
             if self.final_node == None:
