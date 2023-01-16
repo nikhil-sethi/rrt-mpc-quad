@@ -21,7 +21,7 @@ This runs the planner and the simulation. Six maps have been implemented (number
 | Informed RRT | `inf_rrt` |
 | RRT with recycling | `rec_rrt` |
 | RRT* | `rrt_star` |
-| Informerd RRT* | `inf_rrt_star` |
+| Informed RRT* | `inf_rrt_star` |
 
 For example, running informed RRT* on map 2: 
 ```
@@ -71,4 +71,8 @@ Reference the following table for all run options (ordered by relevancy):
 
 ### Map 6
 <img src="media/Map6.png" alt="Map 6" width="450"> 
+
+## MPC (under development)
+
+There is also a development branch called `feat/mpc`. This branch consists of an initial setup to working with mpc as a local planner in combination with one of the sampling based global planners.
 
