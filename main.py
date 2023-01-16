@@ -30,6 +30,19 @@ from utils.color import Color, PrintColor
 from utils import printC
 from environment import Env
 
+from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
+
+from mpc.solver import MPCSolver
+
+class Drone(CtrlAviary):
+    def __init__(self):
+        super().__init__()
+        # Some constraints for the MPC
+        self.max_rotor_speed = self.MAX_RPM
+        self.max_pitch_roll = 0.1
+        self.max_pitch_roll_rate = 0.5
+        self.max_yaw_rate = 0.5
+
 
 def run(
 		drone=DroneModel("cf2x"),
@@ -49,7 +62,8 @@ def run(
 		min_snap = True,
 		seed = None,
 		plot_all = False,
-		corridor=False
+		corridor=False,
+		use_mpc=False
 		):
 
 	
@@ -104,6 +118,9 @@ def run(
 		result = result,
 		plot_all = plot_all
 		)
+	if use_mpc:
+		drone_constraints = Drone()
+		mpc_solver = MPCSolver(drone_constraints, dt=1 / control_freq_hz)
 
 	import cProfile
 	import pstats
@@ -145,12 +162,18 @@ def run(
 		#### Compute control at the desired frequency ##############
 		if i%CTRL_EVERY_N_STEPS == 0:
 
-			## Compute control for the current way point 
-			action["0"], _, _ = controller.computeControlFromState(control_timestep=CTRL_EVERY_N_STEPS*env.TIMESTEP,
-																	state=obs["0"]["state"],
-																	target_pos=plan[wp_counter, 0:3],
-																	target_rpy=init_att
-																	)
+			## Compute control for the current way point
+			if not use_mpc:
+				action["0"], _, _ = controller.computeControlFromState(control_timestep=CTRL_EVERY_N_STEPS*env.TIMESTEP,
+																		state=obs["0"]["state"],
+																		target_pos=plan[wp_counter, 0:3],
+																		target_rpy=init_att
+																		)
+			else:
+				state_arr = obs["0"]["state"]
+				state_drone = np.hstack([state_arr[:3], state_arr[10:13], state_arr[7:10], state_arr[13:16]])
+				state_drone = np.reshape(state_drone, (12,))
+				action["0"], _ = mpc_solver.compute_action(state_drone, plan)
 			pos = obs["0"]["state"][:3]
 			
 			if gui:								
@@ -215,7 +238,8 @@ if __name__ == "__main__":
 	parser.add_argument('--corridor',           default=False, 		        type=str2bool,      help='Corridor constraints (default: False)', metavar=''),
 	parser.add_argument('--seed',              	default=2, 		        type=int,           help='Seed (default: None)', metavar=''),
 	parser.add_argument('--plot_all',           default=True, 		        type=str2bool,      help='Will plot all nodes and connections (default: False)', metavar='')
-  
+	parser.add_argument('--use_mpc', 			default=False, 				type=str2bool,		help='sets the use of the mpc (default: False)', metavar='')
+
 	ARGS = parser.parse_args()
 
 	result = run(**vars(ARGS))

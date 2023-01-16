@@ -1,14 +1,9 @@
 import sys
 import numpy as np
 
-# import casadi
 import forcespro
 import forcespro.nlp
-import matplotlib.pyplot as plt
-import matplotlib.patches
-from matplotlib.gridspec import GridSpec
-import casadi
-
+from .dynamics import dynamics_base_aviary
 from .dynamics import continuous_nonlinear_dynamics_3d as continuous_dynamics
 from .util import extract_next_path_points
 from .objectives import obj, objN
@@ -57,18 +52,11 @@ class MPCSolver:
         #                             not for timings)
         codeoptions.optlevel = 3    # 0 no optimization, 1 optimize for size, 
         #                             2 optimize for speed, 3 optimize for size & speed
-        codeoptions.nlp.TolStat = 0.1 
-        codeoptions.forcenonconvex = 1
+        codeoptions.nlp.TolStat = 0.1
         codeoptions.noVariableElimination = 1
         codeoptions.nohash = 1
         codeoptions.cleanup = True
         codeoptions.timing = 1
-        # codeoptions.nlp.hessian_approximation = 'bfgs'
-        # codeoptions.solvemethod = 'SQP_NLP' # choose the solver method Sequential 
-        # #                              Quadratic Programming
-        # codeoptions.nlp.bfgs_init = 2.5*np.identity(16)
-        # codeoptions.sqp_nlp.maxqps = 1      # maximum number of quadratic problems to be solved
-        # codeoptions.sqp_nlp.reg_hessian = 5e-9 # increase this if exitflag=-8
 
         self.solver = self.model.generate_solver(options=codeoptions)
         
@@ -79,13 +67,13 @@ class MPCSolver:
 
         self.problem = {"x0": self.x0, "xinit": state}
 
-        next_path_points = extract_next_path_points(reference_path, state[:3], self.model.N)
+        next_path_points = extract_next_path_points(reference_path, state[:3], self.model.N)  # Determine the next path points to track
         self.problem["all_parameters"] = np.reshape(next_path_points, (self.model.npar*self.model.N,1))
 
         output, exitflag, info = self.solver.solve(self.problem)
 
         # Make sure the solver has exited properly.
-        # assert exitflag == 1, "bad exitflag"
+        assert exitflag == 1, "bad exitflag"
         sys.stderr.write("FORCESPRO took {} iterations and {} seconds to solve the problem.\n"\
             .format(info.it, info.solvetime))
 
@@ -94,7 +82,7 @@ class MPCSolver:
         for i in range(self.model.N):
             temp[:, i] = output['x{0:02d}'.format(i+1)]
         self.problem["x0"] = temp
-        pred_u = temp[0:4, :]
-        pred_x = temp[4:16, :]
+        pred_u = temp[0:4, :]  # next N values for the 4 rotorspeeds
+        pred_x = temp[4:16, :]  # predicted state
         new_state = np.transpose(self.model.eq(np.concatenate((pred_u[:,0],pred_x[:,0]))))
         return pred_u[:,0], new_state

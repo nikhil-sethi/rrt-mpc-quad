@@ -1,7 +1,7 @@
 import numpy as np
 
 def find_closest_point(points, ref_point):
-    return  np.argmin(np.linalg.norm(points - ref_point, axis=1))
+    return np.argmin(np.linalg.norm(points - ref_point, axis=1))
 
 def extract_next_path_points(path_points, pos, N):
     closest_point = find_closest_point(path_points, pos)
